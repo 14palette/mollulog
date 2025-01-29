@@ -80,18 +80,26 @@ export function parsePickupHistory(raw: string, studentMap: Map<string, string>)
     }
 
     trial += 10;
-    let tier1Count, tier2Count, tier3Count;
-    if (count1 > count3) {
-      tier3Count = count3;
-      tier2Count = count2;
-      tier1Count = count1;
-    } else {
-      tier3Count = count1;
-      tier2Count = count2;
-      tier1Count = count3;
-    }
 
     const names = Array.from(line.matchAll(/[가-힣]+/g)).map((m) => m[0]);
+    let tierOrderAsc;
+    if (names.length === count1 || names.length === count3) {
+      tierOrderAsc = (names.length === count3);
+    } else {
+      tierOrderAsc = (count1 > count3);
+    }
+
+    let tier1Count, tier2Count, tier3Count;
+    if (tierOrderAsc) {
+      tier1Count = count1;
+      tier2Count = count2;
+      tier3Count = count3;
+    } else {
+      tier1Count = count3;
+      tier2Count = count2;
+      tier3Count = count1;
+    }
+
     const tier3StudentIds = names.map((searchName) => {
       const studentId = studentMap.get(searchName);
       if (studentId) {

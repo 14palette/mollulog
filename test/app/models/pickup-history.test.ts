@@ -9,6 +9,10 @@ const studentMap = new Map([
   ["온구레", "10055"],
   ["카즈사(밴드)", "10091"],
   ["아루(드레스)", "10089"],
+  ["마키", "10007"],
+  ["아츠코", "10032"],
+  ["체리노", "10017"],
+  ["미유", "10039"],
 ]);
 
 const cases: [string, PickupHistory["result"]][] = [
@@ -43,7 +47,11 @@ const cases: [string, PickupHistory["result"]][] = [
   [
     "100 2/3/5 드아루 새루나[N]",
     [{ trial: 10, tier1Count: 5, tier2Count: 3, tier3Count: 2, tier3StudentIds: ["10089", "10057"] }],
-  ]
+  ],
+  [
+    "180 4/3/3 마키 아츠코 체리노 미유",
+    [{ trial: 10, tier1Count: 3, tier2Count: 3, tier3Count: 4, tier3StudentIds: ["10007", "10032", "10017", "10039"] }],
+  ],
 ];
 
 describe("parsePickupHistory", () => {
