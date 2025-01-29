@@ -25,12 +25,74 @@ export enum Attack {
   Sonic = 'sonic'
 }
 
+export type ContentInterface = {
+  name: Scalars['String']['output'];
+  since: Scalars['ISO8601DateTime']['output'];
+  until: Scalars['ISO8601DateTime']['output'];
+};
+
+/** The connection type for ContentInterface. */
+export type ContentInterfaceConnection = {
+  __typename?: 'ContentInterfaceConnection';
+  /** A list of edges. */
+  edges: Array<ContentInterfaceEdge>;
+  /** A list of nodes. */
+  nodes: Array<ContentInterface>;
+  /** Information to aid in pagination. */
+  pageInfo: PageInfo;
+};
+
+/** An edge in a connection. */
+export type ContentInterfaceEdge = {
+  __typename?: 'ContentInterfaceEdge';
+  /** A cursor for use in pagination. */
+  cursor: Scalars['String']['output'];
+  /** The item at the end of the edge. */
+  node: Maybe<ContentInterface>;
+};
+
 export enum Defense {
   Elastic = 'elastic',
   Heavy = 'heavy',
   Light = 'light',
   Special = 'special'
 }
+
+export type Event = ContentInterface & Node & {
+  __typename?: 'Event';
+  eventId: Scalars['String']['output'];
+  /** ID of the object. */
+  id: Scalars['ID']['output'];
+  imageUrl: Maybe<Scalars['String']['output']>;
+  name: Scalars['String']['output'];
+  pickups: Array<Pickup>;
+  rerun: Scalars['Boolean']['output'];
+  since: Scalars['ISO8601DateTime']['output'];
+  stages: Array<Stage>;
+  type: EventTypeEnum;
+  until: Scalars['ISO8601DateTime']['output'];
+  videos: Array<Video>;
+};
+
+/** The connection type for Event. */
+export type EventConnection = {
+  __typename?: 'EventConnection';
+  /** A list of edges. */
+  edges: Array<EventEdge>;
+  /** A list of nodes. */
+  nodes: Array<Event>;
+  /** Information to aid in pagination. */
+  pageInfo: PageInfo;
+};
+
+/** An edge in a connection. */
+export type EventEdge = {
+  __typename?: 'EventEdge';
+  /** A cursor for use in pagination. */
+  cursor: Scalars['String']['output'];
+  /** The item at the end of the edge. */
+  node: Maybe<Event>;
+};
 
 export enum EventTypeEnum {
   Campaign = 'campaign',
@@ -45,12 +107,151 @@ export enum EventTypeEnum {
   Pickup = 'pickup'
 }
 
+export type Item = {
+  __typename?: 'Item';
+  eventBonuses: Array<ItemEventBonus>;
+  imageId: Scalars['String']['output'];
+  itemId: Scalars['String']['output'];
+  name: Scalars['String']['output'];
+};
+
+export type ItemEventBonus = {
+  __typename?: 'ItemEventBonus';
+  ratio: Scalars['Float']['output'];
+  student: Student;
+  studentId: Scalars['String']['output'];
+};
+
+/** An object with an ID. */
+export type Node = {
+  /** ID of the object. */
+  id: Scalars['ID']['output'];
+};
+
+/** Information about pagination in a connection. */
+export type PageInfo = {
+  __typename?: 'PageInfo';
+  /** When paginating forwards, the cursor to continue. */
+  endCursor: Maybe<Scalars['String']['output']>;
+  /** When paginating forwards, are there more items? */
+  hasNextPage: Scalars['Boolean']['output'];
+  /** When paginating backwards, are there more items? */
+  hasPreviousPage: Scalars['Boolean']['output'];
+  /** When paginating backwards, the cursor to continue. */
+  startCursor: Maybe<Scalars['String']['output']>;
+};
+
+export type Pickup = {
+  __typename?: 'Pickup';
+  rerun: Scalars['Boolean']['output'];
+  student: Maybe<Student>;
+  studentName: Scalars['String']['output'];
+  type: PickupTypeEnum;
+};
+
 export enum PickupTypeEnum {
   Fes = 'fes',
   Given = 'given',
   Limited = 'limited',
   Usual = 'usual'
 }
+
+export type Query = {
+  __typename?: 'Query';
+  contents: ContentInterfaceConnection;
+  event: Maybe<Event>;
+  events: EventConnection;
+  raid: Maybe<Raid>;
+  raids: RaidConnection;
+  student: Student;
+  students: Array<Student>;
+};
+
+
+export type QueryContentsArgs = {
+  after: InputMaybe<Scalars['String']['input']>;
+  before: InputMaybe<Scalars['String']['input']>;
+  contentIds: InputMaybe<Array<Scalars['String']['input']>>;
+  first: InputMaybe<Scalars['Int']['input']>;
+  last: InputMaybe<Scalars['Int']['input']>;
+  sinceBefore: InputMaybe<Scalars['ISO8601DateTime']['input']>;
+  untilAfter: InputMaybe<Scalars['ISO8601DateTime']['input']>;
+};
+
+
+export type QueryEventArgs = {
+  eventId: Scalars['String']['input'];
+};
+
+
+export type QueryEventsArgs = {
+  after: InputMaybe<Scalars['String']['input']>;
+  before: InputMaybe<Scalars['String']['input']>;
+  eventIds: InputMaybe<Array<Scalars['String']['input']>>;
+  first: InputMaybe<Scalars['Int']['input']>;
+  last: InputMaybe<Scalars['Int']['input']>;
+  untilAfter: InputMaybe<Scalars['ISO8601DateTime']['input']>;
+};
+
+
+export type QueryRaidArgs = {
+  raidId: Scalars['String']['input'];
+};
+
+
+export type QueryRaidsArgs = {
+  after: InputMaybe<Scalars['String']['input']>;
+  before: InputMaybe<Scalars['String']['input']>;
+  first: InputMaybe<Scalars['Int']['input']>;
+  last: InputMaybe<Scalars['Int']['input']>;
+  raidIds: InputMaybe<Array<Scalars['String']['input']>>;
+  untilAfter: InputMaybe<Scalars['ISO8601DateTime']['input']>;
+};
+
+
+export type QueryStudentArgs = {
+  studentId: Scalars['String']['input'];
+};
+
+
+export type QueryStudentsArgs = {
+  studentIds: InputMaybe<Array<Scalars['String']['input']>>;
+};
+
+export type Raid = ContentInterface & Node & {
+  __typename?: 'Raid';
+  attackType: Attack;
+  boss: Scalars['String']['output'];
+  defenseType: Defense;
+  /** ID of the object. */
+  id: Scalars['ID']['output'];
+  name: Scalars['String']['output'];
+  raidId: Scalars['String']['output'];
+  since: Scalars['ISO8601DateTime']['output'];
+  terrain: TerrainEnum;
+  type: RaidTypeEnum;
+  until: Scalars['ISO8601DateTime']['output'];
+};
+
+/** The connection type for Raid. */
+export type RaidConnection = {
+  __typename?: 'RaidConnection';
+  /** A list of edges. */
+  edges: Array<RaidEdge>;
+  /** A list of nodes. */
+  nodes: Array<Raid>;
+  /** Information to aid in pagination. */
+  pageInfo: PageInfo;
+};
+
+/** An edge in a connection. */
+export type RaidEdge = {
+  __typename?: 'RaidEdge';
+  /** A cursor for use in pagination. */
+  cursor: Scalars['String']['output'];
+  /** The item at the end of the edge. */
+  node: Maybe<Raid>;
+};
 
 export enum RaidTypeEnum {
   Elimination = 'elimination',
@@ -63,11 +264,48 @@ export enum RoleEnum {
   Striker = 'striker'
 }
 
+export type Stage = {
+  __typename?: 'Stage';
+  difficulty: Scalars['Int']['output'];
+  entryAp: Maybe<Scalars['Int']['output']>;
+  index: Scalars['String']['output'];
+  name: Scalars['String']['output'];
+  rewards: Array<StageReward>;
+};
+
+export type StageReward = {
+  __typename?: 'StageReward';
+  amount: Scalars['Float']['output'];
+  item: Item;
+};
+
+export type Student = {
+  __typename?: 'Student';
+  attackType: Attack;
+  defenseType: Defense;
+  equipments: Array<Scalars['String']['output']>;
+  initialTier: Scalars['Int']['output'];
+  name: Scalars['String']['output'];
+  order: Scalars['Int']['output'];
+  released: Scalars['Boolean']['output'];
+  role: RoleEnum;
+  schaleDbId: Scalars['String']['output'];
+  school: Scalars['String']['output'];
+  studentId: Scalars['String']['output'];
+};
+
 export enum TerrainEnum {
   Indoor = 'indoor',
   Outdoor = 'outdoor',
   Street = 'street'
 }
+
+export type Video = {
+  __typename?: 'Video';
+  start: Maybe<Scalars['Int']['output']>;
+  title: Scalars['String']['output'];
+  youtube: Scalars['String']['output'];
+};
 
 export type AllStudentsQueryVariables = Exact<{ [key: string]: never; }>;
 

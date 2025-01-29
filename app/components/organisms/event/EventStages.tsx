@@ -157,30 +157,35 @@ export default function EventStages({ stages, signedIn, ownedStudentIds }: Event
                 </div>
                 <div className="p-2">
                   <p className="font-bold">{item.name}</p>
-                  <p className="text-sm text-neutral-500">
-                    모집 학생 보너스{signedIn ? ` +${Math.floor(ratio * 100)}% (최대 +${Math.floor(maxRatio * 100)}%)` : "는 로그인 후 확인 가능"}
-                  </p>
+                  {item.eventBonuses.length > 0 && (
+                    <p className="text-sm text-neutral-500">
+                      모집 학생 보너스{signedIn ? ` +${Math.floor(ratio * 100)}% (최대 +${Math.floor(maxRatio * 100)}%)` : "는 로그인 후 확인 가능"}
+                    </p>
+                  )}
                 </div>
               </div>
 
-              <div className="flex flex-col md:flex-row">
-                <div className="w-full md:w-1/2 p-2">
-                  <p className="mb-2 font-bold">스트라이커</p>
-                  <StudentCards mobileGrid={8} pcGrid={6} cardProps={item.eventBonuses.filter(({ student }) => student.role === "striker").map(({ student, ratio }) => ({
-                    studentId: student.studentId,
-                    grayscale: signedIn && !ownedStudentIds.includes(student.studentId),
-                    label: (<span className="text-white font-normal">{Math.floor(ratio * 100)}%</span>),
-                  }))} />
+              {item.eventBonuses.length === 0 ?
+                <p className="my-8 text-center">모집 학생 보너스가 없어요</p> : (
+                <div className="flex flex-col md:flex-row">
+                  <div className="w-full md:w-1/2 p-2">
+                    <p className="mb-2 font-bold">스트라이커</p>
+                    <StudentCards mobileGrid={8} pcGrid={6} cardProps={item.eventBonuses.filter(({ student }) => student.role === "striker").map(({ student, ratio }) => ({
+                      studentId: student.studentId,
+                      grayscale: signedIn && !ownedStudentIds.includes(student.studentId),
+                      label: (<span className="text-white font-normal">{Math.floor(ratio * 100)}%</span>),
+                    }))} />
+                  </div>
+                  <div className="w-full md:w-1/2 p-2">
+                    <p className="mb-2 font-bold">스페셜</p>
+                    <StudentCards mobileGrid={8} pcGrid={6} cardProps={item.eventBonuses.filter(({ student }) => student.role === "special").map(({ student, ratio }) => ({
+                      studentId: student.studentId,
+                      grayscale: signedIn && !ownedStudentIds.includes(student.studentId),
+                      label: (<span className="text-white font-normal">{Math.floor(ratio * 100)}%</span>),
+                    }))} />
+                  </div>
                 </div>
-                <div className="w-full md:w-1/2 p-2">
-                  <p className="mb-2 font-bold">스페셜</p>
-                  <StudentCards mobileGrid={8} pcGrid={6} cardProps={item.eventBonuses.filter(({ student }) => student.role === "special").map(({ student, ratio }) => ({
-                    studentId: student.studentId,
-                    grayscale: signedIn && !ownedStudentIds.includes(student.studentId),
-                    label: (<span className="text-white font-normal">{Math.floor(ratio * 100)}%</span>),
-                  }))} />
-                </div>
-              </div>
+              )}
             </div>
           )
         })}
