@@ -13,6 +13,7 @@ import { runQuery } from "~/lib/baql";
 import type { FuturePlan} from "~/models/future";
 import { getFuturePlan, setFuturePlan } from "~/models/future";
 import { sanitizeClassName } from "~/prophandlers";
+import { getUserFavoriteStudents, getUserMemos } from "~/models/future-content";
 
 export const futureContentsQuery = graphql(`
   query FutureContents($now: ISO8601DateTime!) {
@@ -69,8 +70,11 @@ export const loader = async ({ request, context }: LoaderFunctionArgs) => {
     contents: data.contents.nodes,
     futurePlans: signedIn ? await getFuturePlan(env, currentUser.id) : null,
     noticeMessage: await env.KV_STATIC_DATA.get("futures::noticeMessage"),
+    favoriteStudents: signedIn ? await getUserFavoriteStudents(env, currentUser.id) : [],
+    memos: signedIn ? await getUserMemos(env, currentUser.id) : [],
   });
 };
+
 export const action = async ({ request, context }: ActionFunctionArgs) => {
   const env = context.cloudflare.env;
   const currentUser = await getAuthenticator(env).isAuthenticated(request);
@@ -100,6 +104,9 @@ export default function Futures() {
     }, 500);
     return () => clearTimeout(timer);
   }, [futurePlans])
+
+  const [favoriteStudents, setFavoriteStudents] = useState(loaderData.favoriteStudents ?? []);
+  const [memos, setMemos] = useState(loaderData.memos ?? {});
 
   return (
     <div className="pb-64">
@@ -141,7 +148,10 @@ export default function Futures() {
 
           return contentAttrs as ContentTimelineProps["contents"][number];
         })}
-        futurePlans={futurePlans}
+
+        favoriteStudents={favoriteStudents}
+        memos={memos}
+
         onMemoUpdate={(eventId, memo) => {
           setFuturePlans((prev) => ({ ...prev, memos: { ...prev.memos, [eventId]: memo } }));
         }}

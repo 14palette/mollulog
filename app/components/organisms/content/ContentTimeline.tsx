@@ -17,10 +17,10 @@ export type ContentTimelineProps = {
     pickups?: ContentTimelineItemProps["pickups"];
     raidInfo?: ContentTimelineItemProps["raidInfo"];
   }[];
-  futurePlans: {
-    pickups?: { [eventId: string]: string[] };
-    memos?: { [eventId: string]: string };
-  } | null;
+
+  favoriteStudents: { contentId: string, studentId: string }[];
+  memos: { contentId: string, body: string }[];
+
   onMemoUpdate?: (eventId: string, memo: string) => void;
   onFavorite?: (eventId: string, studentId: string, favorited: boolean) => void;
 };
@@ -69,7 +69,7 @@ function groupContents(contents: ContentTimelineProps["contents"]): ContentGroup
   }));
 }
 
-export default function ContentTimeline({ contents, futurePlans, onMemoUpdate, onFavorite }: ContentTimelineProps) {
+export default function ContentTimeline({ contents, favoriteStudents, memos, onMemoUpdate, onFavorite }: ContentTimelineProps) {
   const [contentGroups, setContentGroups] = useState<ContentGroup[]>(groupContents(contents));
 
   const [_, setFilter] = useState<ContentFilter>(null);
@@ -124,6 +124,7 @@ export default function ContentTimeline({ contents, futurePlans, onMemoUpdate, o
             {/* 컨텐츠 목록 영역 */}
             <div className="ml-1 -mt-4 py-4 pl-4 md:pl-6 border-l border-neutral-200 dark:border-neutral-700">
               {group.contents.map((content) => {
+                const memo = memos.find(({ contentId }) => contentId === content.contentId)?.body;
                 const showMemo = !!onMemoUpdate && !!content.pickups && content.pickups.length > 0;
                 return (
                   <ContentTimelineItem
@@ -132,10 +133,10 @@ export default function ContentTimeline({ contents, futurePlans, onMemoUpdate, o
                     until={isToday ? content.until : null}
 
                     showMemo={showMemo}
-                    initialMemo={showMemo ? (futurePlans?.memos?.[content.contentId]) : undefined}
+                    initialMemo={showMemo ? memo : undefined}
                     onUpdateMemo={showMemo ? (newMemo) => onMemoUpdate(content.contentId, newMemo) : undefined}
 
-                    favoritedStudents={futurePlans?.pickups?.[content.contentId] ?? []}
+                    favoritedStudents={favoriteStudents.filter(({ contentId }) => contentId === content.contentId).map(({ studentId }) => studentId)}
                     onFavorite={(studentId, favorited) => onFavorite?.(content.contentId, studentId, favorited) }
                   />
                 );
