@@ -102,7 +102,6 @@ export const loader = async ({ params, context, request }: LoaderFunctionArgs) =
   let studentStates: StudentState[] = [];
   if (sensei) {
     studentStates = await getUserStudentStates(env, sensei.username, true) ?? [];
-    studentStates = studentStates.filter(({ student }) => pickupStudentIds.includes(student.id));
   }
 
   return defer({
