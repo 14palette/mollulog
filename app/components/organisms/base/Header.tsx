@@ -1,9 +1,9 @@
 import { MoonIcon } from "@heroicons/react/16/solid";
 import { KeyIcon } from "@heroicons/react/24/solid";
-import { Link, useNavigation, useSubmit } from "@remix-run/react"
+import { Link, useLocation, useNavigation, useSearchParams, useSubmit } from "@remix-run/react"
 import { startAuthentication } from "@simplewebauthn/browser";
 import { PublicKeyCredentialRequestOptionsJSON } from "@simplewebauthn/server/script/deps";
-import { useState } from "react";
+import { useEffect, useState } from "react";
 import { Button } from "~/components/atoms/form";
 import { toggleDarkMode } from "~/lib/device/index.client";
 
@@ -65,7 +65,25 @@ function SignIn({ close }: { close: () => void }) {
 }
 
 export default function Header({ currentUsername }: HeaderProps) {
-  const [showSignIn, setShowSignIn] = useState(false);
+  const location = useLocation();
+  const [searchParams, setSearchParams] = useSearchParams();
+  const [showSignIn, setShowSignIn] = useState(location.pathname === "/signin" || searchParams.get("signin") === "true");
+  useEffect(() => {
+    if (location.pathname === "/signin" || searchParams.get("signin") === "true") {
+      setShowSignIn(true);
+    } else {
+      setShowSignIn(false);
+    }
+  }, [location.pathname, searchParams]);
+
+  useEffect(() => {
+    if (showSignIn === false && searchParams.get("signin") === "true") {
+      setSearchParams((prev) => {
+        prev.delete("signin");
+        return prev;
+      });
+    }
+  }, [showSignIn]);
 
   return (
     <div className="mt-8 mb-12 md:my-16">

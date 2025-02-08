@@ -1,4 +1,4 @@
-create table if not exists favorite_students (
+create table if not exists content_favorite_students (
   id integer primary key autoincrement,
   uid text not null,
   userId integer not null,
@@ -8,11 +8,11 @@ create table if not exists favorite_students (
   updatedAt timestamp not null default current_timestamp
 );
 
-create index if not exists favorite_students_userId on favorite_students (userId);
-create unique index if not exists favorite_students_uid on favorite_students (uid);
+create unique index if not exists content_favorite_students_userId_contentId_studentId on content_favorite_students (userId, contentId, studentId);
+create unique index if not exists content_favorite_students_uid on content_favorite_students (uid);
 
 
-create table if not exists future_content_memos (
+create table if not exists content_memos (
   id integer primary key autoincrement,
   uid text not null,
   userId integer not null,
@@ -22,5 +22,5 @@ create table if not exists future_content_memos (
   updatedAt timestamp not null default current_timestamp
 );
 
-create unique index if not exists future_content_memos_userId_contentId on future_content_memos (userId, contentId);
-create unique index if not exists future_content_memos_uid on future_content_memos (uid);
+create unique index if not exists content_memos_userId_contentId on content_memos (userId, contentId);
+create unique index if not exists content_memos_uid on content_memos (uid);

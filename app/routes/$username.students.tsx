@@ -63,7 +63,7 @@ export default function UserPage() {
             아직 등록한 학생이 없어요
           </div> :
           <StudentCards
-            cardProps={filteredStates.filter(({ owned }) => owned).map(({ student, tier }) => ({
+            students={filteredStates.filter(({ owned }) => owned).map(({ student, tier }) => ({
               studentId: student.id,
               name: student.name,
               tier: tier ?? student.initialTier,
@@ -75,7 +75,7 @@ export default function UserPage() {
       <div className="my-8">
         <p className="font-bold text-xl my-4">미모집 학생</p>
         <StudentCards
-          cardProps={filteredStates.filter(({ owned }) => !owned).map(({ student }) => ({
+          students={filteredStates.filter(({ owned }) => !owned).map(({ student }) => ({
             studentId: student.id,
             name: student.name,
             grayscale: true,

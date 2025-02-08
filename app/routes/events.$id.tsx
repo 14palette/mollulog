@@ -14,6 +14,7 @@ import { graphql } from "~/graphql";
 import type { EventStagesQuery, EventDetailQuery } from "~/graphql/graphql";
 import { runQuery } from "~/lib/baql";
 import { eventTypeLocale, pickupLabelLocale } from "~/locales/ko";
+import { getFavoritedCounts } from "~/models/content";
 import type { StudentState} from "~/models/student-state";
 import { getUserStudentStates } from "~/models/student-state";
 
@@ -91,17 +92,21 @@ export const loader = async ({ params, context, request }: LoaderFunctionArgs) =
     );
   }
 
+  const pickupStudentIds = data!.event!.pickups.map((pickup) => pickup.student?.studentId).filter((id) => id !== undefined);
+
   const env = context.cloudflare.env;
   const sensei = await getAuthenticator(env).isAuthenticated(request);
   let studentStates: StudentState[] = [];
   if (sensei) {
     studentStates = await getUserStudentStates(env, sensei.username, true) ?? [];
+    studentStates = studentStates.filter(({ student }) => pickupStudentIds.includes(student.id));
   }
 
   return defer({
     event: data!.event!,
     stages: getEventStages(params.id as string),
     studentStates,
+    favoritedCounts: await getFavoritedCounts(env, pickupStudentIds),
     signedIn: sensei !== null,
   });
 };
@@ -136,7 +141,7 @@ export const ErrorBoundary = () => {
 };
 
 export default function EventDetail() {
-  const { event, stages, signedIn, studentStates } = useLoaderData<typeof loader>();
+  const { event, stages, signedIn, studentStates, favoritedCounts } = useLoaderData<typeof loader>();
 
   return (
     <>
@@ -155,14 +160,17 @@ export default function EventDetail() {
         <div className="my-8">
           <SubTitle text="픽업 학생" />
           <StudentCards
-            cardProps={event.pickups.map((pickup) => {
+            students={event.pickups.map((pickup) => {
+              const studentId = pickup.student?.studentId ?? null;
               return {
-                  studentId: pickup.student?.studentId || null,
-                  name: pickup.studentName,
-                  label: (<span className={pickup.rerun ? "text-white" : "text-yellow-500"}>{pickupLabelLocale(pickup)}</span>),
-                };
-              }
-            )}
+                studentId,
+                name: pickup.studentName,
+                label: (<span className={pickup.rerun ? "text-white" : "text-yellow-500"}>{pickupLabelLocale(pickup)}</span>),
+                state: {
+                  favoritedCount: favoritedCounts.find((favorited) => favorited.studentId === studentId)?.count,
+                },
+              };
+            })}
             mobileGrid={5}
           />
         </div>

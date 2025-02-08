@@ -170,7 +170,7 @@ export default function EventStages({ stages, signedIn, ownedStudentIds }: Event
                 <div className="flex flex-col md:flex-row">
                   <div className="w-full md:w-1/2 p-2">
                     <p className="mb-2 font-bold">스트라이커</p>
-                    <StudentCards mobileGrid={8} pcGrid={6} cardProps={item.eventBonuses.filter(({ student }) => student.role === "striker").map(({ student, ratio }) => ({
+                    <StudentCards mobileGrid={8} pcGrid={6} students={item.eventBonuses.filter(({ student }) => student.role === "striker").map(({ student, ratio }) => ({
                       studentId: student.studentId,
                       grayscale: signedIn && !ownedStudentIds.includes(student.studentId),
                       label: (<span className="text-white font-normal">{Math.floor(ratio * 100)}%</span>),
@@ -178,7 +178,7 @@ export default function EventStages({ stages, signedIn, ownedStudentIds }: Event
                   </div>
                   <div className="w-full md:w-1/2 p-2">
                     <p className="mb-2 font-bold">스페셜</p>
-                    <StudentCards mobileGrid={8} pcGrid={6} cardProps={item.eventBonuses.filter(({ student }) => student.role === "special").map(({ student, ratio }) => ({
+                    <StudentCards mobileGrid={8} pcGrid={6} students={item.eventBonuses.filter(({ student }) => student.role === "special").map(({ student, ratio }) => ({
                       studentId: student.studentId,
                       grayscale: signedIn && !ownedStudentIds.includes(student.studentId),
                       label: (<span className="text-white font-normal">{Math.floor(ratio * 100)}%</span>),

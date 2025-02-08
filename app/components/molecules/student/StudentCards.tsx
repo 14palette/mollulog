@@ -1,4 +1,3 @@
-import type { StudentCardProps } from "~/components/atoms/student";
 import { StudentCard } from "~/components/atoms/student"
 import StudentInfo from "./StudentInfo";
 import type { ReactNode} from "react";
@@ -6,9 +5,6 @@ import { useState } from "react";
 import type { AttackType, DefenseType, Role } from "~/models/content";
 
 type StudentCardsProps = {
-  // @deprecated - use `students` instead
-  cardProps?: StudentCardProps[];
-
   students?: {
     studentId: string | null;
     name?: string;
@@ -23,6 +19,7 @@ type StudentCardsProps = {
 
     state?: {
       favorited?: boolean;
+      favoritedCount?: number;
     };
   }[];
   mobileGrid?: 4 | 5 | 6 | 8;
@@ -31,7 +28,7 @@ type StudentCardsProps = {
   onFavorite?: (id: string, favorited: boolean) => void;
 };
 
-export default function StudentCards({ cardProps, students, mobileGrid, pcGrid, onSelect, onFavorite }: StudentCardsProps) {
+export default function StudentCards({ students, mobileGrid, pcGrid, onSelect, onFavorite }: StudentCardsProps) {
   const [selectedStudentId, setSelectedStudentId] = useState<string | null>(null);
 
   let gridClass = "grid-cols-6";
@@ -67,7 +64,11 @@ export default function StudentCards({ cardProps, students, mobileGrid, pcGrid, 
                 setSelectedStudentId(studentId);
               } : undefined}
             >
-              <StudentCard {...student} favorited={student?.state?.favorited} />
+              <StudentCard
+                {...student}
+                favorited={student?.state?.favorited}
+                favoritedCount={student?.state?.favoritedCount}
+              />
             </div>
 
             {(showInfo && selectedStudentId === studentId) && (
@@ -88,17 +89,6 @@ export default function StudentCards({ cardProps, students, mobileGrid, pcGrid, 
           </div>
         );
       })}
-
-      {/* DEPRECATED */}
-      {(!students || students.length === 0) && cardProps?.map((prop) => (
-        <div
-          key={`student-card-${prop.studentId}${prop.name ? `-${prop.name}` : ""}`}
-          className={(onSelect && prop.studentId) ? "hover:scale-105 cursor-pointer transition" : ""}
-          onClick={() => prop.studentId && onSelect?.(prop.studentId)}
-        >
-          <StudentCard key={`list-students-${prop.studentId}`} {...prop} />
-        </div>
-      ))}
     </div>
   );
 }

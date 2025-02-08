@@ -21,6 +21,7 @@ export type ContentTimelineItemProps = {
   onUpdateMemo?: (text: string) => void;
 
   favoritedStudents?: string[];
+  favoritedCounts?: Record<string, number>;
   onFavorite?: (studentId: string, favorited: boolean) => void;
 
   pickups?: {
@@ -79,7 +80,7 @@ function ContentTitles({ name, showLink }: { name: string, showLink: boolean }):
 export default function ContentTimelineItem(
   {
     name, contentType, rerun, until, link, raidInfo, pickups,
-    showMemo, initialMemo, onUpdateMemo, favoritedStudents, onFavorite,
+    showMemo, initialMemo, onUpdateMemo, favoritedStudents, favoritedCounts, onFavorite,
   }: ContentTimelineItemProps,
 ) {
   const remainingDays = until ? dayjs(until).startOf("day").diff(dayjs().startOf("day"), "day") : null;
@@ -145,9 +146,10 @@ export default function ContentTimelineItem(
                 studentId: student?.studentId ?? null,
                 name: pickup.studentName,
                 label: <span className={`${colorClass}`}>{pickupLabelLocale(pickup)}</span>,
-                state: {
-                  favorited: student?.studentId ? favoritedStudents?.includes(student.studentId) : false,
-                },
+                state: student?.studentId ? {
+                  favorited: favoritedStudents?.includes(student.studentId),
+                  favoritedCount: favoritedCounts?.[student.studentId],
+                } : undefined,
               };
             })}
             onFavorite={onFavorite}

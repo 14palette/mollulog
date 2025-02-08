@@ -1,6 +1,6 @@
 import { LoaderFunctionArgs } from "@remix-run/cloudflare";
 import { getAuthenticator } from "~/auth/authenticator.server";
-import { migrateFavoriteStudents } from "~/models/future-content";
+import { migrateFavoriteStudents } from "~/models/content";
 
 export const loader = async ({ request, context }: LoaderFunctionArgs) => {
   const env = context.cloudflare.env;

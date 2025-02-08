@@ -2,7 +2,7 @@ import { HeartIcon } from "@heroicons/react/16/solid";
 import type { ReactNode } from "react";
 import { studentImageUrl } from "~/models/assets";
 
-export type StudentCardProps = {
+type StudentCardProps = {
   studentId: string | null;
   name?: string;
   nameSize?: "small" | "normal";
@@ -11,6 +11,7 @@ export type StudentCardProps = {
   label?: ReactNode;
 
   favorited?: boolean;
+  favoritedCount?: number;
   grayscale?: boolean;
 }
 
@@ -23,7 +24,7 @@ function visibileTier(tier: number): [number, boolean] {
 }
 
 export default function StudentCard(
-  { studentId, name, nameSize, tier, label, favorited, grayscale }: StudentCardProps,
+  { studentId, name, nameSize, tier, label, favorited, favoritedCount, grayscale }: StudentCardProps,
 ) {
   const showInfo = tier !== undefined || label !== undefined;
   const visibleNames = [];
@@ -52,9 +53,10 @@ export default function StudentCard(
           src={studentImageUrl(studentId || "unlisted")}
           alt={name} loading="lazy"
         />
-        {favorited && (
-          <div className="absolute top-1 right-1 bg-white opacity-90 rounded-full">
-            <HeartIcon className="p-0.5 text-red-500 size-5" />
+        {(favoritedCount || favorited) && (
+          <div className={`px-1 absolute top-1 right-1 opacity-90 bg-white rounded-full flex items-center ${(favorited === undefined || favorited === true) ? "text-red-500" : "text-neutral-500"}`}>
+            <HeartIcon className="size-4" />
+            {favoritedCount && <span className="text-xs font-bold">{favoritedCount}</span>}
           </div>
         )}
         {showInfo && (
