@@ -1,11 +1,12 @@
-import type { LoaderFunctionArgs, MetaFunction } from "@remix-run/cloudflare";
-import { defer } from "@remix-run/cloudflare";
-import { Await, isRouteErrorResponse, useLoaderData, useRouteError } from "@remix-run/react";
+import { ArrowTopRightOnSquareIcon, HeartIcon } from "@heroicons/react/16/solid";
+import type { ActionFunctionArgs, LoaderFunctionArgs, MetaFunction } from "@remix-run/cloudflare";
+import { defer, json, redirect } from "@remix-run/cloudflare";
+import { Await, isRouteErrorResponse, useFetcher, useLoaderData, useRouteError } from "@remix-run/react";
 import dayjs from "dayjs";
 import { Suspense } from "react";
 import { getAuthenticator } from "~/auth/authenticator.server";
+import { StudentCard } from "~/components/atoms/student";
 import { SubTitle } from "~/components/atoms/typography";
-import { StudentCards } from "~/components/molecules/student";
 import { ContentHeader } from "~/components/organisms/content";
 import { ErrorPage } from "~/components/organisms/error";
 import { EventStages } from "~/components/organisms/event";
@@ -13,14 +14,15 @@ import { TimelinePlaceholder } from "~/components/organisms/useractivity";
 import { graphql } from "~/graphql";
 import type { EventStagesQuery, EventDetailQuery } from "~/graphql/graphql";
 import { runQuery } from "~/lib/baql";
-import { eventTypeLocale, pickupLabelLocale } from "~/locales/ko";
-import { getFavoritedCounts } from "~/models/content";
+import { attackTypeLocale, defenseTypeLocale, eventTypeLocale, pickupLabelLocale, roleLocale } from "~/locales/ko";
+import { favoriteStudent, getFavoritedCounts, getUserFavoritedStudents, unfavoriteStudent } from "~/models/content";
 import type { StudentState} from "~/models/student-state";
 import { getUserStudentStates } from "~/models/student-state";
 
 const eventDetailQuery = graphql(`
   query EventDetail($eventId: String!) {
     event(eventId: $eventId) {
+      eventId
       name
       type
       since
@@ -34,7 +36,7 @@ const eventDetailQuery = graphql(`
       pickups {
         type
         rerun
-        student { studentId }
+        student { studentId attackType defenseType role schaleDbId }
         studentName
       }
     }
@@ -92,7 +94,8 @@ export const loader = async ({ params, context, request }: LoaderFunctionArgs) =
     );
   }
 
-  const pickupStudentIds = data!.event!.pickups.map((pickup) => pickup.student?.studentId).filter((id) => id !== undefined);
+  const content = data!.event!;
+  const pickupStudentIds = content.pickups.map((pickup) => pickup.student?.studentId).filter((id) => id !== undefined);
 
   const env = context.cloudflare.env;
   const sensei = await getAuthenticator(env).isAuthenticated(request);
@@ -103,12 +106,37 @@ export const loader = async ({ params, context, request }: LoaderFunctionArgs) =
   }
 
   return defer({
-    event: data!.event!,
+    event: content,
     stages: getEventStages(params.id as string),
     studentStates,
+    favoritedStudents: sensei ? await getUserFavoritedStudents(env, sensei.id, content.eventId) : [],
     favoritedCounts: await getFavoritedCounts(env, pickupStudentIds),
     signedIn: sensei !== null,
   });
+};
+
+type ActionData = {
+  favorite: {
+    studentId: string;
+    favorited: boolean;
+  };
+};
+
+export const action = async ({ params, request, context }: ActionFunctionArgs) => {
+  const { env } = context.cloudflare;
+  const currentUser = await getAuthenticator(env).isAuthenticated(request);
+  if (!currentUser) {
+    return redirect("?signin=true");
+  }
+
+  const actionData = await request.json<ActionData>();
+  if (actionData.favorite) {
+    const { studentId, favorited } = actionData.favorite;
+    const run = favorited ? favoriteStudent : unfavoriteStudent;
+    await run(env, currentUser.id, studentId, params.id!);
+  }
+
+  return json({});
 };
 
 export const meta: MetaFunction<typeof loader> = ({ data }) => {
@@ -140,8 +168,29 @@ export const ErrorBoundary = () => {
   }
 };
 
+const attackTypeColor = {
+  explosive: "bg-red-500",
+  piercing: "bg-yellow-500",
+  mystic: "bg-blue-500",
+  sonic: "bg-purple-500",
+};
+
+const defenseTypeColor = {
+  light: "bg-red-500",
+  heavy: "bg-yellow-500",
+  special: "bg-blue-500",
+  elastic: "bg-purple-500",
+};
+
+const roleColor = {
+  striker: "bg-red-500",
+  special: "bg-blue-500",
+};
+
 export default function EventDetail() {
-  const { event, stages, signedIn, studentStates, favoritedCounts } = useLoaderData<typeof loader>();
+  const { event, stages, signedIn, studentStates, favoritedStudents, favoritedCounts } = useLoaderData<typeof loader>();
+
+  const fetcher = useFetcher();
 
   return (
     <>
@@ -158,21 +207,55 @@ export default function EventDetail() {
 
       {event.pickups.length > 0 && (
         <div className="my-8">
-          <SubTitle text="픽업 학생" />
-          <StudentCards
-            students={event.pickups.map((pickup) => {
-              const studentId = pickup.student?.studentId ?? null;
-              return {
-                studentId,
-                name: pickup.studentName,
-                label: (<span className={pickup.rerun ? "text-white" : "text-yellow-500"}>{pickupLabelLocale(pickup)}</span>),
-                state: {
-                  favoritedCount: favoritedCounts.find((favorited) => favorited.studentId === studentId)?.count,
-                },
-              };
-            })}
-            mobileGrid={5}
-          />
+          <SubTitle text="모집 학생" />
+          {event.pickups.map((pickup) => {
+            const studentId = pickup.student?.studentId ?? null;
+            const { attackType, defenseType, role, schaleDbId } = pickup.student ?? {};
+
+            const favorited = favoritedStudents.some((favorited) => favorited.studentId === studentId);
+            return (
+              <div key={`pickup-${studentId}`} className="my-4 p-2 flex flex-col md:flex-row bg-neutral-100 dark:bg-neutral-900 rounded-lg">
+                <div className="flex items-center grow">
+                  <div className="w-16 mx-2">
+                    <StudentCard studentId={studentId} />
+                  </div>
+                  <div className="px-2 md:px-4 grow">
+                    <p className="text-xs text-neutral-500">{pickupLabelLocale(pickup)}</p>
+                    <a href={`https://schaledb.com/student/${schaleDbId}`} target="_blank" rel="noreferrer" className="hover:underline">
+                      <span className="font-bold mr-1.5">{pickup.studentName}</span>
+                      <ArrowTopRightOnSquareIcon className="size-3 text-neutral-500 inline" />
+                      <span className="text-xs text-neutral-500">샬레DB</span>
+                    </a>
+                    {attackType && defenseType && role && (
+                      <div className="py-1 flex text-sm gap-x-1">
+                        <div className="px-2 flex items-center bg-neutral-200 dark:bg-neutral-800 rounded-full">
+                          <div className={`size-2.5 rounded-full ` + attackTypeColor[attackType]} />
+                          <span className="ml-1">{attackTypeLocale[attackType]}</span>
+                        </div>
+                        <div className="px-2 flex items-center bg-neutral-200 dark:bg-neutral-800 rounded-full">
+                          <div className={`size-2.5 rounded-full ` + defenseTypeColor[defenseType]} />
+                          <span className="ml-1">{defenseTypeLocale[defenseType]}</span>
+                        </div>
+                        <div className="px-2 flex items-center bg-neutral-200 dark:bg-neutral-800 rounded-full">
+                          <div className={`size-2.5 rounded-full ` + roleColor[role]} />
+                          <span className="ml-1">{roleLocale[role]}</span>
+                        </div>
+                      </div>
+                    )}
+                  </div>
+                </div>
+                <div className="py-2 flex items-center justify-end">
+                  <div
+                    className={`mx-2 px-2 flex items-center rounded-full text-white hover:opacity-50 transition cursor-pointer ${(!signedIn || favorited) ? "bg-red-500" : "bg-neutral-500"}`}
+                    onClick={() => fetcher.submit({ favorite: { studentId: studentId!, favorited: !favorited } }, { method: "post", encType: "application/json" })}
+                  >
+                    <HeartIcon className="size-4" strokeWidth={2} />
+                    <span className="ml-1 font-bold">{favoritedCounts.find((favorited) => favorited.studentId === studentId)?.count ?? 0}</span>
+                  </div>
+                </div>
+              </div>
+            )
+          })}
         </div>
       )}
 

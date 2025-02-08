@@ -1,4 +1,4 @@
-import { and, count, eq, inArray, sql } from "drizzle-orm";
+import { and, count, eq, inArray, sql, SQLWrapper } from "drizzle-orm";
 import { drizzle } from "drizzle-orm/d1";
 import { int, sqliteTable, text } from "drizzle-orm/sqlite-core";
 import { Env } from "~/env.server";
@@ -26,12 +26,14 @@ const SELECT_USER_FAVORITE_STUDENTS_COLUMNS = {
   contentId: favoriteStudentsTable.contentId,
 };
 
-export async function getUserFavoritedStudents(env: Env, userId: number): Promise<FavoriteStudent[]> {
+export async function getUserFavoritedStudents(env: Env, userId: number, contentId?: string): Promise<FavoriteStudent[]> {
   const db = drizzle(env.DB);
-  return await db.select(SELECT_USER_FAVORITE_STUDENTS_COLUMNS)
-    .from(favoriteStudentsTable)
-    .where(eq(favoriteStudentsTable.userId, userId))
-    .all();
+  const filter: SQLWrapper[] = [eq(favoriteStudentsTable.userId, userId)];
+  if (contentId) {
+    filter.push(eq(favoriteStudentsTable.contentId, contentId));
+  }
+
+  return db.select(SELECT_USER_FAVORITE_STUDENTS_COLUMNS).from(favoriteStudentsTable).where(and(...filter)).all();
 }
 
 type FavoritedCount = {

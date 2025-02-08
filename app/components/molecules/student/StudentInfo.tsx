@@ -1,4 +1,5 @@
-import { ArrowTopRightOnSquareIcon, MinusCircleIcon, PlusCircleIcon, XMarkIcon } from "@heroicons/react/24/outline";
+import { ArrowTopRightOnSquareIcon, XMarkIcon, HeartIcon as EmptyHeartIcon } from "@heroicons/react/24/outline";
+import { HeartIcon as FilledHeartIcon } from "@heroicons/react/24/solid";
 import { attackTypeLocale, defenseTypeLocale, roleLocale } from "~/locales/ko";
 import type { AttackType, DefenseType, Role } from "~/models/content";
 
@@ -59,7 +60,7 @@ export default function StudentInfo({ student, favorited, onRemoveFavorite, onAd
       <div>
         {onAddFavorite && onRemoveFavorite && (
           <div className="px-4 py-2 flex items-center hover:bg-neutral-700 transition cursor-pointer border-t border-neutral-700" onClick={favorited ? onRemoveFavorite: onAddFavorite}>
-            {favorited ? <MinusCircleIcon className="size-4" /> : <PlusCircleIcon className="size-4" />}
+            {favorited ? <EmptyHeartIcon className="size-4" /> : <FilledHeartIcon className="size-4" />}
             <span className="ml-1.5">관심 모집 학생에{favorited ? "서 해제" : " 등록"}</span>
           </div>
         )}
