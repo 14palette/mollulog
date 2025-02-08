@@ -9,6 +9,7 @@ import { SenseiFinder } from "~/components/organisms/home";
 import { graphql } from "~/graphql";
 import type { IndexQuery } from "~/graphql/graphql";
 import { runQuery } from "~/lib/baql";
+import { getFavoritedCounts } from "~/models/content";
 import { getAllStudentsMap } from "~/models/student";
 
 const indexQuery = graphql(`
@@ -53,14 +54,23 @@ export const loader = async ({ context }: LoaderFunctionArgs) => {
     throw error ?? "failed to fetch events";
   }
 
+  const { env } = context.cloudflare;
+  const pickupStudentIds = data.contents.nodes.flatMap((content) => {
+    if (content.__typename === "Event") {
+      return content.pickups?.map((pickup) => pickup.student?.studentId ?? null) ?? [];
+    }
+    return [];
+  }).filter((studentId) => studentId !== null);
+
   return defer({
-    students: getAllStudentsMap(context.cloudflare.env),
+    students: getAllStudentsMap(env),
     contents: data.contents.nodes,
+    favoritedCounts: await getFavoritedCounts(env, pickupStudentIds),
   });
 }
 
 export default function Index() {
-  const { students, contents } = useLoaderData<typeof loader>();
+  const { students, contents, favoritedCounts } = useLoaderData<typeof loader>();
   return (
     <>
       <div className="p-4 md:px-6 md:py-4 border border-neutral-100 dark:border-neutral-700 rounded-xl">
@@ -76,6 +86,11 @@ export default function Index() {
         }).map((content) => {
           const isEvent = content.__typename === "Event";
           const showLink = !isEvent || ["event", "immortal_event", "main_story"].includes(content.eventType);
+
+          const contentFavoritedCounts: Record<string, number> = {};
+          favoritedCounts.filter((each) => each.contentId === content.contentId)
+            .forEach((each) => contentFavoritedCounts[each.studentId] = each.count);
+
           return (
             <ContentTimelineItem
               key={content.contentId}
@@ -87,6 +102,7 @@ export default function Index() {
               showMemo={false}
               pickups={isEvent ? content.pickups : undefined}
               raidInfo={isEvent ? undefined : content}
+              favoritedCounts={contentFavoritedCounts}
             />
           )
         })}

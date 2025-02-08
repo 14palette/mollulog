@@ -4,12 +4,12 @@ import { json } from "@remix-run/cloudflare";
 import { FuturePlan } from "~/components/organisms/future";
 import type { UserFuturesQuery } from "~/graphql/graphql";
 import { runQuery } from "~/lib/baql";
-import { getFuturePlan } from "~/models/future";
 import { Link, useLoaderData } from "@remix-run/react";
 import { graphql } from "~/graphql";
 import { getSenseiByUsername } from "~/models/sensei";
 import { SubTitle } from "~/components/atoms/typography";
 import { sanitizeClassName } from "~/prophandlers";
+import { getUserFavoritedStudents, getUserMemos } from "~/models/content";
 
 const userFuturesQuery = graphql(`
   query UserFutures($now: ISO8601DateTime!) {
@@ -51,22 +51,22 @@ export const loader = async ({ context, params }: LoaderFunctionArgs) => {
 
   const username = usernameParam.replace("@", "");
   const sensei = (await getSenseiByUsername(env, username))!;
-  const futurePlans = await getFuturePlan(env, sensei.id);
+  const favoritedStudents = await getUserFavoritedStudents(env, sensei.id);
+  const plannedContentIds = favoritedStudents.map(({ contentId }) => contentId);
 
-  const pickupPlans = futurePlans?.pickups ?? {};
-  const plannedEvents = Object.keys(pickupPlans).filter((eventId) => pickupPlans[eventId] && pickupPlans[eventId].length > 0);
-  const events = data.events.nodes.filter((event) => plannedEvents.includes(event.eventId));
+  const events = data.events.nodes.filter((event) => plannedContentIds.includes(event.eventId));
+  const memos = (await getUserMemos(env, sensei.id)).filter((memo) => plannedContentIds.includes(memo.contentId));
 
   return json({
-    memos: futurePlans?.memos ?? {},
-    pickupPlans,
     events,
+    favoritedStudents,
+    memos,
   });
 }
 
 export default function UserFutures() {
-  const { memos, events, pickupPlans } = useLoaderData<typeof loader>();
-  const pickupStudentIds = Object.values(pickupPlans).flat();
+  const { events, favoritedStudents, memos } = useLoaderData<typeof loader>();
+  
 
   if (events.length === 0) {
     return (
@@ -82,17 +82,20 @@ export default function UserFutures() {
   return (
     <div className="my-8">
       <SubTitle text="학생 모집 계획" />
-      <FuturePlan events={events.map((event) => ({
-        eventId: event.eventId,
-        name: event.name,
-        since: new Date(event.since),
-        memo: memos[event.eventId] ?? null,
-        pickups: event.pickups.filter(({ student }) => pickupStudentIds.includes(student?.studentId ?? "")).map((pickup) => ({
-          type: pickup.type,
-          rerun: pickup.rerun,
-          student: pickup.student!,
-        })),
-      }))} />
+      <FuturePlan events={events.map((event) => {
+        const favoriteStudentIds = favoritedStudents.filter(({ contentId }) => contentId === event.eventId).map(({ studentId }) => studentId);
+        return {
+          eventId: event.eventId,
+          name: event.name,
+          since: new Date(event.since),
+          memo: memos.find((memo) => memo.contentId === event.eventId)?.body ?? null,
+          pickups: event.pickups.filter(({ student }) => favoriteStudentIds.includes(student?.studentId ?? "")).map((pickup) => ({
+            type: pickup.type,
+            rerun: pickup.rerun,
+            student: pickup.student!,
+          })),
+        };
+      })} />
 
       <Link to="/futures">
         <div className={sanitizeClassName(`
