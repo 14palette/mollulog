@@ -21,7 +21,7 @@ const userFuturesQuery = graphql(`
         pickups {
           type
           rerun
-          student { studentId schaleDbId name equipments }
+          student { studentId schaleDbId name school equipments }
         }
       }
     }

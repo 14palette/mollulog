@@ -1,9 +1,9 @@
 import { Link } from "@remix-run/react";
 import dayjs from "dayjs";
+import { MultilineText } from "~/components/atoms/typography";
 import { MemoEditor } from "~/components/molecules/editor";
 import { ResourceCards, StudentCards } from "~/components/molecules/student";
 import { pickupLabelLocale } from "~/locales/ko";
-import type { PickupType } from "~/models/content";
 
 type FuturePlanProps = {
   events: {
@@ -16,6 +16,7 @@ type FuturePlanProps = {
       rerun: boolean;
       student: {
         name: string;
+        school: string;
         studentId: string;
         schaleDbId: string;
         equipments: string[];
@@ -28,6 +29,7 @@ type MonthSummary = {
   month: dayjs.Dayjs;
   events: FuturePlanProps["events"];
   equipments: { [_: string]: number };
+  schools: { [_: string]: number };
 };
 
 function toMonthString(month: dayjs.Dayjs): string {
@@ -41,6 +43,8 @@ export default function FuturePlan({ events }: FuturePlanProps) {
 
   const monthSummaries: MonthSummary[] = months.map((month) => {
     const equipments: { [_: string]: number } = {};
+    const schools: { [_: string]: number } = {};
+
     const monthEvents = events.filter((event) => dayjs(event.since).isSame(month, "month"));
     monthEvents.forEach((event) => {
       event.pickups.forEach(({ student }) => {
@@ -50,6 +54,11 @@ export default function FuturePlan({ events }: FuturePlanProps) {
           }
           equipments[equipment] += 1;
         });
+
+        if (!schools[student.school]) {
+          schools[student.school] = 0;
+        }
+        schools[student.school] += 1;
       });
     });
 
@@ -57,6 +66,7 @@ export default function FuturePlan({ events }: FuturePlanProps) {
       month,
       events: monthEvents,
       equipments,
+      schools,
     };
   });
 
@@ -69,19 +79,20 @@ export default function FuturePlan({ events }: FuturePlanProps) {
         </tr>
       </thead>
       <tbody>
-        {monthSummaries.map(({ month, events, equipments }) => {
+        {monthSummaries.map(({ month, events, equipments, schools }) => {
           return (
             <tr key={toMonthString(month)}>
               <td className="md:px-2 py-2 align-text-top">
-                <p className="my-2">{toMonthString(month)}</p>
+                <p className="my-4">{toMonthString(month)}</p>
               </td>
-              <td className="p-2">
+              <td className="px-2 py-4 border-b border-neutral-100 dark:border-neutral-700">
                 {(events.length > 0) ? 
                   events.map((event) => {
                     return (
-                      <div key={event.eventId} className="my-2">
+                      <div key={event.eventId} className="my-1.5">
                         <Link to={`/events/${event.eventId}`} className="hover:underline">
-                          <p className="font-bold text-lg">{event.name}</p>
+                          <MultilineText className="text-lg font-bold" texts={event.name.split("\n")} />
+                          {/* <p className="font-bold text-lg">{event.name}</p> */}
                         </Link>
                         <p className="mb-2 text-neutral-500 text-sm">{dayjs(event.since).format("YYYY-MM-DD")}</p>
                         <StudentCards
@@ -90,8 +101,8 @@ export default function FuturePlan({ events }: FuturePlanProps) {
                             studentId: student.studentId,
                             name: student.name,
                             label: (
-                              <span className={rerun ? "text-yellow-500" : "text-white"}>
-                                {pickupLabelLocale({ type: type as PickupType, rerun })}
+                              <span className={rerun ? "text-white" : "text-yellow-500"}>
+                                {pickupLabelLocale({ type, rerun })}
                               </span>
                             ),
                           }))}
@@ -101,15 +112,31 @@ export default function FuturePlan({ events }: FuturePlanProps) {
                     );
                   }) : <p className="my-2 text-neutral-300">(모집 일정 없음)</p>
                 }
-                {equipments && (
-                  <ResourceCards
-                    mobileGrid={5}
-                    cardProps={Object.entries(equipments).map(([equipment, count]) => ({
-                      id: `equipment-${equipment}`,
-                      imageUrl: `https://assets.mollulog.net/assets/images/equipments/${equipment}`,
-                      count,
-                    }))}
-                  />
+                {Object.keys(schools).length > 0 && (
+                  <>
+                    <p className="mt-4 font-bold">학원</p>
+                    <ResourceCards
+                      mobileGrid={5}
+                      cardProps={Object.entries(schools).map(([school, count]) => ({
+                        id: `school-${school}`,
+                        imageUrl: `https://assets.mollulog.net/assets/images/schools/${school}`,
+                        count,
+                      }))}
+                    />
+                  </>
+                )}
+                {Object.keys(equipments).length > 0 && (
+                  <>
+                    <p className="mt-4 font-bold">장비</p>
+                    <ResourceCards
+                      mobileGrid={5}
+                      cardProps={Object.entries(equipments).map(([equipment, count]) => ({
+                        id: `equipment-${equipment}`,
+                        imageUrl: `https://assets.mollulog.net/assets/images/equipments/${equipment}`,
+                        count,
+                      }))}
+                    />
+                  </>
                 )}
               </td>
             </tr>
