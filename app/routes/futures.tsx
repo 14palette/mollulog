@@ -3,7 +3,7 @@ import { json, redirect } from "@remix-run/cloudflare";
 import { Link, useFetcher, useLoaderData, useSearchParams } from "@remix-run/react";
 import { CalendarDateRangeIcon } from "@heroicons/react/24/solid";
 import { getAuthenticator } from "~/auth/authenticator.server";
-import { Callout, Title } from "~/components/atoms/typography";
+import { Title } from "~/components/atoms/typography";
 import type { ContentTimelineProps } from "~/components/organisms/content";
 import { ContentTimeline } from "~/components/organisms/content";
 import { graphql } from "~/graphql";
@@ -20,6 +20,7 @@ export const futureContentsQuery = graphql(`
         name
         since
         until
+        confirmed
         ... on Event {
           contentId: eventId
           eventType: type
@@ -73,7 +74,6 @@ export const loader = async ({ request, context }: LoaderFunctionArgs) => {
   return json({
     signedIn,
     contents: data.contents.nodes,
-    noticeMessage: await env.KV_STATIC_DATA.get("futures::noticeMessage"),
     favoritedStudents: signedIn ? await getUserFavoritedStudents(env, currentUser.id) : null,
     favoritedCounts: await getFavoritedCounts(env, allStudentIds),
     memos: signedIn ? await getUserMemos(env, currentUser.id) : [],
@@ -120,7 +120,7 @@ function equalFavorites(a: { contentId: string, studentId: string }, b: { conten
 
 export default function Futures() {
   const loaderData = useLoaderData<typeof loader>();
-  const { signedIn, contents, noticeMessage } = loaderData;
+  const { signedIn, contents } = loaderData;
   const memos = loaderData.memos ?? {};
 
   const [_, setSearchParams] = useSearchParams();
@@ -171,12 +171,6 @@ export default function Futures() {
     <div className="pb-64">
       <Title text="미래시" />
       <p className="text-neutral-500 dark:text-neutral-400 -mt-2 mb-4">미래시는 일본 서버 일정을 바탕으로 추정된 것으로, 실제 일정과 다를 수 있습니다.</p>
-
-      {noticeMessage && (
-        <Callout emoji="📅" className="bg-gradient-to-r from-red-500 to-orange-500 dark:from-red-700 dark:to-orange-700 text-white shadow">
-          <p>{noticeMessage}</p>
-        </Callout>
-      )}
 
       <ContentTimeline
         contents={contents.map((content) => {

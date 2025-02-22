@@ -1,20 +1,22 @@
 import { Chip } from "~/components/atoms/button";
 import { attackTypeLocale, contentTypeLocale, defenseTypeLocale, pickupLabelLocale, terrainLocale } from "~/locales/ko";
 import { bossImageUrl } from "~/models/assets";
-import type { AttackType, DefenseType, EventType, PickupType, RaidType, Role, Terrain } from "~/models/content";
+import type { AttackType, DefenseType, EventType, PickupType, RaidType, Role, Terrain } from "~/models/content.d";
 import { StudentCards } from "../student";
 import type { ReactNode } from "react";
 import { Link } from "@remix-run/react";
 import { MemoEditor } from "../editor";
-import { ChevronRightIcon } from "@heroicons/react/16/solid";
+import { CheckIcon, ChevronRightIcon } from "@heroicons/react/16/solid";
 import dayjs from "dayjs";
 
 export type ContentTimelineItemProps = {
   name: string;
   contentType: EventType | RaidType;
   rerun: boolean;
+  since: Date | null;
   until: Date | null;
   link: string | null;
+  confirmed?: boolean;
 
   showMemo: boolean;
   initialMemo?: string;
@@ -79,11 +81,12 @@ function ContentTitles({ name, showLink }: { name: string, showLink: boolean }):
 
 export default function ContentTimelineItem(
   {
-    name, contentType, rerun, until, link, raidInfo, pickups,
+    name, contentType, rerun, since, until, link, confirmed, raidInfo, pickups,
     showMemo, initialMemo, onUpdateMemo, favoritedStudents, favoritedCounts, onFavorite,
   }: ContentTimelineItemProps,
 ) {
-  const remainingDays = until ? dayjs(until).startOf("day").diff(dayjs().startOf("day"), "day") : null;
+  const now = dayjs();
+  const remainingDays = until ? dayjs(until).startOf("day").diff(now.startOf("day"), "day") : null;
 
   let remainingDaysText = "";
   if (remainingDays === 1) {
@@ -106,11 +109,17 @@ export default function ContentTimelineItem(
             {remainingDaysText}
           </span>
         )}
+        {confirmed && (!since || dayjs(since).isAfter(now)) && (
+          <span className="p-0.5 px-2 text-xs bg-green-600 text-white rounded-full">
+            <CheckIcon className="inline size-4" strokeWidth={2} />
+            확정
+          </span>
+        )}
       </div>
 
       {/* 컨텐츠 이름 */}
       {link ? 
-        <Link to={link} className="font-bold text-lg md:text-xl cursor-pointer hover:underline">
+        <Link to={link} className="font-bold text-lg md:text-xl cursor-pointer hover:underline tracking-tight">
           <ContentTitles name={name} showLink={true} />
         </Link> :
         <div className="font-bold text-lg md:text-xl">

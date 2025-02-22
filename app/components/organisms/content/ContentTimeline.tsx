@@ -3,7 +3,7 @@ import { useState } from "react";
 import type { ContentTimelineItemProps } from "~/components/molecules/content";
 import { ContentTimelineItem } from "~/components/molecules/content";
 import { FilterButtons } from "~/components/molecules/student";
-import type { EventType, RaidType } from "~/models/content";
+import type { EventType, RaidType } from "~/models/content.d";
 
 export type ContentTimelineProps = {
   contents: {
@@ -32,9 +32,6 @@ type ContentGroup = {
 };
 
 export const contentOrders: (EventType | RaidType)[] = [
-  "total_assault",
-  "elimination",
-  "unlimit",
   "fes",
   "main_story",
   "event",
@@ -45,6 +42,9 @@ export const contentOrders: (EventType | RaidType)[] = [
   "mini_event",
   "guide_mission",
   "collab",
+  "total_assault",
+  "elimination",
+  "unlimit",
 ];
 
 type ContentFilter = Partial<Record<EventType | RaidType, boolean>> | null;
@@ -115,15 +115,15 @@ export default function ContentTimeline({ contents, favoritedStudents, favorited
           <div key={groupDate.format("YYYY-MM-DD")}>
             {/* 날짜 구분자 영역 */}
             {isToday ? (
-              <div className="ml-1 flex items-center border-l border-neutral-200 dark:border-neutral-700">
-                <div className="inline-block -ml-1.5 size-3 bg-red-600 rounded-full animate-pulse" />
+              <div className="flex items-center">
+                <div className="inline-block size-3 bg-red-600 rounded-full animate-pulse" />
                 <span className="mx-2 md:mx-4 font-bold text-red-600">
                   진행중인 컨텐츠
                 </span>
               </div>
             ) : (
-              <div className="ml-1 pt-4 flex items-center border-l border-neutral-200 dark:border-neutral-700">
-                <div className="inline-block -ml-1.5 size-3 bg-neutral-500 dark:bg-neutral-400 rounded-full" />
+              <div className="flex items-center">
+                <div className="inline-block size-3 bg-neutral-500 dark:bg-neutral-400 rounded-full" />
                 <span className="mx-2 md:mx-4 font-bold text-neutral-500 dark:text-neutral-400 text-sm ">
                   {groupDate.format("YYYY-MM-DD")}
                 </span>
@@ -131,34 +131,39 @@ export default function ContentTimeline({ contents, favoritedStudents, favorited
             )}
 
             {/* 컨텐츠 목록 영역 */}
-            <div className="ml-1 -mt-4 py-4 pl-4 md:pl-6 border-l border-neutral-200 dark:border-neutral-700">
-              {group.contents.map((content) => {
-                const memo = memos.find(({ contentId }) => contentId === content.contentId)?.body;
-                const showMemo = !!onMemoUpdate && !!content.pickups && content.pickups.length > 0;
-                return (
-                  <ContentTimelineItem
-                    key={content.contentId}
-                    {...content}
-                    until={isToday ? content.until : null}
+            <div className="flex">
+              <div className="w-3 h-parent flex justify-center shrink-0">
+                <div className="w-px h-full bg-neutral-200 dark:bg-neutral-700" />
+              </div>
+              <div className="pl-3 md:pl-5 pb-4 md:pb-8">
+                {group.contents.map((content) => {
+                  const memo = memos.find(({ contentId }) => contentId === content.contentId)?.body;
+                  const showMemo = !!onMemoUpdate && !!content.pickups && content.pickups.length > 0;
+                  return (
+                    <ContentTimelineItem
+                      key={content.contentId}
+                      {...content}
+                      until={isToday ? content.until : null}
 
-                    showMemo={showMemo}
-                    initialMemo={showMemo ? memo : undefined}
-                    onUpdateMemo={showMemo ? (newMemo) => onMemoUpdate(content.contentId, newMemo) : undefined}
+                      showMemo={showMemo}
+                      initialMemo={showMemo ? memo : undefined}
+                      onUpdateMemo={showMemo ? (newMemo) => onMemoUpdate(content.contentId, newMemo) : undefined}
 
-                    favoritedStudents={favoritedStudents?.filter(({ contentId }) => contentId === content.contentId).map(({ studentId }) => studentId)}
-                    favoritedCounts={favoriteStudentIdsByContents[content.contentId]}
-                    onFavorite={(studentId, favorited) => onFavorite?.(content.contentId, studentId, favorited) }
-                  />
-                );
-              })}
+                      favoritedStudents={favoritedStudents?.filter(({ contentId }) => contentId === content.contentId).map(({ studentId }) => studentId)}
+                      favoritedCounts={favoriteStudentIdsByContents[content.contentId]}
+                      onFavorite={(studentId, favorited) => onFavorite?.(content.contentId, studentId, favorited)}
+                    />
+                  );
+                })}
+              </div>
             </div>
           </div>
         );
       })}
 
-      <div className="ml-1 flex items-center">
-        <div className="inline-block -ml-1.5 size-3 bg-neutral-500 rounded-full" />
-        <span className="mx-2 font-bold text-neutral-500 text-sm">
+      <div className="flex items-center">
+        <div className="inline-block size-3 bg-neutral-500 dark:bg-neutral-400 rounded-full" />
+        <span className="mx-2 md:mx-4 font-bold text-neutral-500 dark:text-neutral-400 text-sm ">
           {`남은 미래시까지 D-${dayjs(contents[contents.length - 1].until).diff(today, "day")}`}
         </span>
       </div>

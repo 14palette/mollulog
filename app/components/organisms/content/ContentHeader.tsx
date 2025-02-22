@@ -165,7 +165,7 @@ export default function ContentHeader(
         </div>
       </div>
 
-      {videos && (
+      {videos && videos.length > 0 && (
         <div className="w-full my-2 relative">
           <div className="w-full px-10 flex flex-nowrap overflow-x-scroll no-scrollbar" ref={videoListRef}>
             {videos.map((video) => (
