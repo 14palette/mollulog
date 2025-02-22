@@ -18,9 +18,9 @@ export default function ProfileImage({ studentId, imageSize }: ProfileImageProps
   }
 
   return studentId ?
-    <img className={`${imageSizeClass} rounded-full object-cover`} src={studentImageUrl(studentId)} alt="학생 프로필" /> :
+    <img className={`${imageSizeClass} inline rounded-full object-cover`} src={studentImageUrl(studentId)} alt="학생 프로필" /> :
     (
-      <div className={`${imageSizeClass} flex items-center justify-center rounded-full border border-neutral-200 dark:border-neutral-700 text-neutral-700 dark:text-neutral-300`}>
+      <div className={`${imageSizeClass} inline flex items-center justify-center rounded-full border border-neutral-200 dark:border-neutral-700 text-neutral-700 dark:text-neutral-300`}>
         <UserIcon className={iconSizeClass} />
       </div>
     );

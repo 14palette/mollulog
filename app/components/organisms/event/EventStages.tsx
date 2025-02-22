@@ -79,7 +79,7 @@ export default function EventStages({ stages, signedIn, ownedStudentIds }: Event
   }
 
   return (
-    <div className="my-8">
+    <>
       <SubTitle text="스테이지 보상" />
       {!signedIn && (
         <Callout className="my-4" emoji="✨">
@@ -97,7 +97,7 @@ export default function EventStages({ stages, signedIn, ownedStudentIds }: Event
       )}
       <div className="w-screen -mx-4 md:w-auto overflow-x-scroll no-scrollbar">
         <div className="px-4">
-          <table className="mb-8 table-auto">
+          <table className="table-auto">
             <thead className="bg-neutral-100 dark:bg-neutral-900 text-left">
               <tr>
                 <th className="px-2 md:px-4 py-2 rounded-l-lg">#</th>
@@ -190,6 +190,6 @@ export default function EventStages({ stages, signedIn, ownedStudentIds }: Event
           )
         })}
       </div>
-    </div>
+    </>
   );
 }

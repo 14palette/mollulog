@@ -1,5 +1,6 @@
 import type { ActionFunction, MetaFunction } from "@remix-run/cloudflare";
 import { getAuthenticator } from "~/auth/authenticator.server";
+import { SignIn } from "~/components/molecules/auth";
 
 export const action: ActionFunction = async ({ request, context }) => {
   return getAuthenticator(context.cloudflare.env).authenticate("google", request);
@@ -12,8 +13,10 @@ export const meta: MetaFunction = () => {
   ];
 };
 
-export default function SignIn() {
+export default function SignInView() {
   return (
-    <></>
+    <>
+      <SignIn />
+    </>
   );
 }

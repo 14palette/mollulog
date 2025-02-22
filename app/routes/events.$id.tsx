@@ -1,12 +1,13 @@
 import { ArrowTopRightOnSquareIcon, HeartIcon } from "@heroicons/react/16/solid";
 import type { ActionFunctionArgs, LoaderFunctionArgs, MetaFunction } from "@remix-run/cloudflare";
 import { defer, json, redirect } from "@remix-run/cloudflare";
-import { Await, isRouteErrorResponse, useFetcher, useLoaderData, useRouteError } from "@remix-run/react";
+import { Await, isRouteErrorResponse, Link, useFetcher, useLoaderData, useRouteError } from "@remix-run/react";
 import dayjs from "dayjs";
 import { Suspense } from "react";
 import { getAuthenticator } from "~/auth/authenticator.server";
-import { StudentCard } from "~/components/atoms/student";
+import { ProfileImage, StudentCard } from "~/components/atoms/student";
 import { SubTitle } from "~/components/atoms/typography";
+import { MemoEditor } from "~/components/molecules/editor";
 import { ContentHeader } from "~/components/organisms/content";
 import { ErrorPage } from "~/components/organisms/error";
 import { EventStages } from "~/components/organisms/event";
@@ -15,7 +16,7 @@ import { graphql } from "~/graphql";
 import type { EventStagesQuery, EventDetailQuery } from "~/graphql/graphql";
 import { runQuery } from "~/lib/baql";
 import { attackTypeLocale, defenseTypeLocale, eventTypeLocale, pickupLabelLocale, roleLocale } from "~/locales/ko";
-import { favoriteStudent, getFavoritedCounts, getUserFavoritedStudents, unfavoriteStudent } from "~/models/content";
+import { favoriteStudent, getContentMemos, getFavoritedCounts, getUserFavoritedStudents, setMemo, setMemoVisibility, unfavoriteStudent } from "~/models/content";
 import type { StudentState} from "~/models/student-state";
 import { getUserStudentStates } from "~/models/student-state";
 
@@ -104,6 +105,9 @@ export const loader = async ({ params, context, request }: LoaderFunctionArgs) =
     studentStates = await getUserStudentStates(env, sensei.username, true) ?? [];
   }
 
+  const memos = await getContentMemos(env, content.eventId, sensei?.id);
+  const myMemo = memos.find((memo) => memo.sensei.username === sensei?.username);
+
   return defer({
     event: content,
     stages: getEventStages(params.id as string),
@@ -111,11 +115,17 @@ export const loader = async ({ params, context, request }: LoaderFunctionArgs) =
     favoritedStudents: sensei ? await getUserFavoritedStudents(env, sensei.id, content.eventId) : [],
     favoritedCounts: await getFavoritedCounts(env, pickupStudentIds),
     signedIn: sensei !== null,
+    memos: memos.filter((memo) => memo.uid !== myMemo?.uid),
+    myMemo,
   });
 };
 
 type ActionData = {
-  favorite: {
+  memo?: {
+    body?: string;
+    visibility?: "private" | "public";
+  };
+  favorite?: {
     studentId: string;
     favorited: boolean;
   };
@@ -128,11 +138,18 @@ export const action = async ({ params, request, context }: ActionFunctionArgs) =
     return redirect("?signin=true");
   }
 
+  const contentId = params.id!;
   const actionData = await request.json<ActionData>();
   if (actionData.favorite) {
     const { studentId, favorited } = actionData.favorite;
     const run = favorited ? favoriteStudent : unfavoriteStudent;
-    await run(env, currentUser.id, studentId, params.id!);
+    await run(env, currentUser.id, studentId, contentId);
+  }
+
+  if (actionData.memo?.body !== undefined) {
+    await setMemo(env, currentUser.id, contentId, actionData.memo.body);
+  } else if (actionData.memo?.visibility) {
+    await setMemoVisibility(env, currentUser.id, contentId, actionData.memo.visibility);
   }
 
   return json({});
@@ -187,9 +204,10 @@ const roleColor = {
 };
 
 export default function EventDetail() {
-  const { event, stages, signedIn, studentStates, favoritedStudents, favoritedCounts } = useLoaderData<typeof loader>();
+  const { event, stages, signedIn, studentStates, favoritedStudents, favoritedCounts, memos, myMemo } = useLoaderData<typeof loader>();
 
   const fetcher = useFetcher();
+  const submit = (data: ActionData) => fetcher.submit(data, { method: "post", encType: "application/json" });
 
   return (
     <>
@@ -226,7 +244,7 @@ export default function EventDetail() {
                       <span className="text-xs text-neutral-500">샬레DB</span>
                     </a>
                     {attackType && defenseType && role && (
-                      <div className="py-1 flex text-sm gap-x-1">
+                      <div className="py-1 flex text-sm gap-x-1 tracking-tighter md:tracking-normal">
                         <div className="px-2 flex items-center bg-neutral-200 dark:bg-neutral-800 rounded-full">
                           <div className={`size-2.5 rounded-full ` + attackTypeColor[attackType]} />
                           <span className="ml-1">{attackTypeLocale[attackType]}</span>
@@ -246,7 +264,7 @@ export default function EventDetail() {
                 <div className="py-2 flex items-center justify-end">
                   <div
                     className={`mx-2 px-2 flex items-center rounded-full text-white hover:opacity-50 transition cursor-pointer ${(!signedIn || favorited) ? "bg-red-500" : "bg-neutral-500"}`}
-                    onClick={() => fetcher.submit({ favorite: { studentId: studentId!, favorited: !favorited } }, { method: "post", encType: "application/json" })}
+                    onClick={() => submit({ favorite: { studentId: studentId!, favorited: !favorited } })}
                   >
                     <HeartIcon className="size-4" strokeWidth={2} />
                     <span className="ml-1 font-bold">{favoritedCounts.find((favorited) => favorited.studentId === studentId)?.count ?? 0}</span>
@@ -257,6 +275,32 @@ export default function EventDetail() {
           })}
         </div>
       )}
+
+      <SubTitle text="이벤트 메모" />
+      {signedIn && (
+        <>
+          <MemoEditor
+            initialText={myMemo?.body}
+            initialVisibility={myMemo?.visibility || "private"}
+            onUpdate={(body) => submit({ memo: { body } })}
+            onVisibilityChange={(visiblity) => submit({ memo: { visibility: visiblity } })}
+          />
+          {myMemo?.visibility === "public" && <p className="text-xs text-neutral-500">공개 메모에 스포일러가 포함되지 않도록 주의해주세요.</p>}
+        </>
+      )}
+      <div className="my-4">
+        {memos.length === 0 && <p className="my-4 text-neutral-500 dark:text-neutral-400">아직 아무도 메모를 공개하지 않았어요</p>}
+        {memos.map((memo) => (
+          <p key={memo.uid} className="my-4">
+            <Link to={`/@${memo.sensei.username}`} className="hover:underline">
+              <ProfileImage studentId={memo.sensei.profileStudentId} imageSize={6} />
+              <span className="ml-2 font-semibold">{memo.sensei.username}</span>
+            </Link>
+            <span className="ml-2">{memo.body}</span>
+            {memo.visibility === "private" && <span className="ml-1 text-xs text-neutral-500">(비공개)</span>}
+          </p>
+        ))}
+      </div>
 
       <Suspense fallback={<TimelinePlaceholder />}>
         <Await resolve={stages}>

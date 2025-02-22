@@ -206,14 +206,14 @@ export default function Futures() {
         favoritedCounts={favoritedCounts}
         onFavorite={(contentId, studentId, favorited) => {
           if (!signedIn) {
-            setSearchParams({ signin: "true" });
+            setSearchParams({ signin: "true" }, { preventScrollReset: true });
             return;
           }
           toggleFavorite(contentId, studentId, favorited);
         }}
 
         memos={memos}
-        onMemoUpdate={(eventId, memo) => submit({ memo: { contentId: eventId, body: memo } })}
+        onMemoUpdate={signedIn ? (eventId, memo) => submit({ memo: { contentId: eventId, body: memo } }) : undefined}
       />
 
       {signedIn && (

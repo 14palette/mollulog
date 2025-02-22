@@ -167,7 +167,9 @@ export default function ContentTimelineItem(
       )}
 
       {/* 메모 */}
-      {showMemo && <MemoEditor initialText={initialMemo} onUpdate={(text) => onUpdateMemo?.(text)} />}
+      {showMemo && (
+        <MemoEditor initialText={initialMemo} onUpdate={(text) => onUpdateMemo?.(text)} />
+      )}
     </div>
   );
 }

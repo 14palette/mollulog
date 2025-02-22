@@ -12,8 +12,8 @@
     "assets:build": "cd lambda && GOOS=linux GOARCH=amd64 go build -tags lambda.norpc -o build/bootstrap ./assets-metadata",
     "assets:plan": "tofu -chdir=deploy/assets plan",
     "assets:deploy": "tofu -chdir=deploy/assets apply",
-    "db:dev:migrate": "find ./db/migrations -type f | sort | xargs -I {} sh -c 'echo {} && wrangler d1 execute DB --local --file {}'",
-    "db:prod:migrate": "find ./db/migrations -type f | sort | xargs -I {} sh -c 'echo {} && wrangler d1 execute DB --remote --file {}'",
+    "db:dev:migrate": "wrangler d1 migrations apply --local DB",
+    "db:prod:migrate": "wrangler d1 migrations apply --remote DB",
     "test": "jest",
     "typecheck": "tsc",
     "lint": "eslint --fix app/"

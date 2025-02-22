@@ -1,6 +1,18 @@
 import { nanoid } from "nanoid/non-secure";
 import type { Env } from "~/env.server";
 import { isUniqueConstraintError } from "./base";
+import { sqliteTable, int, text } from "drizzle-orm/sqlite-core";
+
+export const senseisTable = sqliteTable("senseis", {
+  id: int().primaryKey({ autoIncrement: true }),
+  uid: text().notNull(),
+  username: text().notNull().unique(),
+  friendCode: text(),
+  profileStudentId: text(),
+  googleId: text(),
+  active: int().notNull().default(0),
+});
+
 
 export type DBSensei = {
   id: number;
