@@ -7,5 +7,12 @@ export function bossBannerUrl(boss: string): string {
 }
 
 export function studentImageUrl(studentId: string): string {
-  return `/assets/images/students/${studentId}`;
+  if (studentId === "unlisted") {
+    return "https://assets.mollulog.net/assets/images/students/-1";
+  }
+  return `https://assets.mollulog.net/images/students/${studentId}`;
+}
+
+export function itemImageUrl(item: string): string {
+  return `https://assets.mollulog.net/images/items/${item}`;
 }

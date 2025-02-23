@@ -1,3 +1,5 @@
+import { itemImageUrl } from "~/models/assets";
+
 export type ItemCardProps = {
   name: string;
   imageId: string;
@@ -9,7 +11,7 @@ export default function ItemCard({ name, imageId, label, labelClassName }: ItemC
   return (
     <div className="w-12 md:w-12 relative text-white">
       <img
-        src={`/assets/images/items/${imageId}`}
+        src={itemImageUrl(imageId)}
         alt={name}
         loading="lazy"
       />
