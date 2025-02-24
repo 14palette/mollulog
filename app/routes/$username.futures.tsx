@@ -44,7 +44,10 @@ export const loader = async ({ context, params }: LoaderFunctionArgs) => {
     throw new Error("Not found");
   }
 
-  const { data, error } = await runQuery<UserFuturesQuery>(userFuturesQuery, { now: new Date().toISOString() });
+  const truncatedNow = new Date();
+  truncatedNow.setMinutes(0, 0, 0);
+
+  const { data, error } = await runQuery<UserFuturesQuery>(userFuturesQuery, { now: truncatedNow.toISOString() });
   if (error || !data) {
     throw error ?? "failed to fetch events";
   }

@@ -13,7 +13,7 @@ export type ContentTimelineItemProps = {
   name: string;
   contentType: EventType | RaidType;
   rerun: boolean;
-  since: Date | null;
+  since?: Date | null;
   until: Date | null;
   link: string | null;
   confirmed?: boolean;
@@ -109,7 +109,7 @@ export default function ContentTimelineItem(
             {remainingDaysText}
           </span>
         )}
-        {confirmed && (!since || dayjs(since).isAfter(now)) && (
+        {confirmed && (since && dayjs(since).isAfter(now)) && (
           <span className="p-0.5 px-2 text-xs bg-green-600 text-white rounded-full">
             <CheckIcon className="inline size-4" strokeWidth={2} />
             확정

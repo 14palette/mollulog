@@ -56,7 +56,10 @@ export const meta: MetaFunction = () => {
 };
 
 export const loader = async ({ request, context }: LoaderFunctionArgs) => {
-  const { data, error } = await runQuery<FutureContentsQuery>(futureContentsQuery, { now: new Date().toISOString() });
+  const truncatedNow = new Date();
+  truncatedNow.setMinutes(0, 0, 0);
+
+  const { data, error } = await runQuery<FutureContentsQuery>(futureContentsQuery, { now: truncatedNow.toISOString() });
   if (error || !data) {
     throw error ?? "failed to fetch events";
   }
@@ -133,38 +136,29 @@ export default function Futures() {
   const toggleFavorite = (contentId: string, studentId: string, favorited: boolean) => {
     submit({ favorite: { contentId, studentId, favorited } });
 
-    // Update local states
-    const alreadyFavorited = favoritedStudents && favoritedStudents.some((prev) => prev.contentId === contentId && prev.studentId === studentId);
-    if (favorited && !alreadyFavorited) {
-      setFavoritedStudents((prev) => prev && [...prev, { studentId, contentId }]);
-      setFavoritedCounts((prev) => {
-        let found = false;
-        const newCounts = prev.map((favorite) => {
-          if (equalFavorites(favorite, { contentId, studentId })) {
-            found = true;
-            return { ...favorite, count: favorite.count + 1 }
-          }
-          return favorite;
-        });
-        if (!found) {
-          newCounts.push({ contentId, studentId, count: 1 });
+    setFavoritedStudents((prev) => {
+      const alreadyFavorited = prev && prev.some((favorite) => equalFavorites(favorite, { contentId, studentId }));
+      if (favorited && !alreadyFavorited) {
+        return prev && [...prev, { contentId, studentId }];
+      } else if (!favorited && alreadyFavorited) {
+        return prev && prev.filter((fav) => !equalFavorites(fav, { contentId, studentId }));
+      }
+    });
+
+    setFavoritedCounts((prev) => {
+      let found = false;
+      const newCounts = prev.map((favorite) => {
+        if (equalFavorites(favorite, { contentId, studentId })) {
+          found = true;
+          return { ...favorite, count: favorite.count + (favorited ? 1 : -1) };
         }
-        return newCounts;
+        return favorite;
       });
-    } else if (!favorited && alreadyFavorited) {
-      setFavoritedStudents((prev) => prev && prev.filter((favorite) => !equalFavorites(favorite, { contentId, studentId })));
-      setFavoritedCounts((prev) => {
-        return prev.map((favorite) => {
-          if (equalFavorites(favorite, { contentId, studentId })) {
-            if (favorite.count === 1) {
-              return null;
-            }
-            return { ...favorite, count: favorite.count - 1 };
-          }
-          return favorite;
-        }).filter((favorite) => favorite !== null);
-      });
-    }
+      if (!found && favorited) {
+        newCounts.push({ contentId, studentId, count: 1 });
+      }
+      return newCounts.filter((favorite) => favorite.count > 0);
+    });
   };
 
   return (
