@@ -238,11 +238,14 @@ export default function EventDetail() {
                   </div>
                   <div className="px-2 md:px-4 grow">
                     <p className="text-xs text-neutral-500">{pickupLabelLocale(pickup)}</p>
-                    <a href={`https://schaledb.com/student/${schaleDbId}`} target="_blank" rel="noreferrer" className="hover:underline">
-                      <span className="font-bold mr-1.5">{pickup.studentName}</span>
-                      <ArrowTopRightOnSquareIcon className="size-3 text-neutral-500 inline" />
-                      <span className="text-xs text-neutral-500">샬레DB</span>
-                    </a>
+                    <span className="font-bold mr-1.5">{pickup.studentName}</span>
+                    {schaleDbId ?
+                      <a href={`https://schaledb.com/student/${schaleDbId}`} target="_blank" rel="noreferrer" className="hover:underline">
+                        <ArrowTopRightOnSquareIcon className="size-3 text-neutral-500 inline" />
+                        <span className="text-xs text-neutral-500">샬레DB</span>
+                      </a> :
+                      <span className="text-xs text-neutral-500">정보 준비중</span>
+                    }
                     {attackType && defenseType && role && (
                       <div className="py-1 flex text-sm gap-x-1 tracking-tighter md:tracking-normal">
                         <div className="px-2 flex items-center bg-neutral-200 dark:bg-neutral-800 rounded-full">
@@ -261,15 +264,17 @@ export default function EventDetail() {
                     )}
                   </div>
                 </div>
-                <div className="py-2 flex items-center justify-end">
-                  <div
-                    className={`mx-2 px-2 flex items-center rounded-full text-white hover:opacity-50 transition cursor-pointer ${(!signedIn || favorited) ? "bg-red-500" : "bg-neutral-500"}`}
-                    onClick={() => submit({ favorite: { studentId: studentId!, favorited: !favorited } })}
-                  >
-                    <HeartIcon className="size-4" strokeWidth={2} />
-                    <span className="ml-1 font-bold">{favoritedCounts.find((favorited) => favorited.studentId === studentId)?.count ?? 0}</span>
+                {studentId && (
+                  <div className="py-2 flex items-center justify-end">
+                    <div
+                      className={`mx-2 px-2 flex items-center rounded-full text-white hover:opacity-50 transition cursor-pointer ${(!signedIn || favorited) ? "bg-red-500" : "bg-neutral-500"}`}
+                      onClick={() => submit({ favorite: { studentId: studentId!, favorited: !favorited } })}
+                    >
+                      <HeartIcon className="size-4" strokeWidth={2} />
+                      <span className="ml-1 font-bold">{favoritedCounts.find((favorited) => favorited.studentId === studentId)?.count ?? 0}</span>
+                    </div>
                   </div>
-                </div>
+                )}
               </div>
             )
           })}
