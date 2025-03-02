@@ -32,19 +32,19 @@ type ContentGroup = {
 };
 
 export const contentOrders: (EventType | RaidType)[] = [
-  "fes",
-  "main_story",
-  "event",
-  "immortal_event",
-  "pickup",
+  "total_assault",
+  "elimination",
+  "unlimit",
   "campaign",
   "exercise",
   "mini_event",
   "guide_mission",
   "collab",
-  "total_assault",
-  "elimination",
-  "unlimit",
+  "fes",
+  "main_story",
+  "event",
+  "immortal_event",
+  "pickup",
 ];
 
 type ContentFilter = Partial<Record<EventType | RaidType, boolean>> | null;

@@ -1,3 +1,6 @@
+import { and, eq, sql } from "drizzle-orm";
+import { drizzle } from "drizzle-orm/d1";
+import { sqliteTable, int, text } from "drizzle-orm/sqlite-core";
 import { nanoid } from "nanoid/non-secure";
 import { Env } from "~/env.server";
 
@@ -8,67 +11,69 @@ export type PickupHistory = {
   result: {
     trial: number;
     tier3Count: number;
-    tier2Count: number;
-    tier1Count: number;
     tier3StudentIds: string[];
+    tier2Count?: number;
+    tier1Count?: number;
   }[];
+  rawResult?: string | null;
 };
 
-export type DBPickupHistory = {
-  uid: string;
-  userId: number;
-  eventId: string;
-  result: string;
-  rawResult: string;
-};
+const pickupHistoriesTable = sqliteTable("pickup_histories", {
+  id: int().primaryKey({ autoIncrement: true }),
+  uid: text().notNull(),
+  userId: int().notNull(),
+  eventId: text().notNull(),
+  result: text().notNull(),
+  rawResult: text(),
+  createdAt: text().notNull().default(sql`current_timestamp`),
+  updatedAt: text().notNull().default(sql`current_timestamp`),
+});
 
-const GET_PICKUP_HISTORY_QUERY = "select * from pickup_histories where uid = ?1 and userId = ?2";
+export async function getPickupHistory(env: Env, userId: number, uid: string, includeRaw?: boolean): Promise<PickupHistory | null> {
+  const db = drizzle(env.DB);
+  const results = await db.select().from(pickupHistoriesTable)
+    .where(and(eq(pickupHistoriesTable.uid, uid), eq(pickupHistoriesTable.userId, userId)))
+    .all();
 
-export async function getPickupHistory(env: Env, userId: number, uid: string): Promise<PickupHistory | null> {
-  const dbResult = await env.DB.prepare(GET_PICKUP_HISTORY_QUERY).bind(uid, userId).first<DBPickupHistory>();
-  return dbResult ? toModel(dbResult) : null;
+  return results.length > 0 ? toModel(results[0], includeRaw) : null;
 }
-
-const GET_PICKUP_HISTORIES_QUERY = "select * from pickup_histories where userId = ?1";
 
 export async function getPickupHistories(env: Env, userId: number): Promise<PickupHistory[]> {
-  const dbResult = await env.DB.prepare(GET_PICKUP_HISTORIES_QUERY).bind(userId).all<DBPickupHistory>();
-  if (dbResult.error) {
-    console.error(dbResult.error);
-    return [];
-  }
-  return dbResult.results.map(toModel);
+  const db = drizzle(env.DB);
+  const results = await db.select().from(pickupHistoriesTable)
+    .where(eq(pickupHistoriesTable.userId, userId))
+    .all();
+
+  return results.map((result) => toModel(result));
 }
 
-const CREATE_PICKUP_HISTORY_QUERY = "insert into pickup_histories (uid, userId, eventId, result, rawResult) values (?1, ?2, ?3, ?4, ?5)";
-
-export async function createPickupHistory(env: Env, userId: number, eventId: string, result: PickupHistory["result"], rawResult: string) {
-  const dbResult = await env.DB.prepare(CREATE_PICKUP_HISTORY_QUERY).bind(
-    nanoid(8),
-    userId,
-    eventId,
-    JSON.stringify(result),
-    rawResult,
-  ).run();
-
-  if (dbResult.error) {
-    console.error(dbResult.error);
-  }
-  return;
+export async function createPickupHistory(env: Env, userId: number, eventId: string, result: PickupHistory["result"], rawResult: string | null) {
+  const db = drizzle(env.DB);
+  await db.insert(pickupHistoriesTable)
+    .values({ uid: nanoid(8), userId, eventId, result: JSON.stringify(result), rawResult });
 }
 
-const DELETE_PICKUP_HISTORY_QUERY = "delete from pickup_histories where uid = ?1 and userId = ?2";
+export async function updatePickupHistory(env: Env, userId: number, uid: string, eventId: string, result: PickupHistory["result"], rawResult?: string | null) {
+  const db = drizzle(env.DB);
+  const updateValue: { eventId: string, result: string, rawResult?: string | null } = { eventId, result: JSON.stringify(result) };
+  if (rawResult !== undefined) {
+    updateValue.rawResult = rawResult;
+  }
+
+  await db.update(pickupHistoriesTable)
+    .set({ ...updateValue, updatedAt: sql`current_timestamp` })
+    .where(and(eq(pickupHistoriesTable.uid, uid), eq(pickupHistoriesTable.userId, userId)));
+}
 
 export async function deletePickupHistory(env: Env, userId: number, uid: string) {
-  const dbResult = await env.DB.prepare(DELETE_PICKUP_HISTORY_QUERY).bind(uid, userId).run();
-  if (dbResult.error) {
-    console.error(dbResult.error);
-  }
-  return;
+  const db = drizzle(env.DB);
+  await db.delete(pickupHistoriesTable)
+    .where(and(eq(pickupHistoriesTable.uid, uid), eq(pickupHistoriesTable.userId, userId)));
 }
 
-export function parsePickupHistory(raw: string, studentMap: Map<string, string>): PickupHistory["result"] {
-  const studentNames = Array.from(studentMap.keys());
+export function parsePickupHistory(raw: string, students: { studentId: string, name: string }[]): PickupHistory["result"] {
+  const studentNames = students.map((student) => student.name);
+  const studentMap = new Map(students.map((student) => [student.name, student.studentId]));
 
   const result: PickupHistory["result"] = [];
   let trial = 0;
@@ -127,11 +132,25 @@ export function parsePickupHistory(raw: string, studentMap: Map<string, string>)
   return result;
 }
 
-function toModel(pickupHistory: DBPickupHistory): PickupHistory {
-  return {
-    uid: pickupHistory.uid,
-    userId: pickupHistory.userId,
-    eventId: pickupHistory.eventId,
-    result: JSON.parse(pickupHistory.result),
+type DBPickupHistory = {
+  uid: string;
+  userId: number;
+  eventId: string;
+  result: string;
+  rawResult: string | null;
+};
+
+function toModel(dbResult: DBPickupHistory, includeRaw: boolean = false): PickupHistory {
+  const result: PickupHistory = {
+    uid: dbResult.uid,
+    userId: dbResult.userId,
+    eventId: dbResult.eventId,
+    result: JSON.parse(dbResult.result),
   };
+
+  if (includeRaw) {
+    result.rawResult = dbResult.rawResult;
+  };
+
+  return result;
 }

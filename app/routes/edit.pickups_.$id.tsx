@@ -1,19 +1,18 @@
-import { PencilSquareIcon, XMarkIcon } from "@heroicons/react/16/solid";
 import { ActionFunctionArgs, json, LoaderFunctionArgs, MetaFunction, redirect } from "@remix-run/cloudflare";
-import { Form, useLoaderData, useSubmit } from "@remix-run/react";
+import { useLoaderData, useSearchParams, useSubmit } from "@remix-run/react";
 import dayjs from "dayjs";
 import { useState } from "react";
 import { getAuthenticator } from "~/auth/authenticator.server";
-import { Button, Input, Label, Textarea } from "~/components/atoms/form";
+import { Button } from "~/components/atoms/form";
 import { StudentCard } from "~/components/atoms/student";
-import { Title } from "~/components/atoms/typography";
+import { SubTitle, Title } from "~/components/atoms/typography";
 import { ContentSelector } from "~/components/molecules/editor";
-import { filterStudentByName } from "~/filters/student";
+import { PickupHistoryEditor, PickupHistoryImporter } from "~/components/organisms/pickup";
 import { graphql } from "~/graphql";
 import { type PickupEventsQuery } from "~/graphql/graphql";
 import { runQuery } from "~/lib/baql";
-import { createPickupHistory, getPickupHistory, parsePickupHistory, PickupHistory } from "~/models/pickup-history";
-import { getAllStudentsMap } from "~/models/student";
+import { createPickupHistory, getPickupHistory, PickupHistory, updatePickupHistory } from "~/models/pickup-history";
+import { getAllStudents } from "~/models/student";
 
 const pickupEventsQuery = graphql(`
   query PickupEvents {
@@ -40,9 +39,9 @@ export const loader = async ({ context, request, params }: LoaderFunctionArgs) =
     return redirect("/signin");
   }
 
-  let pickupHistory = null;
-  if (params.id) {
-    pickupHistory = await getPickupHistory(env, sensei.id, params.id);
+  let currentPickupHistory = null;
+  if (params.id && params.id !== "new") {
+    currentPickupHistory = await getPickupHistory(env, sensei.id, params.id, true);
   }
 
   const { data, error } = await runQuery<PickupEventsQuery>(pickupEventsQuery, {});
@@ -54,19 +53,21 @@ export const loader = async ({ context, request, params }: LoaderFunctionArgs) =
   const now = dayjs();
   return json({
     events: data.events.nodes.filter((event) => event.pickups.length > 0 && dayjs(event.since).isBefore(now)).reverse(),
-    students: await getAllStudentsMap(env),
-    pickupHistory,
+    tier3Students: (await getAllStudents(env))
+      .filter((student) => student.initialTier === 3)
+      .map((student) => ({ studentId: student.id, name: student.name })),
+    currentPickupHistory,
   });
 };
 
-type ActionBody = {
+type ActionData = {
   eventId: string;
   result: PickupHistory["result"];
-  rawResult: string;
+  rawResult?: string;
 };
 
-export const action = async ({ context, request }: ActionFunctionArgs) => {
-  const data = await request.json<ActionBody>();
+export const action = async ({ context, request, params }: ActionFunctionArgs) => {
+  const data = await request.json<ActionData>();
 
   const env = context.cloudflare.env;
   const sensei = await getAuthenticator(env).isAuthenticated(request);
@@ -74,86 +75,49 @@ export const action = async ({ context, request }: ActionFunctionArgs) => {
     return redirect("/signin");
   }
 
-  await createPickupHistory(
-    context.cloudflare.env,
-    sensei.id,
-    data.eventId,
-    data.result,
-    data.rawResult
-  );
-
+  if (params.id && params.id !== "new") {
+    await updatePickupHistory(env, sensei.id, params.id, data.eventId, data.result, data.rawResult);
+  } else {
+    await createPickupHistory(env, sensei.id, data.eventId, data.result, data.rawResult ?? null);
+  }
   return redirect("/edit/pickups");
 }
 
-type PickupStudentCardProps = {
-  studentId: string | null;
-  tier3Students: Map<string, string>;
-  onChange: (studentId: string) => void;
-};
-
-function PickupStudentCard({ studentId, tier3Students, onChange }: PickupStudentCardProps) {
-  const [open, setOpen] = useState(false);
-  const [search, setSearch] = useState("");
-
-  const studentNames = Array.from(tier3Students.keys()).map((name) => ({ name }));
-  const searchResult = filterStudentByName(search, studentNames);
-
-  return (
-    <div className="w-12">
-      <div className="relative w-full group">
-        <StudentCard studentId={studentId} />
-        <div
-          className="absolute w-full h-full rounded-lg top-0 left-0 bg-black flex items-center justify-center bg-opacity-0 group-hover:bg-opacity-50 transition cursor-pointer"
-          onClick={() => setOpen((prev) => !prev)}
-        >
-          <PencilSquareIcon className="hidden group-hover:block size-4 text-white" />
-        </div>
-      </div>
-      {open && (
-        <div className="absolute w-full left-0 my-2 px-4 py-2 bg-white z-10 rounded-lg border">
-          <div className="relative">
-            <Input label="학생 찾기" placeholder="이름으로 찾기..." onChange={setSearch} />
-            <XMarkIcon
-              onClick={() => setOpen(false)}
-              className="absolute right-0 top-0 p-1 size-6 cursor-pointer"
-            />
-          </div>
-          {searchResult.length > 0 && (
-            <div className="p-2 flex gap-x-2 bg-neutral-100 rounded-lg">
-              {searchResult.slice(0, 5).map(({ name }) => (
-                <div
-                  key={name}
-                  className="w-12 hover:opacity-75 cursor-pointer transition"
-                  onClick={() => {
-                    onChange(tier3Students.get(name) ?? "");
-                    setOpen(false);
-                  }}
-                >
-                  <StudentCard studentId={tier3Students.get(name)!} />
-                </div>
-              ))}
-            </div>
-          )}
-        </div>
-      )}
-    </div>
-  );
-}
-
 export default function EditPickup() {
-  const { events, students, pickupHistory } = useLoaderData<typeof loader>();
-  const initialEvent = pickupHistory ? events.find((event) => event.eventId === pickupHistory.eventId) : null;
+  const { events, tier3Students, currentPickupHistory } = useLoaderData<typeof loader>();
 
+  let initialEventId = null;
+  if (currentPickupHistory) {
+    initialEventId = currentPickupHistory.eventId;
+  } else {
+    const [searchParams] = useSearchParams();
+    const eventId = searchParams.get("eventId");
+    if (eventId) {
+      initialEventId = eventId;
+    }
+  }
+
+  let initialTotalCount: number | undefined = undefined;
+  let initialTier3Count: number | undefined = undefined;
+  let initialTier3StudentIds: string[] | undefined = undefined;
+  if (currentPickupHistory?.result) {
+    initialTotalCount = Math.max(...currentPickupHistory.result.map((trial) => trial.trial));
+    currentPickupHistory.result.forEach((trial) => {
+      initialTier3Count = (initialTier3Count ?? 0) + trial.tier3Count;
+      initialTier3StudentIds = (initialTier3StudentIds ?? []).concat(trial.tier3StudentIds);
+    });
+  }
+
+  const initialEvent = initialEventId ? events.find((event) => event.eventId === initialEventId) : null;
   const [eventId, setEventId] = useState<string | null>(initialEvent?.eventId ?? null);
 
-  const [result, setResult] = useState<PickupHistory["result"]>(pickupHistory?.result ?? []);
-  const [rawResult, setRawResult] = useState("");
+  const [editorMode, setEditorMode] = useState<"edit" | "import">(currentPickupHistory?.rawResult ? "import" : "edit");
 
-  const submit = useSubmit();
+  const rawSubmit = useSubmit();
+  const submit = (data: ActionData) => rawSubmit(data, { method: "post", encType: "application/json" });
 
-  const allTier3Students = new Map(Object.entries(students).filter(([_, student]) => student.initialTier === 3).map(([_, student]) => [student.name, student.id]));
   return (
-    <div className="min-h-screen">
+    <div className="min-h-screen max-w-4xl pb-96">
       <Title text="모집 이력 관리" />
       <ContentSelector
         contents={events.map((event) => ({
@@ -171,102 +135,43 @@ export default function EditPickup() {
           ),
           searchKeyword: `${event.name} ${event.pickups.map((pickup) => pickup.studentName).join(" ")}`,
         }))}
-        placeholder="모집 컨텐츠를 선택하세요"
+        placeholder="모집 이력을 기록할 이벤트를 선택하세요"
         initialContentId={eventId ?? undefined}
         onSelectContent={setEventId}
         searchable
       />
 
-      {result.length === 0 ?
-        <Textarea
-          className="h-64 md:h-64 max-w-4xl"
-          label="모집 결과"
-          description="10연 모집의 결과를 입력 한 줄에 하나씩 입력"
-          placeholder="1/2/7 드요코&#10;1 3 6 밴즈사&#10;..."
-          onChange={(value) => setRawResult(value)}
-        /> :
+      {eventId && (
         <>
-          <Label text="모집 결과" />
-          <p className="my-2 text-sm text-neutral-500 dark:text-neutral-300">
-            학생 이미지를 클릭하여 모집한 학생을 수정할 수 있어요.
-          </p>
-          <table>
-            <thead className="bg-neutral-100 dark:bg-neutral-900 rounded-lg">
-              <tr>
-                <th className="px-4 py-2 rounded-l-lg">횟수</th>
-                <th className="p-2">★3</th>
-                <th className="p-2">★2</th>
-                <th className="p-2">★1</th>
-                <th className="p-2 pr-4 rounded-r-lg">모집 ★3 학생</th>
-              </tr>
-            </thead>
-            <tbody>
-              {result.map((eachResult) => {
-                const tier3Students = new Array(eachResult.tier3Count).fill(null);
-                eachResult.tier3StudentIds.forEach((studentId, index) => {
-                  if (index < tier3Students.length) {
-                    tier3Students[index] = studentId;
-                  }
-                });
-
-                return (
-                  <tr key={`trial-${eachResult.trial}`} className="relative py-2 hover:bg-neutral-100 hover:bg-neutral-700 transition">
-                    <td className="px-4 p-2 font-bold rounded-l-lg">{eachResult.trial}</td>
-                    <td className="p-2">{eachResult.tier3Count}</td>
-                    <td className="p-2">{eachResult.tier2Count}</td>
-                    <td className="p-2">{eachResult.tier1Count}</td>
-                    <td className="rounded-r-lg">
-                      <div className="flex gap-x-2">
-                        {tier3Students.map((studentId, index) => (
-                          <PickupStudentCard
-                            key={`student-${studentId ?? index}`}
-                            studentId={studentId}
-                            tier3Students={allTier3Students}
-                            onChange={(newStudentId) => {
-                              const newResult = [...result];
-                              newResult.find((result) => result.trial === eachResult.trial)!.tier3StudentIds[index] = newStudentId;
-                              setResult(newResult);
-                            }}
-                          />
-                        ))}
-                      </div>
-                    </td>
-                  </tr>
-                );
+          <SubTitle text="모집 내용" />
+          {!currentPickupHistory && (
+            <Button
+              text={editorMode === "edit" ? "외부 데이터 불러오기" : "직접 입력하기"}
+              onClick={() => setEditorMode((prev) => prev === "edit" ? "import" : "edit")}
+            />
+          )}
+          {editorMode === "edit" && (
+            <PickupHistoryEditor
+              tier3Students={tier3Students}
+              initialTotalCount={initialTotalCount}
+              initialTier3Count={initialTier3Count}
+              initialTier3StudentIds={initialTier3StudentIds}
+              onComplete={(result) => submit({
+                eventId,
+                result: [{ trial: result.totalCount, tier3Count: result.tier3Count, tier3StudentIds: result.tier3StudentIds }],
               })}
-              <tr className="py-2">
-                <td className="px-4 p-2 font-bold">합계</td>
-                <td className="p-2">{result.map((eachResult) => eachResult.tier3Count).reduce((a, b) => a + b)}</td>
-                <td className="p-2">{result.map((eachResult) => eachResult.tier2Count).reduce((a, b) => a + b)}</td>
-                <td className="p-2 pr-4">{result.map((eachResult) => eachResult.tier1Count).reduce((a, b) => a + b)}</td>
-                <td></td>
-              </tr>
-            </tbody>
-          </table>
+            />
+          )}
+          {editorMode === "import" && (
+            <PickupHistoryImporter
+              tier3Students={tier3Students}
+              initialResult={currentPickupHistory?.result ?? undefined}
+              initialRawResult={currentPickupHistory?.rawResult ?? undefined}
+              onComplete={({ result, rawResult }) => submit({ eventId, result, rawResult })}
+            />
+          )}
         </>
-      }
-
-      {result.length === 0 ?
-        <Button
-          text="입력 결과 미리보기"
-          onClick={() => setResult(parsePickupHistory(rawResult, allTier3Students))}
-        /> :
-        <Form>
-          <Button 
-            color="primary" text="저장하기"
-            onClick={() => {
-              if (!eventId) {
-                return;
-              }
-              submit(
-                { eventId, result, rawResult } as ActionBody,
-                { method: "post", encType: "application/json" },
-              );
-            }}
-          />
-          <Button text="다시 입력하기" onClick={() => setResult([])} />
-        </Form>
-      }
+      )}
     </div>
   );
 }

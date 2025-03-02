@@ -1,6 +1,6 @@
 import { ReactNode, useState } from "react";
 import hangul from 'hangul-js';
-import { Label } from "~/components/atoms/form";
+import { SubTitle } from "~/components/atoms/typography";
 
 const { search } = hangul;
 
@@ -47,7 +47,7 @@ export default function ContentSelector({ contents, initialContentId, placeholde
 
   return (
     <>
-      <Label text="컨텐츠" />
+      <SubTitle text="컨텐츠" />
 
       <div className="relative">
         <div

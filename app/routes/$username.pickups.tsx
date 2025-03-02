@@ -87,7 +87,7 @@ export const loader = async ({ context, request, params }: LoaderFunctionArgs) =
   });
 
   const pickupStatistics = {
-    trial: pickupHistories.map((history) => history.result.length * 10).reduce((a, b) => a + b, 0),
+    trial: pickupHistories.map((history) => Math.max(...history.result.map((result) => result.trial))).reduce((a, b) => a + b, 0),
     tier3Count,
     tier3RateCount,
     pickupCount,
@@ -101,7 +101,7 @@ export const loader = async ({ context, request, params }: LoaderFunctionArgs) =
       uid: history.uid,
       event: history.event,
       tier3Students: history.students,
-      trial: history.result.length * 10,
+      trial: history.result.length > 0 ? history.result[history.result.length - 1].trial : 0,
     })),
     pickupStatistics,
   });

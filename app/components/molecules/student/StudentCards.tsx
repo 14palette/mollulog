@@ -2,7 +2,7 @@ import { StudentCard } from "~/components/atoms/student"
 import StudentInfo from "./StudentInfo";
 import type { ReactNode} from "react";
 import { useState } from "react";
-import type { AttackType, DefenseType, Role } from "~/models/content";
+import type { AttackType, DefenseType, Role } from "~/models/content.d";
 
 type StudentCardsProps = {
   students?: {
@@ -56,7 +56,7 @@ export default function StudentCards({ students, mobileGrid, pcGrid, onSelect, o
         const showInfo = studentId && name && student.attackType && student.defenseType && student.role && student.schaleDbId;
 
         return (
-          <div key={`student-card-${name ?? studentId ?? index}`}>
+          <div key={`student-card-${name ?? studentId}-${index}`}>
             <div
               className={((onSelect || onFavorite) && studentId) ? "hover:scale-105 cursor-pointer transition" : ""}
               onClick={studentId ? () => {

@@ -1,19 +1,19 @@
 import { describe, expect, it } from "@jest/globals";
 import { parsePickupHistory, PickupHistory } from "../../../app/models/pickup-history";
 
-const studentMap = new Map([
-  ["코코나", "10050"],
-  ["하루나(새해)", "10057"],
-  ["하루나(체육복)", "20030"],
-  ["코하루", "10020"],
-  ["온구레", "10055"],
-  ["카즈사(밴드)", "10091"],
-  ["아루(드레스)", "10089"],
-  ["마키", "10007"],
-  ["아츠코", "10032"],
-  ["체리노", "10017"],
-  ["미유", "10039"],
-]);
+const students = [
+  { name: "코코나", studentId: "10050" },
+  { name: "하루나(새해)", studentId: "10057" },
+  { name: "하루나(체육복)", studentId: "20030" },
+  { name: "코하루", studentId: "10020" },
+  { name: "온구레", studentId: "10055" },
+  { name: "카즈사(밴드)", studentId: "10091" },
+  { name: "아루(드레스)", studentId: "10089" },
+  { name: "마키", studentId: "10007" },
+  { name: "아츠코", studentId: "10032" },
+  { name: "체리노", studentId: "10017" },
+  { name: "미유", studentId: "10039" },
+];
 
 const cases: [string, PickupHistory["result"]][] = [
   [
@@ -56,6 +56,6 @@ const cases: [string, PickupHistory["result"]][] = [
 
 describe("parsePickupHistory", () => {
   it.each(cases)("parses %s", (raw, expected) => {
-    expect(parsePickupHistory(raw, studentMap)).toEqual(expected);
+    expect(parsePickupHistory(raw, students)).toEqual(expected);
   });
 });
