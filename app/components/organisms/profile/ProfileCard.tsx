@@ -49,7 +49,7 @@ export default function ProfileCard(props: ProfileCardProps) {
                 <span className="w-3 inline-block mr-1">{tier <= 5 ? tier : tier - 5}</span>
                 <span className="w-16 inline-block">- {tierCounts.get(tier) ?? 0}명</span>
               </div>
-              <div className="flex-grow">
+              <div className="grow">
                 <Progress ratio={(tierCounts.get(tier) ?? 0) / totalCount} color={colors[tier]} />
               </div>
             </div>

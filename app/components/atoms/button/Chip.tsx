@@ -4,11 +4,11 @@ type ChipProps = {
 };
 
 const colorMap = {
-  "red": "bg-gradient-to-r from-red-500 to-orange-400",
-  "yellow": "bg-gradient-to-r from-amber-500 to-yellow-400",
-  "blue": "bg-gradient-to-r from-blue-500 to-sky-400",
-  "purple": "bg-gradient-to-r from-purple-500 to-fuchsia-400",
-  "black": "bg-gradient-to-r from-neutral-900 to-neutral-700",
+  "red": "bg-linear-to-r from-red-500 to-orange-400",
+  "yellow": "bg-linear-to-r from-amber-500 to-yellow-400",
+  "blue": "bg-linear-to-r from-blue-500 to-sky-400",
+  "purple": "bg-linear-to-r from-purple-500 to-fuchsia-400",
+  "black": "bg-linear-to-r from-neutral-900 to-neutral-700",
 };
 
 export default function Chip({ text, color }: ChipProps) {

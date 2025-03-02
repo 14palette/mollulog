@@ -144,7 +144,7 @@ export default function ContentHeader(
           />
         </div>
         <div className={sanitizeClassName(`
-          absolute bottom-0 w-full px-4 md:px-6 py-4 text-white bg-gradient-to-t from-neutral-900/75 from-75% md:rounded-b-xl
+          absolute bottom-0 w-full px-4 md:px-6 py-4 text-white bg-linear-to-t from-neutral-900/75 from-75% md:rounded-b-xl
           ${videoPlaying ? "opacity-75" : ""} group-hover:opacity-100 transition-opacity ease-in duration-500
         `)}>
           <p className="text-sm md:text-base text-neutral-300">{type}</p>

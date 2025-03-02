@@ -13,7 +13,7 @@ export default function FloatingButton({ state }: { state: "idle" | "submitting"
     <button
       className={sanitizeClassName(`
         m-4 md:m-8 px-4 py-2 fixed bottom-0 right-0 flex items-center
-        bg-gradient-to-br from-sky-500 to-fuchsia-500 hover:opacity-75 disabled:bg-neutral-300
+        bg-linear-to-br from-sky-500 to-fuchsia-500 hover:opacity-75 disabled:bg-neutral-300
         text-white shadow-xl rounded-full transition cursor-pointer disabled:cursor-default
       `)}
       disabled={state !== "idle"}

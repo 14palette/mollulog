@@ -6,14 +6,14 @@ export type ProgressProps = {
 export default function Progress({ ratio, color }: ProgressProps) {
   let colorClass;
   switch (color) {
-    case "red":     colorClass = "bg-gradient-to-r from-red-500 to-orange-300";     break;
-    case "orange":  colorClass = "bg-gradient-to-r from-orange-500 to-amber-300";   break;
-    case "yellow":  colorClass = "bg-gradient-to-r from-amber-500 to-yellow-300";   break;
-    case "green":   colorClass = "bg-gradient-to-r from-green-500 to-emerald-300";  break;
-    case "cyan":    colorClass = "bg-gradient-to-r from-blue-500 to-sky-300";       break;
-    case "blue":    colorClass = "bg-gradient-to-r from-blue-500 to-indigo-300";    break;
-    case "purple":  colorClass = "bg-gradient-to-r from-purple-500 to-fuchsia-300"; break;
-    case "fuchsia": colorClass = "bg-gradient-to-r from-fuchsia-500 to-pink-300";   break;
+    case "red":     colorClass = "bg-linear-to-r from-red-500 to-orange-300";     break;
+    case "orange":  colorClass = "bg-linear-to-r from-orange-500 to-amber-300";   break;
+    case "yellow":  colorClass = "bg-linear-to-r from-amber-500 to-yellow-300";   break;
+    case "green":   colorClass = "bg-linear-to-r from-green-500 to-emerald-300";  break;
+    case "cyan":    colorClass = "bg-linear-to-r from-blue-500 to-sky-300";       break;
+    case "blue":    colorClass = "bg-linear-to-r from-blue-500 to-indigo-300";    break;
+    case "purple":  colorClass = "bg-linear-to-r from-purple-500 to-fuchsia-300"; break;
+    case "fuchsia": colorClass = "bg-linear-to-r from-fuchsia-500 to-pink-300";   break;
   }
 
   return (

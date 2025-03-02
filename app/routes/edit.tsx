@@ -22,7 +22,7 @@ export default function Edit() {
   return (
     <div className="w-screen flex flex-col sm:flex-row">
       {/* Sidebar */}
-      <div className="sm:h-screen w-full sm:w-48 md:w-64 shrink-0 bg-gradient-to-br from-blue-500 to-violet-500 text-white shadow-inner sticky top-0 z-10">
+      <div className="sm:h-screen w-full sm:w-48 md:w-64 shrink-0 bg-linear-to-br from-blue-500 to-violet-500 text-white shadow-inner sticky top-0 z-10">
         <div className="m-4 md:m-6 flex items-center">
           <Link to="/">
             <h1 className="hover:opacity-50 transition-opacity text-xl sm:text-2xl font-ingame">

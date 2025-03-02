@@ -9,7 +9,7 @@ type FilterButtonProps = {
   onToggle: (activated: boolean) => void;
 };
 
-const defaultButtonColor = "bg-gradient-to-br bg-blue-500 to-sky-400 dark:from-blue-600 dark:to-sky-500";
+const defaultButtonColor = "bg-linear-to-br bg-blue-500 to-sky-400 dark:from-blue-600 dark:to-sky-500";
 
 function FilterButton({ text, color, active, onToggle }: FilterButtonProps) {
   return (

@@ -30,7 +30,7 @@ export default function MemoEditor({ initialText, placeholder, onUpdate, initial
           <ChatBubbleOvalLeftEllipsisIcon className="mr-2 w-4 h-4" />
         </div>
         <input
-          className="flex-grow bg-neutral-100 dark:bg-neutral-900"
+          className="grow bg-neutral-100 dark:bg-neutral-900"
           placeholder={placeholder ?? "메모를 남겨보세요"}
           defaultValue={initialText}
           disabled={!onUpdate}
