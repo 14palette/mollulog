@@ -13,7 +13,7 @@ export default function NavigationLink({ to, text, active }: NavigationLinkProps
         className={`
           whitespace-nowrap px-4 py-2 transition rounded-lg
           ${active ?
-            "font-bold bg-gradient-to-br from-sky-500 to-fuchsia-500 text-white" :
+            "font-bold bg-linear-to-br from-sky-500 to-fuchsia-500 text-white" :
             "hover:bg-neutral-200 dark:hover:bg-neutral-700"
           }
         `}

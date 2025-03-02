@@ -30,7 +30,7 @@ function Content({ name, description, imageUrl }: ContentProps) {
       {imageUrl ? (
         <img
           src={imageUrl} alt={name}
-          className="h-full max-w-32 md:max-w-48 aspect-video rounded-r-lg object-cover bg-gradient-to-r from-white to-neutral-300 "
+          className="h-full max-w-32 md:max-w-48 aspect-video rounded-r-lg object-cover bg-linear-to-r from-white to-neutral-300 "
         />
       ) : null}
     </div>

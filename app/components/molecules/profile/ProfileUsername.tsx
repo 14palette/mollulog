@@ -27,7 +27,7 @@ export default function ProfileUsername({
           </div>
         )
       }
-      <div className="ml-2 md:ml-4 flex-grow">
+      <div className="ml-2 md:ml-4 grow">
         <p className="font-bold text-lg md:text-xl">@{username}</p>
         {followers !== undefined && following !== undefined && (
           <p className="text-sm">

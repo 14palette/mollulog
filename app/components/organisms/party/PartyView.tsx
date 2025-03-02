@@ -82,7 +82,7 @@ export default function PartyView({ party, sensei, students, studentStates, edit
       {raid && (
         <Link className="group flex items-center my-4 md:my-8 -mx-4 md:-mx-6" to={`/raids/${raid.raidId}`}>
           <img
-            className="h-12 md:h-24 w-36 md:w-fit object-cover object-left bg-gradient-to-l from-white dark:from-neutral-800 rounded-r-lg"
+            className="h-12 md:h-24 w-36 md:w-fit object-cover object-left bg-linear-to-l from-white dark:from-neutral-800 rounded-r-lg"
             src={bossImageUrl(raid.boss)}
             alt={`${raid.name} 이벤트`}
           />

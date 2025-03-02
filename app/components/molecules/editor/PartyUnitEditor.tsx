@@ -144,7 +144,7 @@ export default function PartyUnitEditor(
           <Toggle
             label={`파티 인원 조정 (${partySize}명)`}
             onChange={(value) => setPartySize(value ? 10 : 6)}
-            colorClass="bg-blue-500 data-[checked]:bg-purple-500"
+            colorClass="bg-blue-500 data-checked:bg-purple-500"
           />
         </div>
 
