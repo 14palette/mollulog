@@ -1,6 +1,7 @@
 import { Chip } from "~/components/atoms/button";
 import { attackTypeLocale, contentTypeLocale, defenseTypeLocale, pickupLabelLocale, terrainLocale } from "~/locales/ko";
 import { bossImageUrl } from "~/models/assets";
+import { attackTypeColorMap, defenseTypeColorMap } from "~/models/content.d";
 import type { AttackType, DefenseType, EventType, PickupType, RaidType, Role, Terrain } from "~/models/content.d";
 import { StudentCards } from "../student";
 import type { ReactNode } from "react";
@@ -39,26 +40,15 @@ export type ContentTimelineItemProps = {
     studentName: string;
   }[];
   raidInfo?: {
+    raidId: string;
     boss: string;
     terrain: Terrain;
     attackType: AttackType;
     defenseType: DefenseType;
+    rankVisible: boolean;
   };
 };
 
-const attachTypeColorMap: Record<AttackType, "red" | "yellow" | "blue" | "purple"> = {
-  explosive: "red",
-  piercing: "yellow",
-  mystic: "blue",
-  sonic: "purple",
-};
-
-const defenseTypeColorMap: Record<DefenseType, "red" | "yellow" | "blue" | "purple"> = {
-  light: "red",
-  heavy: "yellow",
-  special: "blue",
-  elastic: "purple",
-};
 
 function ContentTitles({ name, showLink }: { name: string, showLink: boolean }): ReactNode {
   const titles = name.split("\n");
@@ -129,17 +119,26 @@ export default function ContentTimelineItem(
 
       {/* 레이드 정보 */}
       {raidInfo && (
-        <div className="mt-2 mb-6 relative md:w-3/5">
-          <img
-            className="rounded-lg bg-linear-to-br from-neutral-50 to-neutral-300 dark:from-neutral-600 dark:to-neutral-800"
-            src={bossImageUrl(raidInfo.boss)} alt={`총력전 보스 ${name}`} loading="lazy"
-          />
-          <div className="absolute bottom-0 right-0 flex gap-x-1 p-1 text-white text-sm">
-            <Chip text={terrainLocale[raidInfo.terrain]} color="black" />
-            <Chip text={attackTypeLocale[raidInfo.attackType]} color={attachTypeColorMap[raidInfo.attackType]} />
-            <Chip text={defenseTypeLocale[raidInfo.defenseType]} color={defenseTypeColorMap[raidInfo.defenseType]} />
+        <>
+          <div className="mt-2 mb-6 relative md:w-3/5">
+            <img
+              className="rounded-lg bg-linear-to-br from-neutral-50 to-neutral-300 dark:from-neutral-600 dark:to-neutral-800"
+              src={bossImageUrl(raidInfo.boss)} alt={`총력전 보스 ${name}`} loading="lazy"
+            />
+            <div className="absolute bottom-0 right-0 flex gap-x-1 p-1 text-white text-sm">
+              <Chip text={terrainLocale[raidInfo.terrain]} color="black" />
+              <Chip text={attackTypeLocale[raidInfo.attackType]} color={attackTypeColorMap[raidInfo.attackType]} />
+              <Chip text={defenseTypeLocale[raidInfo.defenseType]} color={defenseTypeColorMap[raidInfo.defenseType]} />
+            </div>
           </div>
-        </div>
+          {contentType === "total_assault" && raidInfo.rankVisible && (
+            <Link to={`/raids/${raidInfo.raidId}`} className="hover:opacity-50 transition-opacity">
+              <div className="p-4 -mt-4 bg-neutral-100 dark:bg-neutral-900 rounded-lg text-sm md:text-base">
+                <p>✨ 일본 서비스의 총력전 순위 및 편성 학생 정보를 확인할 수 있어요. <span className="underline">보러가기 →</span></p>
+              </div>
+            </Link>
+          )}
+        </>
       )}
 
       {/* 픽업 정보 */}

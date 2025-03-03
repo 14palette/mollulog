@@ -9,12 +9,13 @@ type InputProps = {
   placeholder?: string;
   required?: boolean;
   defaultValue?: string;
+  value?: string;
   error?: string;
   onChange?: (value: string) => void;
 };
 
 export default function Input({
-  className, type, name, label, description, placeholder, required, defaultValue, error, onChange,
+  className, type, name, label, description, placeholder, required, defaultValue, value, error, onChange,
 }: InputProps) {
   return (
     <div className="mt-2 mb-8 last:mb-2">
@@ -31,6 +32,7 @@ export default function Input({
           ${className ?? ""}
         `)}
         required={required}
+        value={value}
         defaultValue={defaultValue}
         onChange={(e) => onChange?.(e.target.value)}
       />

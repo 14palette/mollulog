@@ -45,6 +45,9 @@ export default function Header({ currentUsername, darkMode, onToggleDarkMode }: 
         <div className="flex mt-4 gap-x-4 text-lg tracking-tight">
           {currentUsername && (
             <>
+              <Link to="/" className="cursor-pointer hover:opacity-50 hover:underline transition-opacity">
+                <span>홈</span>
+              </Link>
               <Link to="/futures" className="cursor-pointer hover:opacity-50 hover:underline transition-opacity">
                 <span>미래시</span>
               </Link>

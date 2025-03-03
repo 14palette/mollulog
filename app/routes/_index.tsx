@@ -1,41 +1,29 @@
 import { defer } from "@remix-run/cloudflare";
 import type { LoaderFunctionArgs, MetaFunction } from "@remix-run/cloudflare";
-import { Await, Link, useLoaderData } from "@remix-run/react";
-import { Suspense } from "react";
-import { SubTitle } from "~/components/atoms/typography";
+import { Link, useLoaderData } from "@remix-run/react";
+import { SubTitle, Title } from "~/components/atoms/typography";
 import { ContentTimelineItem } from "~/components/molecules/content";
 import { contentOrders } from "~/components/organisms/content/ContentTimeline";
-import { SenseiFinder } from "~/components/organisms/home";
+import { RaidCard } from "~/components/organisms/raid";
 import { graphql } from "~/graphql";
 import type { IndexQuery } from "~/graphql/graphql";
 import { runQuery } from "~/lib/baql";
 import { getFavoritedCounts } from "~/models/content";
-import { getAllStudentsMap } from "~/models/student";
 
 const indexQuery = graphql(`
   query Index($now: ISO8601DateTime!) {
-    contents(untilAfter: $now, sinceBefore: $now, first: 9999) {
+    events(untilAfter: $now, sinceBefore: $now) {
       nodes {
-        __typename
-        name
-        since
-        until
-        ... on Event {
-          contentId: eventId
-          eventType : type
-          rerun
-          pickups {
-            type
-            rerun
-            student { studentId }
-            studentName
-          }
+        name since until eventId type rerun
+        pickups {
+          type rerun
+          student { studentId name }
         }
-        ... on Raid {
-          contentId: raidId
-          raidType: type
-          boss terrain attackType defenseType
-        }
+      }
+    }
+    raids(untilAfter: $now, types: [total_assault, elimination], first: 2) {
+      nodes {
+        name since until raidId type boss attackType defenseType terrain
       }
     }
   }
@@ -49,75 +37,87 @@ export const meta: MetaFunction = () => {
 };
 
 export const loader = async ({ context }: LoaderFunctionArgs) => {
-  const { data, error } = await runQuery<IndexQuery>(indexQuery, { now: new Date().toISOString() });
+  const truncatedNow = new Date();
+  truncatedNow.setMinutes(0, 0, 0);
+
+  const { data, error } = await runQuery<IndexQuery>(indexQuery, { now: truncatedNow.toISOString() });
   if (error || !data) {
     throw error ?? "failed to fetch events";
   }
 
   const { env } = context.cloudflare;
-  const pickupStudentIds = data.contents.nodes.flatMap((content) => {
-    if (content.__typename === "Event") {
-      return content.pickups?.map((pickup) => pickup.student?.studentId ?? null) ?? [];
+  const pickupStudentIds = data.events.nodes.flatMap((event) => {
+    if (event.__typename === "Event") {
+      return event.pickups?.map((pickup) => pickup.student?.studentId ?? null) ?? [];
     }
     return [];
   }).filter((studentId) => studentId !== null);
 
   return defer({
-    students: getAllStudentsMap(env),
-    contents: data.contents.nodes,
+    events: data.events.nodes,
+    raids: data.raids.nodes,
     favoritedCounts: await getFavoritedCounts(env, pickupStudentIds),
   });
 }
 
 export default function Index() {
-  const { students, contents, favoritedCounts } = useLoaderData<typeof loader>();
+  const { events, raids, favoritedCounts } = useLoaderData<typeof loader>();
   return (
     <>
+      <Title text="진행중인 컨텐츠" />
+
       <div className="p-4 md:px-6 md:py-4 border border-neutral-100 dark:border-neutral-700 rounded-xl">
         <div className="my-2 flex items-center">
           <div className="w-3 h-3 bg-red-600 rounded-full animate-pulse" />
           <p className="ml-2 text-red-600 font-bold">진행중 이벤트</p>
         </div>
 
-        {contents.sort((a, b) => {
-          const aContentType = a.__typename === "Event" ? a.eventType : a.raidType;
-          const bContentType = b.__typename === "Event" ? b.eventType : b.raidType;
-          return contentOrders.indexOf(aContentType) - contentOrders.indexOf(bContentType);
-        }).map((content) => {
-          const isEvent = content.__typename === "Event";
-          const showLink = !isEvent || ["event", "immortal_event", "main_story"].includes(content.eventType);
+        {events.sort((a, b) => {
+          return contentOrders.indexOf(a.type) - contentOrders.indexOf(b.type);
+        }).map((event) => {
+          const showLink = ["event", "immortal_event", "main_story"];
 
           const contentFavoritedCounts: Record<string, number> = {};
-          favoritedCounts.filter((each) => each.contentId === content.contentId)
+          favoritedCounts.filter((each) => each.contentId === event.eventId)
             .forEach((each) => contentFavoritedCounts[each.studentId] = each.count);
 
           return (
             <ContentTimelineItem
-              key={content.contentId}
-              name={content.name}
-              contentType={isEvent ? content.eventType : content.raidType}
-              rerun={isEvent ? content.rerun : false}
-              until={new Date(content.until)}
-              link={showLink ? `/${isEvent ? "events" : "raids"}/${content.contentId}` : null}
+              key={event.eventId}
+              name={event.name}
+              contentType={event.type}
+              rerun={event.rerun}
+              until={new Date(event.until)}
+              link={showLink ? `/events/${event.eventId}` : null}
               showMemo={false}
-              pickups={isEvent ? content.pickups : undefined}
-              raidInfo={isEvent ? undefined : content}
+              pickups={event.pickups.map((pickup) => ({
+                type: pickup.type,
+                rerun: pickup.rerun,
+                studentName: pickup.student?.name ?? "",
+                student: {
+                  studentId: pickup.student?.studentId ?? "",
+                },
+              }))}
               favoritedCounts={contentFavoritedCounts}
             />
           )
         })}
       </div>
       <Link to="/futures" className="hover:underline hover:opacity-75">
-        <p className="mx-2 my-4 mb-8 text-right">미래시 보러가기 →</p>
+        <p className="mx-2 my-4 mb-8 text-right">모든 미래시 보러가기 →</p>
       </Link>
 
-      <div className="my-8">
-        <SubTitle text="선생님 찾기" />
-        <Suspense>
-          <Await resolve={students}>
-            {(students) => <SenseiFinder students={Object.entries(students).map(([_, student]) => ({ studentId: student.id, name: student.name }))} />}
-          </Await>
-        </Suspense>
+      <SubTitle text="총력전 / 대결전 정보" />
+      <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+        {raids.map((raid) => (
+          <Link to={`/raids/${raid.raidId}`} key={raid.raidId} className="hover:opacity-50 transition-opacity">
+            <RaidCard
+              {...raid}
+              since={new Date(raid.since)}
+              until={new Date(raid.until)}
+            />
+          </Link>
+        ))}
       </div>
     </>
   );

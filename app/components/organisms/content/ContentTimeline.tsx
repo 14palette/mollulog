@@ -27,7 +27,7 @@ export type ContentTimelineProps = {
 };
 
 type ContentGroup = {
-  groupDate: Date;
+  groupDate: Date | null;
   contents: ContentTimelineProps["contents"];
 };
 
@@ -50,14 +50,17 @@ export const contentOrders: (EventType | RaidType)[] = [
 type ContentFilter = Partial<Record<EventType | RaidType, boolean>> | null;
 
 function groupContents(contents: ContentTimelineProps["contents"]): ContentGroup[] {
-  const groups: { groupDate: dayjs.Dayjs, contents: ContentTimelineProps["contents"] }[] = [];
+  const groups: { groupDate: dayjs.Dayjs | null, contents: ContentTimelineProps["contents"] }[] = [];
 
   const now = dayjs();
   contents.sort((a, b) => a.since.getTime() - b.since.getTime()).forEach((content) => {
     const since = dayjs(content.since);
-    const groupDate = (since.isBefore(now) ? now : since).startOf("day");
+    const until = dayjs(content.until);
+    const isCurrent = since.isBefore(now) && until.isAfter(now);
+
+    const groupDate = isCurrent ? null : since.startOf("day");
     const lastGroup = groups[groups.length - 1];
-    if (lastGroup && lastGroup.groupDate.isSame(groupDate)) {
+    if (lastGroup && (lastGroup.groupDate === null && isCurrent) || (lastGroup && lastGroup.groupDate?.isSame(groupDate, "day"))) {
       lastGroup.contents.push(content);
     } else {
       groups.push({ groupDate, contents: [content] });
@@ -65,7 +68,7 @@ function groupContents(contents: ContentTimelineProps["contents"]): ContentGroup
   });
 
   return groups.map(({ groupDate, contents }) => ({
-    groupDate: groupDate.toDate(),
+    groupDate: groupDate?.toDate() ?? null,
     contents: contents.sort((a, b) => contentOrders.indexOf(a.contentType) - contentOrders.indexOf(b.contentType)),
   }));
 }
@@ -109,12 +112,12 @@ export default function ContentTimeline({ contents, favoritedStudents, favorited
       </div>
 
       {contentGroups.map((group) => {
-        const groupDate = dayjs(group.groupDate);
-        const isToday = groupDate.isSame(today, "day");
+        const isCurrent = group.groupDate === null;
+        const groupDate = isCurrent ? dayjs() : dayjs(group.groupDate);
         return (
-          <div key={groupDate.format("YYYY-MM-DD")}>
+          <div key={isCurrent ? "current" : groupDate.format("YYYY-MM-DD")}>
             {/* 날짜 구분자 영역 */}
-            {isToday ? (
+            {isCurrent ? (
               <div className="flex items-center">
                 <div className="inline-block size-3 bg-red-600 rounded-full animate-pulse" />
                 <span className="mx-2 md:mx-4 font-bold text-red-600">
@@ -143,7 +146,7 @@ export default function ContentTimeline({ contents, favoritedStudents, favorited
                     <ContentTimelineItem
                       key={content.contentId}
                       {...content}
-                      until={isToday ? content.until : null}
+                      until={isCurrent ? content.until : null}
 
                       showMemo={showMemo}
                       initialMemo={showMemo ? memo : undefined}

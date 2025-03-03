@@ -35,6 +35,7 @@ export const futureContentsQuery = graphql(`
         ... on Raid {
           contentId: raidId
           raidType: type
+          rankVisible
           boss terrain attackType defenseType
         }
       }
@@ -186,10 +187,12 @@ export default function Futures() {
             contentAttrs.rerun = false;
             contentAttrs.link = `/raids/${content.contentId}`;
             contentAttrs.raidInfo = {
+              raidId: content.contentId,
               boss: content.boss,
               terrain: content.terrain,
               attackType: content.attackType,
               defenseType: content.defenseType,
+              rankVisible: content.rankVisible,
             };
           }
 
