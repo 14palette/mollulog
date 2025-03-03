@@ -13,8 +13,8 @@ import {
 import styles from "./tailwind.css?url";
 import { getAuthenticator } from "./auth/authenticator.server";
 import { Header, Footer } from "./components/organisms/base";
-import { useEffect, useState } from "react";
-import { isDarkMode } from "./lib/device/index.client";
+import { getPreference } from "./auth/preference.server";
+import { useState } from "react";
 
 export const links = () => [
   ...(cssBundleHref ? [{ rel: "stylesheet", href: cssBundleHref }] : []),
@@ -24,20 +24,24 @@ export const links = () => [
 ];
 
 export const loader = async ({ request, context }: LoaderFunctionArgs) => {
-  const sensei = await getAuthenticator(context.cloudflare.env).isAuthenticated(request);
-  return json({ currentUsername: sensei?.username ?? null });
+  const env = context.cloudflare.env;
+
+  const sensei = await getAuthenticator(env).isAuthenticated(request);
+  const preference = await getPreference(env, request);
+  return json({
+    currentUsername: sensei?.username ?? null,
+    darkMode: preference.darkMode ?? false,
+  });
 };
 
 export default function App() {
-  const { currentUsername } = useLoaderData<typeof loader>();
+  const loaderData = useLoaderData<typeof loader>();
+  const { currentUsername } = loaderData;
+
+  const [darkMode, setDarkMode] = useState(loaderData.darkMode);
 
   const matches = useMatches();
   const pathname = matches[matches.length - 1].pathname;
-
-  const [darkMode, setDarkMode] = useState(false);
-  useEffect(() => {
-    setDarkMode(isDarkMode());
-  }, []);
 
   return (
     <html lang="ko" className={darkMode ? "dark" : ""}>
@@ -56,7 +60,7 @@ export default function App() {
       <body className="text-neutral-900 dark:bg-neutral-800 dark:text-neutral-200 transition">
         {pathname.startsWith("/edit") ? <Outlet /> : (
           <div className="mx-auto max-w-3xl p-4">
-            <Header currentUsername={currentUsername} />
+            <Header currentUsername={currentUsername} darkMode={darkMode} onToggleDarkMode={setDarkMode} />
             <Outlet />
             <Footer />
           </div>

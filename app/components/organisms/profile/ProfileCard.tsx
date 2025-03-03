@@ -41,7 +41,7 @@ export default function ProfileCard(props: ProfileCardProps) {
         {[1, 2, 3, 4, 5, 6, 7, 8].map((tier) => (
           <div key={`tier-${tier}`} className="my-2">
             <div className="flex">
-              <div className="w-1/7 flex items-center">
+              <div className="w-fit shrink-0 flex items-center">
                 {(tier <= 5) ?
                   <span className="w-4 mr-1 inline-block text-yellow-500">★</span> :
                   <img className="w-4 h-4 mr-1 inline-block" src="/icons/exclusive_weapon.png" alt="고유 장비" />
