@@ -27,7 +27,7 @@ export default function PickupHistoryEditor(
   const [tier3Count, setTier3Count] = useState(initialTier3Count);
   const [tier3StudentIds, setTier3StudentIds] = useState(initialTier3StudentIds ?? []);
 
-  const studentCards = tier3StudentIds.map((studentId) => ({
+  const studentCards: { studentId: string | null; name?: string }[] = tier3StudentIds.map((studentId) => ({
     studentId,
     name: tier3Students.find((student) => student.studentId === studentId)?.name,
   }));

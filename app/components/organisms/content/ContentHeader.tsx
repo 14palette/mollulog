@@ -154,9 +154,9 @@ export default function ContentHeader(
               {dayjs(since).format("YYYY-MM-DD")} ~ {dayjs(until).format("YYYY-MM-DD")}
             </p>
             <div className="flex items-center">
-              <span className="py-1 px-4 bg-neutral-900 bg-opacity-75 text-xs md:text-sm rounded-full">{dDayText}</span>
+              <span className="py-1 px-4 bg-neutral-900 text-xs md:text-sm rounded-full">{dDayText}</span>
               {videos && videos.length > 0 && (
-                <div className="p-1.5 ml-2 bg-neutral-900 bg-opacity-75 rounded-full cursor-pointer text-white" onClick={() => setMuted((prev) => !prev)}>
+                <div className="p-1.5 ml-2 bg-neutral-900 rounded-full cursor-pointer text-white" onClick={() => setMuted((prev) => !prev)}>
                   {muted ? <SpeakerXMarkIcon className="size-3.5" /> : <SpeakerWaveIcon className="size-3.5" />}
                 </div>
               )}

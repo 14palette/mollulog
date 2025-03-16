@@ -16,7 +16,7 @@ export default function ItemCard({ name, imageId, label, labelClassName }: ItemC
         loading="lazy"
       />
       {label && (
-        <div className={`absolute bottom-0 right-0 px-1 bg-black bg-opacity-75 text-center font-bold text-xs rounded-lg ${labelClassName ?? ""}`}>
+        <div className={`absolute bottom-0 right-0 px-1 bg-black/75 text-center font-bold text-xs rounded-lg ${labelClassName ?? ""}`}>
           {label}
         </div>
       )}

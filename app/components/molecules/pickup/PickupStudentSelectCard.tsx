@@ -29,7 +29,7 @@ export default function PickupStudentSelectCard({ studentId, name, tier3Students
         <div
           className={sanitizeClassName(`
             absolute w-full h-full rounded-lg top-0 left-0 flex justify-center bg-white dark:bg-neutral-800
-            bg-opacity-0 dark:bg-opacity-0 group-hover:bg-opacity-75 transition cursor-pointer
+            opacity-0 dark:opacity-0 group-hover:opacity-75 transition cursor-pointer
           `)}
           onClick={() => setOpen((prev) => !prev)}
         >
