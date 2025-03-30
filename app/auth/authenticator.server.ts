@@ -1,6 +1,6 @@
 import type { SessionStorage} from "@remix-run/cloudflare";
 import { createCookieSessionStorage } from "@remix-run/cloudflare";
-import { Authenticator } from "remix-auth";
+import { Authenticator, AuthorizationError } from "remix-auth";
 import { GoogleStrategy } from "remix-auth-google";
 import type { Env } from "~/env.server";
 import type { Sensei } from "~/models/sensei";
@@ -12,6 +12,19 @@ let _sessionStorage: SessionStorage;
 let _authenticator: Authenticator<Sensei>;
 
 const googleClientId = "129736193789-sqgen372tfq53l483j1v9br36uo4iuua.apps.googleusercontent.com";
+
+export function redirectTo(request: Request): string | null {
+  const cookieHeader = request.headers.get("Cookie");
+  const redirectTo = cookieHeader?.split("; ").find((row) => row.startsWith("redirectTo="))?.split("=")[1];
+  if (redirectTo) {
+    const decodedURIComponent = decodeURIComponent(redirectTo);
+    if (decodedURIComponent.startsWith("/unauthorized")) {
+      return null;
+    }
+    return decodedURIComponent;
+  }
+  return null;
+}
 
 export function sessionStorage(env: Env): SessionStorage {
   if (_sessionStorage) {
@@ -41,7 +54,7 @@ export function getAuthenticator(env: Env): Authenticator<Sensei> {
   authenticator.use(new GoogleStrategy({
     clientID: googleClientId,
     clientSecret: env.GOOGLE_CLIENT_SECRET,
-    callbackURL: `${env.HOST}/auth/callbacks/google`,
+    callbackURL: `${env.HOST}/auth/google/callback`,
   }, async ({ extraParams }) => {
     try {
       const googleUserId = await fetchGoogleUserId(extraParams.id_token);
@@ -57,7 +70,7 @@ export function getAuthenticator(env: Env): Authenticator<Sensei> {
     const sensei = await verifyPasskeyAuthentication(env, authenticationResponse);
     if (!sensei) {
       console.error("Passkey not matched");
-      throw "Passkey not matched";
+      throw new AuthorizationError("Passkey not matched");
     }
     return sensei;
   }), "passkey");
@@ -71,7 +84,7 @@ async function fetchGoogleUserId(idToken: string): Promise<string> {
   const res = await fetch(`${url}?id_token=${idToken}`);
   const body = await res.json<{ aud: string, sub: string }>();
   if (body.aud !== googleClientId) {
-    throw "ClientID not matched!";
+    throw new AuthorizationError("ClientID not matched!");
   }
   return body.sub;
 }

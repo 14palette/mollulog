@@ -15,6 +15,8 @@ import { getAuthenticator } from "./auth/authenticator.server";
 import { Header, Footer } from "./components/organisms/base";
 import { getPreference } from "./auth/preference.server";
 import { useState } from "react";
+import { SignInProvider } from "./contexts/SignInProvider";
+import { SignInBottomSheet } from "./components/molecules/auth";
 
 export const links = () => [
   ...(cssBundleHref ? [{ rel: "stylesheet", href: cssBundleHref }] : []),
@@ -58,14 +60,16 @@ export default function App() {
         <Links />
       </head>
       <body className="text-neutral-900 dark:bg-neutral-800 dark:text-neutral-200 transition">
-        {pathname.startsWith("/edit") ? <Outlet /> : (
-          <div className="mx-auto max-w-3xl p-4">
-            <Header currentUsername={currentUsername} darkMode={darkMode} onToggleDarkMode={setDarkMode} />
-            <Outlet />
-            <Footer />
-          </div>
-        )}
-        
+        <SignInProvider>
+          {pathname.startsWith("/edit") ? <Outlet /> : (
+            <div className="mx-auto max-w-3xl p-4">
+              <Header currentUsername={currentUsername} darkMode={darkMode} onToggleDarkMode={setDarkMode} />
+              <Outlet />
+              <Footer />
+            </div>
+          )}
+          <SignInBottomSheet />
+        </SignInProvider>
         <ScrollRestoration />
         <Scripts />
       </body>

@@ -1,5 +1,5 @@
-import SignIn from "./SignIn";
+import SignInBottomSheet from "./SignInBottomSheet";
 
 export {
-  SignIn,
+  SignInBottomSheet,
 };

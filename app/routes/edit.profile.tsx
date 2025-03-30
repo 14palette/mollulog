@@ -29,7 +29,7 @@ export const loader = async ({ context, request }: LoaderFunctionArgs) => {
   const env = context.cloudflare.env;
   const sensei = await getAuthenticator(env).isAuthenticated(request);
   if (!sensei) {
-    return redirect("/signin");
+    return redirect("/unauthorized");
   }
 
   const { data } = await runQuery<ProfileStudentsQuery>(profileStudentsQuery, {});
@@ -55,7 +55,7 @@ export const action: ActionFunction = async ({ request, context }) => {
   const authenticator = getAuthenticator(env);
   const sensei = await authenticator.isAuthenticated(request);
   if (!sensei) {
-    return redirect("/signin");
+    return redirect("/unauthorized");
   }
 
   const formData = await request.formData();

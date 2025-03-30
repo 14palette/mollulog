@@ -1,4 +1,5 @@
 import { ActionFunctionArgs, json, LoaderFunctionArgs } from "@remix-run/cloudflare";
+import { AuthorizationError } from "remix-auth";
 import { getAuthenticator } from "~/auth/authenticator.server";
 import { createPasskeyAuthenticationOptions } from "~/models/passkey";
 
@@ -9,8 +10,16 @@ export const loader = async ({ context }: LoaderFunctionArgs) => {
 
 export const action = async ({ context, request }: ActionFunctionArgs) => {
   const env = context.cloudflare.env;
-  return getAuthenticator(env).authenticate("passkey", request, {
-    successRedirect: "/register",
-    failureRedirect: "/signin?state=failed",
-  });
+  try {
+    return await getAuthenticator(env).authenticate("passkey", request, {
+      successRedirect: "/register",
+      failureRedirect: "/",
+    });
+  } catch (error) {
+    console.log("error", error);
+    if (error instanceof AuthorizationError) {
+      return json({ error: error.message }, { status: 401 });
+    }
+    throw error;
+  }
 };

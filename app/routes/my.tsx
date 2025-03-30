@@ -8,6 +8,6 @@ export const loader: LoaderFunction = async ({ request, context }) => {
     const url = new URL(request.url);
     return redirect(`/@${sensei.username}/${url.searchParams.get("path") ?? ""}`);
   } else {
-    return redirect("/signin");
+    return redirect("/unauthorized");
   }
 }

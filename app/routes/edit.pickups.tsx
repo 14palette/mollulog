@@ -19,7 +19,7 @@ export const loader = async ({ request, context }: LoaderFunctionArgs) => {
   const env = context.cloudflare.env;
   const sensei = await getAuthenticator(env).isAuthenticated(request);
   if (!sensei) {
-    return redirect("/signin");
+    return redirect("/unauthorized");
   }
 
   const pickupHistories = await getPickupHistories(env, sensei.id);
@@ -50,7 +50,7 @@ export const action = async ({ context, request }: ActionFunctionArgs) => {
   const env = context.cloudflare.env;
   const sensei = await getAuthenticator(env).isAuthenticated(request);
   if (!sensei) {
-    return redirect("/signin");
+    return redirect("/unauthorized");
   }
 
   const body = new URLSearchParams(await request.text());

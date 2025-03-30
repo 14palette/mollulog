@@ -3,7 +3,7 @@ import { json, redirect } from "@remix-run/cloudflare";
 import { Form, useActionData, useLoaderData } from "@remix-run/react";
 import { Title } from "~/components/atoms/typography";
 import { updateSensei } from "~/models/sensei";
-import { getAuthenticator, sessionStorage } from "~/auth/authenticator.server";
+import { getAuthenticator, redirectTo, sessionStorage } from "~/auth/authenticator.server";
 import { ProfileEditor } from "~/components/organisms/profile";
 import type { ProfileStudentsQuery } from "~/graphql/graphql";
 import { runQuery } from "~/lib/baql";
@@ -15,10 +15,12 @@ export const meta: MetaFunction = () => [
 
 export const loader = async ({ request, context }: LoaderFunctionArgs) => {
   const sensei = await getAuthenticator(context.cloudflare.env).isAuthenticated(request);
+  console.log("sensei", sensei);
   if (!sensei) {
-    return redirect("/signin");
+    return redirect("/unauthorized");
   } else if (sensei.active) {
-    return redirect(`/@${sensei.username}`);
+    const redirectPath = redirectTo(request);
+    return redirect(redirectPath ? redirectPath : `/@${sensei.username}`);
   }
 
   const { data } = await runQuery<ProfileStudentsQuery>(profileStudentsQuery, {});
@@ -38,9 +40,10 @@ export const action: ActionFunction = async ({ request, context }) => {
   const authenticator = getAuthenticator(env);
   const sensei = await authenticator.isAuthenticated(request);
   if (!sensei) {
-    return redirect("/signin");
+    return redirect("/unauthorized");
   } else if (sensei.active) {
-    return redirect(`/@${sensei.username}`);
+    const redirectPath = redirectTo(request);
+    return redirect(redirectPath ? redirectPath : `/@${sensei.username}`);
   }
 
   const formData = await request.formData();

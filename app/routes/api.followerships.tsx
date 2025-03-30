@@ -8,7 +8,7 @@ export const action: ActionFunction = async ({ request, context }) => {
   const env = context.cloudflare.env;
   const follower = await getAuthenticator(env).isAuthenticated(request);
   if (!follower) {
-    return redirect("/signin");
+    return redirect("/unauthorized");
   }
 
   const formData = await request.formData();

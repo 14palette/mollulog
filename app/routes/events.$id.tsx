@@ -12,6 +12,7 @@ import { ContentHeader } from "~/components/organisms/content";
 import { ErrorPage } from "~/components/organisms/error";
 import { EventStages } from "~/components/organisms/event";
 import { TimelinePlaceholder } from "~/components/organisms/useractivity";
+import { useSignIn } from "~/contexts/SignInProvider";
 import { graphql } from "~/graphql";
 import type { EventStagesQuery, EventDetailQuery } from "~/graphql/graphql";
 import { runQuery } from "~/lib/baql";
@@ -135,7 +136,7 @@ export const action = async ({ params, request, context }: ActionFunctionArgs) =
   const { env } = context.cloudflare;
   const currentUser = await getAuthenticator(env).isAuthenticated(request);
   if (!currentUser) {
-    return redirect("?signin=true");
+    return redirect("/unauthorized");
   }
 
   const contentId = params.id!;
@@ -206,6 +207,8 @@ const roleColor = {
 export default function EventDetail() {
   const { event, stages, signedIn, studentStates, favoritedStudents, favoritedCounts, memos, myMemo } = useLoaderData<typeof loader>();
 
+  const { showSignIn } = useSignIn();
+
   const fetcher = useFetcher();
   const submit = (data: ActionData) => fetcher.submit(data, { method: "post", encType: "application/json" });
 
@@ -268,7 +271,7 @@ export default function EventDetail() {
                   <div className="py-2 flex items-center justify-end">
                     <div
                       className={`mx-2 px-2 flex items-center rounded-full text-white hover:opacity-50 transition cursor-pointer ${(!signedIn || favorited) ? "bg-red-500" : "bg-neutral-500"}`}
-                      onClick={() => submit({ favorite: { studentId: studentId!, favorited: !favorited } })}
+                      onClick={() => signedIn ? submit({ favorite: { studentId: studentId!, favorited: !favorited } }) : showSignIn()}
                     >
                       <HeartIcon className="size-4" strokeWidth={2} />
                       <span className="ml-1 font-bold">{favoritedCounts.find((favorited) => favorited.studentId === studentId)?.count ?? 0}</span>

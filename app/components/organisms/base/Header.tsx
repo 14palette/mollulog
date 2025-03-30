@@ -1,7 +1,7 @@
 import { MoonIcon } from "@heroicons/react/16/solid";
-import { Link, useLocation, useSearchParams, useSubmit } from "@remix-run/react"
-import { useEffect, useState } from "react";
-import { SignIn } from "~/components/molecules/auth";
+import { Link, useSubmit } from "@remix-run/react"
+import { useEffect } from "react";
+import { useSignIn } from "~/contexts/SignInProvider";
 import { submitPreference } from "~/routes/api.preference";
 
 type HeaderProps = {
@@ -11,27 +11,14 @@ type HeaderProps = {
 };
 
 export default function Header({ currentUsername, darkMode, onToggleDarkMode }: HeaderProps) {
-  const location = useLocation();
-  const [searchParams, setSearchParams] = useSearchParams();
-  const [showSignIn, setShowSignIn] = useState(searchParams.get("signin") === "true");
-  useEffect(() => {
-    if (searchParams.get("signin") === "true") {
-      setShowSignIn(true);
-    } else {
-      setShowSignIn(false);
-    }
-  }, [searchParams]);
-
-  useEffect(() => {
-    if (showSignIn === false && searchParams.get("signin") === "true") {
-      setSearchParams((prev) => {
-        prev.delete("signin");
-        return prev;
-      }, { preventScrollReset: true });
-    }
-  }, [showSignIn]);
-
+  const { showSignIn, hideSignIn } = useSignIn();
   const submit = useSubmit();
+
+  useEffect(() => {
+    if (currentUsername) {
+      hideSignIn();
+    }
+  }, [currentUsername, hideSignIn]);
 
   return (
     <div className="mt-4 mb-12 md:my-16 flex items-end">
@@ -60,23 +47,14 @@ export default function Header({ currentUsername, darkMode, onToggleDarkMode }: 
             </>
           )}
 
-          {currentUsername === null && location.pathname !== "/signin" && (
+          {currentUsername === null && (
             <>
               <Link to="/futures" className="cursor-pointer hover:opacity-50 hover:underline transition-opacity">
                 <span>미래시</span>
               </Link>
-              <div className="cursor-pointer hover:opacity-50 hover:underline transition-opacity" onClick={() => setShowSignIn((prev) => !prev)}>
+              <div className="cursor-pointer hover:opacity-50 hover:underline transition-opacity" onClick={() => showSignIn()}>
                 <span>로그인 후 내 정보 관리 →</span>
               </div>
-
-              {showSignIn && (
-                <>
-                  <div className="w-screen h-full min-h-screen top-0 left-0 fixed bg-black opacity-50 z-40" onClick={() => setShowSignIn(false)} />
-                  <div className="fixed bottom-0 w-full md:max-w-3xl -mx-4 p-4 md:p-8 bg-white dark:bg-neutral-800 z-50 rounded-t-2xl text-base tracking-normal">
-                    <SignIn />
-                  </div>
-                </>
-              )}
             </>
           )}
         </div>

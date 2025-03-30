@@ -7,7 +7,7 @@ export const loader = async ({ context, request }: LoaderFunctionArgs) => {
   const env = context.cloudflare.env;
   const currentUser = await getAuthenticator(env).isAuthenticated(request);
   if (!currentUser) {
-    return redirect("/signin");
+    return redirect("/unauthorized");
   }
 
   return json(await createPasskeyCreationOptions(env, currentUser));
@@ -17,7 +17,7 @@ export const action = async ({ context, request }: ActionFunctionArgs) => {
   const env = context.cloudflare.env;
   const currentUser = await getAuthenticator(env).isAuthenticated(request);
   if (!currentUser) {
-    return redirect("/signin");
+    return redirect("/unauthorized");
   }
 
   const creationResponse = await request.json<RegistrationResponseJSON>();

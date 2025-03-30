@@ -3,6 +3,7 @@ import { ItemCard } from "~/components/atoms/item";
 import { SubTitle, Callout } from "~/components/atoms/typography";
 import { ItemCards } from "~/components/molecules/item";
 import { StudentCards } from "~/components/molecules/student";
+import { useSignIn } from "~/contexts/SignInProvider";
 import type { Role } from "~/models/student";
 
 type EventStagesProps = {
@@ -31,6 +32,8 @@ type EventStagesProps = {
 }
 
 export default function EventStages({ stages, signedIn, ownedStudentIds }: EventStagesProps) {
+  const { showSignIn } = useSignIn();
+
   const itemBonuses: {
     [itemId: string]: {
       item: EventStagesProps["stages"][number]["rewards"][number]["item"],
@@ -83,9 +86,9 @@ export default function EventStages({ stages, signedIn, ownedStudentIds }: Event
       <SubTitle text="스테이지 보상" />
       {!signedIn && (
         <Callout className="my-4" emoji="✨">
-          <span>
-            <Link to="/signin" className="underline">로그인</Link> 후 학생 모집 정보를 등록하면 내 학생 보너스를 계산할 수 있어요.
-          </span>
+          <p>
+            <span className="cursor-pointer underline" onClick={() => showSignIn()}>로그인</span> 후 학생 모집 정보를 등록하면 내 학생 보너스를 계산할 수 있어요.
+          </p>
         </Callout>
       )}
       {signedIn && ownedStudentIds.length === 0 && (

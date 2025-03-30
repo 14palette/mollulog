@@ -1,6 +1,6 @@
 import type { ActionFunctionArgs, LoaderFunctionArgs, MetaFunction} from "@remix-run/cloudflare";
 import { json, redirect } from "@remix-run/cloudflare";
-import { Link, useFetcher, useLoaderData, useSearchParams } from "@remix-run/react";
+import { Link, useFetcher, useLoaderData } from "@remix-run/react";
 import { CalendarDateRangeIcon } from "@heroicons/react/24/solid";
 import { getAuthenticator } from "~/auth/authenticator.server";
 import { Title } from "~/components/atoms/typography";
@@ -12,6 +12,7 @@ import { runQuery } from "~/lib/baql";
 import { sanitizeClassName } from "~/prophandlers";
 import { setMemo, getUserFavoritedStudents, getUserMemos, favoriteStudent, unfavoriteStudent, getFavoritedCounts } from "~/models/content";
 import { useState } from "react";
+import { useSignIn } from "~/contexts/SignInProvider";
 
 export const futureContentsQuery = graphql(`
   query FutureContents($now: ISO8601DateTime!) {
@@ -100,7 +101,7 @@ export const action = async ({ request, context }: ActionFunctionArgs) => {
   const env = context.cloudflare.env;
   const currentUser = await getAuthenticator(env).isAuthenticated(request);
   if (!currentUser) {
-    return redirect("/signin");
+    return redirect("/unauthorized");
   }
 
   const actionData = await request.json<ActionData>();
@@ -127,7 +128,7 @@ export default function Futures() {
   const { signedIn, contents } = loaderData;
   const memos = loaderData.memos ?? {};
 
-  const [_, setSearchParams] = useSearchParams();
+  const { showSignIn } = useSignIn();
 
   const fetcher = useFetcher();
   const submit = (data: ActionData) => fetcher.submit(data, { method: "post", encType: "application/json" });
@@ -203,7 +204,7 @@ export default function Futures() {
         favoritedCounts={favoritedCounts}
         onFavorite={(contentId, studentId, favorited) => {
           if (!signedIn) {
-            setSearchParams({ signin: "true" }, { preventScrollReset: true });
+            showSignIn();
             return;
           }
           toggleFavorite(contentId, studentId, favorited);

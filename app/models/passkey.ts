@@ -93,6 +93,7 @@ export async function verifyAndCreatePasskey(env: Env, sensei: Sensei, response:
     expectedChallenge: creationOptions.challenge,
     expectedOrigin: env.HOST,
     expectedRPID: passkeyRelyingParty(env).id,
+    requireUserVerification: false,
   });
   if (!verificationResult.verified || !response.response.publicKey || !verificationResult.registrationInfo) {
     return null;
@@ -149,6 +150,7 @@ export async function verifyPasskeyAuthentication(env: Env, response: Authentica
     },
     expectedOrigin: env.HOST,
     expectedRPID: passkeyRelyingParty(env).id,
+    requireUserVerification: false,
     credential: {
       id: passkey.keyId,
       publicKey: base64UrlToUint8Array(passkey.publicKey),
