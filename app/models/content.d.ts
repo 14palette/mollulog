@@ -8,3 +8,17 @@ export type Role = "striker" | "special";
 export type EventType = "event" | "mini_event" | "guide_mission" | "immortal_event" | "pickup" | "fes" | "campaign" | "exercise" | "main_story" | "collab";
 export type RaidType = "total_assault" | "elimination" | "unlimit";
 export type PickupType = "usual" | "limited" | "given" | "fes";
+
+export const attackTypeColorMap: Record<AttackType, "red" | "yellow" | "blue" | "purple"> = {
+  explosive: "red",
+  piercing: "yellow",
+  mystic: "blue",
+  sonic: "purple",
+};
+
+export const defenseTypeColorMap: Record<DefenseType, "red" | "yellow" | "blue" | "purple"> = {
+  light: "red",
+  heavy: "yellow",
+  special: "blue",
+  elastic: "purple",
+};

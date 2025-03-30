@@ -1,36 +1,23 @@
 import type { LoaderFunctionArgs, MetaFunction } from "@remix-run/cloudflare";
-import { Link, json, useLoaderData } from "@remix-run/react";
+import { json, useLoaderData } from "@remix-run/react";
 import dayjs from "dayjs";
+import { useState } from "react";
 import { getAuthenticator } from "~/auth/authenticator.server";
-import { Callout, SubTitle } from "~/components/atoms/typography";
+import { SubTitle } from "~/components/atoms/typography";
 import { ContentHeader } from "~/components/organisms/content";
-import { PartyView } from "~/components/organisms/party";
 import { graphql } from "~/graphql";
 import type { RaidDetailQuery } from "~/graphql/graphql";
 import { runQuery } from "~/lib/baql";
 import { raidTypeLocale } from "~/locales/ko";
 import { bossBannerUrl } from "~/models/assets";
-import { getPartiesByRaidId } from "~/models/party";
-import type { StudentState} from "~/models/student-state";
-import { getUserStudentStates } from "~/models/student-state";
+import { RaidRanks } from "~/components/organisms/raid";
+import type { RaidRankFilters } from "~/components/organisms/raid/RaidRanks";
+import { getAllStudents } from "~/models/student";
 
 const raidDetailQuery = graphql(`
-  query RaidDetail($raidId: String!, $studentIds: [String!]) {
+  query RaidDetail($raidId: String!) {
     raid(raidId: $raidId) {
-      raidId
-      type
-      name
-      boss
-      since
-      until
-      terrain
-      attackType
-      defenseType
-    }
-    students(studentIds: $studentIds) {
-      studentId
-      name
-      initialTier
+      raidId type name boss since until terrain attackType defenseType
     }
   }
 `);
@@ -48,10 +35,7 @@ export const loader = async ({ request, context, params }: LoaderFunctionArgs) =
   }
 
   const env = context.cloudflare.env;
-  const parties = await getPartiesByRaidId(env, raidId, true);
-  const studentIds = parties.flatMap((party) => party.studentIds.flatMap((squad) => squad));
-
-  const { data, error } = await runQuery<RaidDetailQuery>(raidDetailQuery, { raidId, studentIds });
+  const { data, error } = await runQuery<RaidDetailQuery>(raidDetailQuery, { raidId });
   let errorMessage: string | null = null;
   if (error || !data) {
     errorMessage = error?.message ?? "이벤트 정보를 가져오는 중 오류가 발생했어요";
@@ -70,17 +54,14 @@ export const loader = async ({ request, context, params }: LoaderFunctionArgs) =
   }
 
   const sensei = await getAuthenticator(env).isAuthenticated(request);
-  let studentStates: StudentState[] = [];
-  if (sensei) {
-    studentStates = await getUserStudentStates(env, sensei.username, true) ?? [];
-  }
-
+  const allStudents = await getAllStudents(env, true);
   return json({
     raid: data!.raid!,
-    parties,
-    students: data!.students!,
-    studentStates,
     signedIn: sensei !== null,
+    allStudents: allStudents.map((student) => ({
+      studentId: student.id,
+      name: student.name,
+    })),
   });
 };
 
@@ -103,7 +84,14 @@ export const meta: MetaFunction<typeof loader> = ({ data }) => {
 }
 
 export default function RaidDetail() {
-  const { raid, parties, students, studentStates, signedIn } = useLoaderData<typeof loader>();
+  const { raid, signedIn, allStudents } = useLoaderData<typeof loader>();
+
+  const [filters, setFilters] = useState<RaidRankFilters>({
+    byStates: false,
+    byTier: false,
+    byFutures: false,
+    futureStudentIds: [],
+  });
 
   return (
     <>
@@ -118,24 +106,18 @@ export default function RaidDetail() {
         />
       </div>
 
-      <div className="my-8">
-        <SubTitle text="공략 및 편성" />
-        {!signedIn && (
-          <Callout className="my-4" emoji="✨">
-            <span>
-              <Link to="/signin" className="underline">로그인</Link> 후 학생 모집 정보를 등록하면 내 학생에 맞는 편성을 확인할 수 있어요.
-            </span>
-          </Callout>
-        )}
-
-        {(parties.length === 0) && <p className="my-8 text-center">공략 정보를 준비중이에요.</p>}
-        {parties.map((party) => (
-          <PartyView
-            key={`party-${party.uid}`}
-            party={party} sensei={party.sensei} students={students} studentStates={studentStates}
-          />
-        ))}
+      <div className="mb-2">
+        <SubTitle className="inline" text="일본 서비스 순위 정보 " />
+        <sup>beta</sup>
       </div>
+      <p className="mb-4 text-sm text-neutral-500">상위 2만명의 순위 정보를 제공해요.</p>
+      <RaidRanks
+        raidId={raid.raidId}
+        students={allStudents}
+        signedIn={signedIn}
+        filters={filters}
+        onFilterChange={setFilters}
+      />
     </>
   );
 }

@@ -3,6 +3,7 @@ import SubTitle from "./SubTitle";
 import MultilineText from "./MultilineText";
 import Callout from "./Callout";
 import KeyValueTable from "./KeyValueTable";
+import EmptyView from "./EmptyView";
 
 export {
   Title,
@@ -10,4 +11,5 @@ export {
   MultilineText,
   Callout,
   KeyValueTable,
+  EmptyView,
 };

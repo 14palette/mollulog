@@ -21,8 +21,10 @@ export default function StudentSearch(
   { label, placeholder, description, students, onSelect }: StudentSearchProps,
 ) {
   const [searched, setSearched] = useState<SearchableStudent[]>([]);
+  const [searchValue, setSearchValue] = useState("");
 
   const onSearch = (search: string) => {
+    setSearchValue(search);
     if (search.length === 0) {
       return setSearched([]);
     }
@@ -32,14 +34,17 @@ export default function StudentSearch(
   return (
     <>
       <div>
-        <Input label={label} placeholder={placeholder} description={description} onChange={onSearch} />
+        <Input label={label} placeholder={placeholder ?? "이름으로 찾기..."} description={description} onChange={onSearch} value={searchValue} />
       </div>
       {(searched && searched.length > 0) && (
         <StudentCards
           students={searched}
           onSelect={(studentId) => {
-            studentId && onSelect(studentId);
-            setSearched([]);
+            if (studentId) {
+              onSelect(studentId);
+              setSearchValue("");
+              setSearched([]);
+            }
           }}
         />
       )}
