@@ -12,13 +12,14 @@ type StudentSearchProps = {
   label?: string;
   placeholder?: string;
   description?: string;
+  grid?: 4;
 
   students: SearchableStudent[];
   onSelect: (studentId: string) => void;
 };
 
 export default function StudentSearch(
-  { label, placeholder, description, students, onSelect }: StudentSearchProps,
+  { label, placeholder, description, grid, students, onSelect }: StudentSearchProps,
 ) {
   const [searched, setSearched] = useState<SearchableStudent[]>([]);
   const [searchValue, setSearchValue] = useState("");
@@ -28,7 +29,7 @@ export default function StudentSearch(
     if (search.length === 0) {
       return setSearched([]);
     }
-    setSearched(filterStudentByName(search, students, 6));
+    setSearched(filterStudentByName(search, students, grid ?? 6));
   };
 
   return (
@@ -38,6 +39,7 @@ export default function StudentSearch(
       </div>
       {(searched && searched.length > 0) && (
         <StudentCards
+          pcGrid={grid}
           students={searched}
           onSelect={(studentId) => {
             if (studentId) {

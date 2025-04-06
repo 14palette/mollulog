@@ -15,12 +15,10 @@ export const meta: MetaFunction = () => [
 
 export const loader = async ({ request, context }: LoaderFunctionArgs) => {
   const sensei = await getAuthenticator(context.cloudflare.env).isAuthenticated(request);
-  console.log("sensei", sensei);
   if (!sensei) {
     return redirect("/unauthorized");
   } else if (sensei.active) {
-    const redirectPath = redirectTo(request);
-    return redirect(redirectPath ? redirectPath : `/@${sensei.username}`);
+    return redirect(redirectTo(request) ?? `/@${sensei.username}`);
   }
 
   const { data } = await runQuery<ProfileStudentsQuery>(profileStudentsQuery, {});
@@ -39,11 +37,11 @@ export const action: ActionFunction = async ({ request, context }) => {
   const env = context.cloudflare.env;
   const authenticator = getAuthenticator(env);
   const sensei = await authenticator.isAuthenticated(request);
+  const redirectPath = redirectTo(request) ?? `/@${sensei?.username}`;
   if (!sensei) {
     return redirect("/unauthorized");
   } else if (sensei.active) {
-    const redirectPath = redirectTo(request);
-    return redirect(redirectPath ? redirectPath : `/@${sensei.username}`);
+    return redirect(redirectPath);
   }
 
   const formData = await request.formData();
@@ -59,7 +57,7 @@ export const action: ActionFunction = async ({ request, context }) => {
   const { getSession, commitSession } = sessionStorage(env);
   const session = await getSession(request.headers.get("cookie"));
   session.set(authenticator.sessionKey, sensei);
-  return redirect(`/@${sensei.username}`, {
+  return redirect(redirectPath, {
     headers: { "Set-Cookie": await commitSession(session) },
   });
 }
