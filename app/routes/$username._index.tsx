@@ -1,34 +1,24 @@
 import type { LoaderFunctionArgs, MetaFunction } from "@remix-run/cloudflare";
-import { defer } from "@remix-run/cloudflare";
-import { Await, Link, useFetcher, useLoaderData } from "@remix-run/react";
+import { json } from "@remix-run/cloudflare";
+import { Link, useFetcher, useLoaderData } from "@remix-run/react";
 import { Callout, SubTitle } from "~/components/atoms/typography";
 import type { ProfileCardProps } from "~/components/organisms/profile";
 import { ProfileCard } from "~/components/organisms/profile";
 import { getFollowers, getFollowings } from "~/models/followership";
-import { getSenseiByUsername } from "~/models/sensei";
 import { getUserStudentStates } from "~/models/student-state";
 import type { ActionData } from "./api.followerships";
 import { getAuthenticator } from "~/auth/authenticator.server";
-import { getUserActivitiesBySensei } from "~/models/user-activity";
-import { Timeline, TimelinePlaceholder } from "~/components/organisms/useractivity";
-import { Suspense } from "react";
+import { Timeline } from "~/components/organisms/useractivity";
 import { studentImageUrl } from "~/models/assets";
+import { getRouteSensei } from "./$username";
 
 export const loader = async ({ context, request, params }: LoaderFunctionArgs) => {
-  const usernameParam = params.username;
-  if (!usernameParam || !usernameParam.startsWith("@")) {
-    throw new Error("Not found");
-  }
-
   const env = context.cloudflare.env;
-  const username = usernameParam.replace("@", "");
-  const sensei = (await getSenseiByUsername(env, username))!;
+  const sensei = await getRouteSensei(env, params);
 
   // Get a relationship
-  const [following, followers] = await Promise.all([
-    getFollowings(env, sensei.id),
-    getFollowers(env, sensei.id),
-  ]);
+  const following = await getFollowings(env, sensei.id);
+  const followers = await getFollowers(env, sensei.id);
 
   const relationship = { followed: false, following: false };
   const currentUser = await getAuthenticator(env).isAuthenticated(request);
@@ -37,17 +27,28 @@ export const loader = async ({ context, request, params }: LoaderFunctionArgs) =
     relationship.following = followers.find((each) => each.id === currentUser.id) !== undefined;
   }
 
-  const states = await getUserStudentStates(env, username);
-  return defer({
-    username,
+  // Get student tiers
+  const states = await getUserStudentStates(env, sensei.username) ?? [];
+  const tierCounts: { [key: number]: number } = {};
+  states.forEach(({ student, tier, owned }) => {
+    if (owned) {
+      const studentTier = tier ?? student.initialTier;
+      tierCounts[studentTier] = (tierCounts[studentTier] ?? 0) + 1;
+    }
+  });
+
+  return json({
     currentUsername: currentUser?.username ?? null,
+    sensei: {
+      username: sensei.username,
+      profileStudentId: sensei.profileStudentId ?? null,
+      bio: sensei.bio ?? null,
+      friendCode: sensei.friendCode ?? null,
+    },
     relationship,
     following: following.length,
     followers: followers.length,
-    profileStudentId: sensei?.profileStudentId ?? null,
-    friendCode: sensei?.friendCode ?? null,
-    states,
-    userActivities: getUserActivitiesBySensei(env, sensei.id),
+    tierCounts,
   });
 };
 
@@ -62,33 +63,21 @@ export const meta: MetaFunction = ({ params }) => {
 
 export default function UserIndex() {
   const loaderData = useLoaderData<typeof loader>();
-  const { username, currentUsername, friendCode, profileStudentId, states, userActivities } = loaderData;
+  const { sensei, currentUsername, tierCounts } = loaderData;
 
   let followability: ProfileCardProps["followability"] = loaderData.relationship.following ? "following" : "followable";
-  if (currentUsername === username) {
+  if (currentUsername === sensei.username) {
     followability = "unable";
   }
 
   const fetcher = useFetcher<ActionData>();
 
-  if (!states) {
-    return <p className="my-8">선생님을 찾을 수 없어요. 다른 이름으로 검색해보세요.</p>
-  }
-
   let imageUrl: string | null = null;
-  if (profileStudentId !== null) {
-    imageUrl = studentImageUrl(profileStudentId);
+  if (sensei.profileStudentId !== null) {
+    imageUrl = studentImageUrl(sensei.profileStudentId);
   }
 
-  const tierCounts = new Map<number, number>();
-  states!.forEach(({ student, tier, owned }) => {
-    if (owned) {
-      const studentTier = tier ?? student.initialTier;
-      tierCounts.set(studentTier, (tierCounts.get(studentTier) ?? 0) + 1);
-    }
-  });
-
-  const isNewbee = username === currentUsername && states.every(({ owned }) => !owned);
+  const isNewbee = sensei.username === currentUsername && Object.values(tierCounts).every((count) => count === 0);
 
   return (
     <div className="my-8">
@@ -101,26 +90,21 @@ export default function UserIndex() {
 
       <div className="my-8">
         <ProfileCard
-          username={username}
-          friendCode={friendCode}
+          {...sensei}
           imageUrl={imageUrl}
           tierCounts={tierCounts}
           followability={followability}
           followers={loaderData.followers}
           following={loaderData.following}
           loading={fetcher.state !== "idle"}
-          onFollow={() => fetcher.submit({ username }, { method: "post", action: "/api/followerships" })}
-          onUnfollow={() => fetcher.submit({ username }, { method: "delete", action: "/api/followerships" })}
+          onFollow={() => fetcher.submit({ username: sensei.username }, { method: "post", action: "/api/followerships" })}
+          onUnfollow={() => fetcher.submit({ username: sensei.username }, { method: "delete", action: "/api/followerships" })}
         />
       </div>
 
       <div className="md:my-8 my-16">
         <SubTitle text="최근 활동" />
-        <Suspense fallback={<TimelinePlaceholder />}>
-          <Await resolve={userActivities}>
-            {(userActivities) => <Timeline activities={userActivities.map((activity) => ({ ...activity, eventAt: new Date(activity.eventAt) }))} />}
-          </Await>
-        </Suspense>
+        <Timeline activities={[]} />
       </div>
     </div>
   );

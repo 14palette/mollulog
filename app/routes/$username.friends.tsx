@@ -1,4 +1,4 @@
-import type { LoaderFunction } from "@remix-run/cloudflare";
+import type { LoaderFunctionArgs } from "@remix-run/cloudflare";
 import { json } from "@remix-run/cloudflare";
 import { useLoaderData, useSearchParams } from "@remix-run/react";
 import { SparklesIcon, UsersIcon } from "@heroicons/react/24/outline";
@@ -9,36 +9,19 @@ import { ErrorPage } from "~/components/organisms/error";
 import { SenseiList } from "~/components/organisms/sensei";
 import { getFollowers, getFollowings } from "~/models/followership";
 import type { Sensei } from "~/models/sensei";
-import { getSenseiByUsername } from "~/models/sensei";
+import { getRouteSensei } from "./$username";
 
-type LoaderData = {
-  following: Sensei[];
-  followers: Sensei[];
-};
-
-export const loader: LoaderFunction = async ({ params, context }) => {
-  const usernameParam = params.username;
-  if (!usernameParam || !usernameParam.startsWith("@")) {
-    throw new Error("Not found");
-  }
-
+export const loader = async ({ params, context }: LoaderFunctionArgs) => {
   const env = context.cloudflare.env;
-  const username = usernameParam.replace("@", "");
-  const sensei = (await getSenseiByUsername(env, username))!;
-
-  const [following, followers] = await Promise.all([
-    getFollowings(env, sensei.id),
-    getFollowers(env, sensei.id),
-  ]);
-
-  return json<LoaderData>({
-    following,
-    followers,
+  const sensei = await getRouteSensei(env, params);
+  return json({
+    following: await getFollowings(env, sensei.id),
+    followers: await getFollowers(env, sensei.id),
   });
 };
 
 export default function UserFollowing() {
-  const { following, followers } = useLoaderData<LoaderData>();
+  const { following, followers } = useLoaderData<typeof loader>();
 
   const [params, setParams] = useSearchParams();
   const [senseis, setSenseis] = useState<Sensei[]>(params.get("tab") === "followers" ? followers : following);

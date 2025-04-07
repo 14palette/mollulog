@@ -5,6 +5,7 @@ import { studentImageUrl } from "~/models/assets";
 type SenseiListProps = {
   senseis: {
     username: string;
+    bio: string | null;
     profileStudentId: string | null;
     friendCode: string | null;
   }[];
@@ -20,6 +21,7 @@ export default function SenseiList({ senseis }: SenseiListProps) {
               <ProfileUsername
                 imageUrl={sensei.profileStudentId && studentImageUrl(sensei.profileStudentId)}
                 username={sensei.username}
+                bio={sensei.bio}
                 friendCode={sensei.friendCode}
               />
             </div>

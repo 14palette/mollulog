@@ -6,10 +6,10 @@ import type { UserFuturesQuery } from "~/graphql/graphql";
 import { runQuery } from "~/lib/baql";
 import { Link, useLoaderData } from "@remix-run/react";
 import { graphql } from "~/graphql";
-import { getSenseiByUsername } from "~/models/sensei";
 import { SubTitle } from "~/components/atoms/typography";
 import { sanitizeClassName } from "~/prophandlers";
 import { getUserFavoritedStudents, getUserMemos } from "~/models/content";
+import { getRouteSensei } from "./$username";
 
 const userFuturesQuery = graphql(`
   query UserFutures($now: ISO8601DateTime!) {
@@ -38,12 +38,6 @@ export const meta: MetaFunction = ({ params }) => {
 };
 
 export const loader = async ({ context, params }: LoaderFunctionArgs) => {
-  const env = context.cloudflare.env;
-  const usernameParam = params.username;
-  if (!usernameParam || !usernameParam.startsWith("@")) {
-    throw new Error("Not found");
-  }
-
   const truncatedNow = new Date();
   truncatedNow.setMinutes(0, 0, 0);
 
@@ -52,8 +46,9 @@ export const loader = async ({ context, params }: LoaderFunctionArgs) => {
     throw error ?? "failed to fetch events";
   }
 
-  const username = usernameParam.replace("@", "");
-  const sensei = (await getSenseiByUsername(env, username))!;
+  const env = context.cloudflare.env;
+  const sensei = await getRouteSensei(env, params);
+
   const favoritedStudents = await getUserFavoritedStudents(env, sensei.id);
   const plannedContentIds = favoritedStudents.map(({ contentId }) => contentId);
 

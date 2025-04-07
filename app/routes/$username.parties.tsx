@@ -10,6 +10,7 @@ import type { RaidForPartyQuery } from "~/graphql/graphql";
 import { runQuery } from "~/lib/baql";
 import { getUserParties } from "~/models/party";
 import { getUserStudentStates } from "~/models/student-state";
+import { getRouteSensei } from "./$username";
 
 export const raidForPartyQuery = graphql(`
   query RaidForParty {
@@ -29,24 +30,19 @@ export const meta: MetaFunction = ({ params }) => {
 };
 
 export const loader = async ({ context, request, params }: LoaderFunctionArgs) => {
-  const env = context.cloudflare.env;
-  const usernameParam = params.username;
-  if (!usernameParam || !usernameParam.startsWith("@")) {
-    throw new Error("Not found");
-  }
-
   const { data } = await runQuery<RaidForPartyQuery>(raidForPartyQuery, {});
   if (!data) {
     throw new Error("failed to load data");
   }
 
-  const username = usernameParam.replace("@", "");
+  const env = context.cloudflare.env;
+  const sensei = await getRouteSensei(env, params);
   const currentUser = await getAuthenticator(env).isAuthenticated(request);
-  const parties = (await getUserParties(env, username)).reverse();
-  const states = await getUserStudentStates(env, username, true);
+  const parties = (await getUserParties(env, sensei.username)).reverse();
+  const states = await getUserStudentStates(env, sensei.username, true);
 
   return json({
-    me: username === currentUser?.username,
+    me: sensei.username === currentUser?.username,
     states: states!,
     parties,
     raids: data.raids.nodes,

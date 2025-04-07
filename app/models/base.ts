@@ -15,7 +15,7 @@ export async function fetchCached<T>(env: Env, dataKey: string, fn: () => Promis
 }
 
 export async function deleteCache(env: Env, ...cacheKeys: string[]) {
-  await Promise.all(cacheKeys.map((key) => env.KV_USERDATA.delete(key)));
+  await Promise.all(cacheKeys.map((key) => env.KV_USERDATA.delete(`cache::${key}`)));
 }
 
 export async function flushCacheAll(env: Env) {
