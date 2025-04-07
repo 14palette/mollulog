@@ -6,20 +6,16 @@ import { useStateFilter } from "~/components/organisms/student";
 import { StudentCards } from "~/components/molecules/student";
 import { getAuthenticator } from "~/auth/authenticator.server";
 import { Callout } from "~/components/atoms/typography";
+import { getRouteSensei } from "./$username";
 
 export const loader = async ({ context, request, params }: LoaderFunctionArgs) => {
   const env = context.cloudflare.env;
-  const usernameParam = params.username;
-  if (!usernameParam || !usernameParam.startsWith("@")) {
-    throw new Error("Not found");
-  }
-
   const currentUser = await getAuthenticator(env).isAuthenticated(request);
-  const username = usernameParam.replace("@", "");
+  const sensei = await getRouteSensei(env, params);
   return json({
     currentUsername: currentUser?.username,
-    username,
-    states: await getUserStudentStates(env, username, false),
+    username: sensei.username,
+    states: await getUserStudentStates(env, sensei.username, false),
   });
 };
 

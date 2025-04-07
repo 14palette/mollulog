@@ -1,8 +1,18 @@
 import type { Env } from "~/env.server";
 import type { Sensei } from "./sensei";
 import { getSenseisById } from "./sensei";
-import { createFollowingActivity } from "./user-activity";
 import { deleteCache, fetchCached } from "./base";
+import { int, sqliteTable, text } from "drizzle-orm/sqlite-core";
+import { and, count, eq, or, sql } from "drizzle-orm";
+import { drizzle } from "drizzle-orm/d1";
+
+const followershipsTable = sqliteTable("followerships", {
+  id: int().primaryKey({ autoIncrement: true }),
+  followerId: int().notNull(),
+  followeeId: int().notNull(),
+  createdAt: text().notNull().default(sql`current_timestamp`),
+  updatedAt: text().notNull().default(sql`current_timestamp`),
+});
 
 export type Followership = {
   followerId: number;
@@ -15,23 +25,37 @@ export type Relationship = {
 };
 
 export async function follow(env: Env, followerId: number, followeeId: number) {
-  const query = "insert into followerships (followerId, followeeId) values (?1, ?2)";
-  await env.DB.prepare(query).bind(followerId, followeeId).run();
-  await createFollowingActivity(env, followerId, followeeId);
+  const db = drizzle(env.DB);
+  await db.insert(followershipsTable).values({ followerId, followeeId }).run();
   await deleteCache(env, followersCacheKey(followeeId), followingCacheKey(followerId));
 }
 
 export async function unfollow(env: Env, followerId: number, followeeId: number) {
-  const query = "delete from followerships where followerId = ?1 and followeeId = ?2";
-  await env.DB.prepare(query).bind(followerId, followeeId).run();
+  const db = drizzle(env.DB);
+  await db.delete(followershipsTable).where(
+    and(eq(followershipsTable.followerId, followerId), eq(followershipsTable.followeeId, followeeId)),
+  ).run();
   await deleteCache(env, followersCacheKey(followeeId), followingCacheKey(followerId));
+}
+
+export async function getFollowershipCount(env: Env, userId: number): Promise<{ followers: number, followings: number }> {
+  const db = drizzle(env.DB);
+  const result = await db.select({
+    followers: count(followershipsTable.followerId),
+    followings: count(followershipsTable.followeeId),
+  }).from(followershipsTable).where(or(eq(followershipsTable.followerId, userId), eq(followershipsTable.followeeId, userId)));
+
+  return {
+    followers: result[0].followers,
+    followings: result[0].followings,
+  };
 }
 
 export async function getFollowers(env: Env, followeeId: number): Promise<Sensei[]> {
   return fetchCached(env, followersCacheKey(followeeId), async () => {
-    const query = "select * from followerships where followeeId = ?1";
-    const result = await env.DB.prepare(query).bind(followeeId).all<Followership>();
-    const followerIds = result.results.map((each) => each.followerId);
+    const db = drizzle(env.DB);
+    const result = await db.select().from(followershipsTable).where(eq(followershipsTable.followeeId, followeeId));
+    const followerIds = result.map((each) => each.followerId);
 
     return getSenseisById(env, [...new Set(followerIds)]);
   });
@@ -39,9 +63,9 @@ export async function getFollowers(env: Env, followeeId: number): Promise<Sensei
 
 export async function getFollowings(env: Env, followerId: number): Promise<Sensei[]> {
   return fetchCached(env, followingCacheKey(followerId), async () => {
-    const query = "select * from followerships where followerId = ?1";
-    const result = await env.DB.prepare(query).bind(followerId).all<Followership>();
-    const followeeIds = result.results.map((each) => each.followeeId);
+    const db = drizzle(env.DB);
+    const result = await db.select().from(followershipsTable).where(eq(followershipsTable.followerId, followerId));
+    const followeeIds = result.map((each) => each.followeeId);
 
     return getSenseisById(env, [...new Set(followeeIds)]);
   });

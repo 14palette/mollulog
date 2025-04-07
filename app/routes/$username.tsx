@@ -1,34 +1,28 @@
-import type { LoaderFunction } from "@remix-run/cloudflare";
 import { json } from "@remix-run/cloudflare";
-import { Outlet, isRouteErrorResponse, useLoaderData, useParams, useRouteError } from "@remix-run/react";
+import { Outlet, Params, isRouteErrorResponse, useParams, useRouteError } from "@remix-run/react";
 import { Title } from "~/components/atoms/typography";
 import { ErrorPage } from "~/components/organisms/error";
 import { Navigation } from "~/components/organisms/navigation";
-import { getSenseiByUsername } from "~/models/sensei";
+import { Env } from "~/env.server";
+import { getSenseiByUsername, type Sensei } from "~/models/sensei";
 
-type LoaderData = {
-  username: string;
-}
-
-export const loader: LoaderFunction = async ({ params, context }) => {
+export async function getRouteSensei(env: Env, params: Params<string>): Promise<Sensei> {
   const usernameParam = params.username;
   if (!usernameParam || !usernameParam.startsWith("@")) {
     throw new Error("Not found");
   }
 
   const username = usernameParam.replace("@", "");
-  const env = context.cloudflare.env;
-  if (!(await getSenseiByUsername(env, username))) {
+  const sensei = await getSenseiByUsername(env, username);
+  if (!sensei) {
     throw json(
-      { error: { message: "해당하는 닉네임의 선생님을 찾을 수 없어요", data: { username } } },
+      { error: { message: "선생님을 찾을 수 없어요", data: { username } } },
       { status: 404 },
     );
   }
 
-  return json<LoaderData>({
-    username,
-  });
-};
+  return sensei;
+}
 
 export const ErrorBoundary = () => {
   const error = useRouteError();
@@ -47,8 +41,8 @@ export const ErrorBoundary = () => {
 };
 
 export default function User() {
-  const { username } = useLoaderData<LoaderData>();
   const params = useParams();
+  const username = (params.username as string).replace("@", "");
 
   return (
     <>

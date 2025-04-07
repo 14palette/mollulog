@@ -13,6 +13,7 @@ import { SubTitle } from "~/components/atoms/typography";
 import { graphql } from "~/graphql";
 import { getAllStudentsMap } from "~/models/student";
 import dayjs from "dayjs";
+import { getRouteSensei } from "./$username";
 
 export const userPickupEventsQuery = graphql(`
   query UserPickupEvents($eventIds: [String!]!) {
@@ -38,16 +39,7 @@ export const meta: MetaFunction = ({ params }) => {
 
 export const loader = async ({ context, request, params }: LoaderFunctionArgs) => {
   const env = context.cloudflare.env;
-  const usernameParam = params.username;
-  if (!usernameParam || !usernameParam.startsWith("@")) {
-    throw new Error("Not found");
-  }
-
-  const username = usernameParam.replace("@", "");
-  const sensei = await getSenseiByUsername(env, username);
-  if (!sensei) {
-    throw new Error("Not found");
-  }
+  const sensei = await getRouteSensei(env, params);
 
   const pickupHistories = await getPickupHistories(env, sensei.id);
   const eventIds = pickupHistories.map((history) => history.eventId);
@@ -96,7 +88,7 @@ export const loader = async ({ context, request, params }: LoaderFunctionArgs) =
 
   const currentUser = await getAuthenticator(env).isAuthenticated(request);
   return json({
-    me: username === currentUser?.username,
+    me: sensei.username === currentUser?.username,
     pickupHistories: aggregatedHistories.map((history) => ({
       uid: history.uid,
       event: history.event,
