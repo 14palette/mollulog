@@ -61,7 +61,7 @@
     "ts-jest": "^29.2.6",
     "ts-node": "^10.9.2",
     "typescript": "^5.8.2",
-    "vite": "^5.4.11",
+    "vite": "^5.4.17",
     "vite-tsconfig-paths": "^5.1.4",
     "wrangler": "^3.111.0"
   },
