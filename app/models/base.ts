@@ -19,7 +19,7 @@ export async function fetchCached<T>(env: Env, dataKey: string, fn: () => Promis
 export async function deleteCache(env: Env, ...dataKeys: string[]) {
   await Promise.all(dataKeys.map((key) => {
     const cacheKey = `${cachePrefix}${key}`;
-    env.KV_USERDATA.delete(cacheKey);
+    return env.KV_USERDATA.delete(cacheKey);
   }));
 }
 

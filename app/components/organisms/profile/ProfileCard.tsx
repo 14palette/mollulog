@@ -51,7 +51,7 @@ export default function ProfileCard(props: ProfileCardProps) {
                 <span className="w-16 inline-block">- {tierCounts[tier] ?? 0}명</span>
               </div>
               <div className="grow">
-                <Progress ratio={(tierCounts[tier] ?? 0) / totalCount} color={colors[tier]} />
+                <Progress ratio={totalCount > 0 ? (tierCounts[tier] ?? 0) / totalCount : 0} color={colors[tier]} />
               </div>
             </div>
           </div>
