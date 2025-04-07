@@ -11,6 +11,7 @@ import { getAuthenticator } from "~/auth/authenticator.server";
 import { Timeline } from "~/components/organisms/useractivity";
 import { studentImageUrl } from "~/models/assets";
 import { getRouteSensei } from "./$username";
+import { useSignIn } from "~/contexts/SignInProvider";
 
 export const loader = async ({ context, request, params }: LoaderFunctionArgs) => {
   const env = context.cloudflare.env;
@@ -79,6 +80,8 @@ export default function UserIndex() {
 
   const isNewbee = sensei.username === currentUsername && Object.values(tierCounts).every((count) => count === 0);
 
+  const { showSignIn } = useSignIn();
+
   return (
     <div className="my-8">
       {isNewbee && (
@@ -97,8 +100,8 @@ export default function UserIndex() {
           followers={loaderData.followers}
           following={loaderData.following}
           loading={fetcher.state !== "idle"}
-          onFollow={() => fetcher.submit({ username: sensei.username }, { method: "post", action: "/api/followerships" })}
-          onUnfollow={() => fetcher.submit({ username: sensei.username }, { method: "delete", action: "/api/followerships" })}
+          onFollow={() => currentUsername ? fetcher.submit({ username: sensei.username }, { method: "post", action: "/api/followerships" }) : showSignIn()}
+          onUnfollow={() => currentUsername ? fetcher.submit({ username: sensei.username }, { method: "delete", action: "/api/followerships" }) : showSignIn()}
         />
       </div>
 
