@@ -1,7 +1,9 @@
 import type { Env } from "~/env.server";
 
+const cachePrefix = "cache::";
+
 export async function fetchCached<T>(env: Env, dataKey: string, fn: () => Promise<T>, ttl?: number): Promise<T> {
-  const cacheKey = `cache::${dataKey}`;
+  const cacheKey = `${cachePrefix}${dataKey}`;
   const cached = await env.KV_USERDATA.get(cacheKey);
   if (cached) {
     return JSON.parse(cached) as T;
@@ -14,14 +16,16 @@ export async function fetchCached<T>(env: Env, dataKey: string, fn: () => Promis
   return data;
 }
 
-export async function deleteCache(env: Env, ...cacheKeys: string[]) {
-  await Promise.all(cacheKeys.map((key) => env.KV_USERDATA.delete(`cache::${key}`)));
+export async function deleteCache(env: Env, ...dataKeys: string[]) {
+  await Promise.all(dataKeys.map((key) => {
+    const cacheKey = `${cachePrefix}${key}`;
+    env.KV_USERDATA.delete(cacheKey);
+  }));
 }
 
 export async function flushCacheAll(env: Env) {
-  await env.KV_USERDATA.list({ prefix: "cache::" }).then((keys) => {
-    keys.keys.forEach((key) => env.KV_USERDATA.delete(key.name));
-  });
+  const caches = await env.KV_USERDATA.list({ prefix: cachePrefix });
+  await Promise.all(caches.keys.map((key) => env.KV_USERDATA.delete(key.name)));
 }
 
 export function isUniqueConstraintError(err: Error): { table: string, column: string } | null {
