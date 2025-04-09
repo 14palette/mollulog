@@ -8,11 +8,10 @@ import {
   Scripts,
   ScrollRestoration,
   useLoaderData,
-  useMatches,
 } from "@remix-run/react";
 import styles from "./tailwind.css?url";
 import { getAuthenticator } from "./auth/authenticator.server";
-import { Header, Footer } from "./components/organisms/base";
+import { Footer, Sidebar } from "./components/organisms/base";
 import { getPreference } from "./auth/preference.server";
 import { useState } from "react";
 import { SignInProvider } from "./contexts/SignInProvider";
@@ -42,9 +41,6 @@ export default function App() {
 
   const [darkMode, setDarkMode] = useState(loaderData.darkMode);
 
-  const matches = useMatches();
-  const pathname = matches[matches.length - 1].pathname;
-
   return (
     <html lang="ko" className={darkMode ? "dark" : ""}>
       <head>
@@ -61,13 +57,17 @@ export default function App() {
       </head>
       <body className="text-neutral-900 dark:bg-neutral-800 dark:text-neutral-200 transition">
         <SignInProvider>
-          {pathname.startsWith("/edit") ? <Outlet /> : (
-            <div className="mx-auto max-w-3xl p-4">
-              <Header currentUsername={currentUsername} darkMode={darkMode} onToggleDarkMode={setDarkMode} />
-              <Outlet />
-              <Footer />
+          <div className="mx-auto flex flex-col-reverse lg:flex-row">
+            <div className="px-4 py-6 w-80">
+              <Sidebar currentUsername={currentUsername} setDarkMode={setDarkMode} />
             </div>
-          )}
+            <div className="w-full overflow-y-auto">
+              <div className="xl:h-screen max-w-3xl 2xl:max-w-4xl md:px-8 py-6 xl:border-l xl:border-r border-neutral-100 dark:border-neutral-700">
+                <Outlet />
+                <Footer />
+              </div>
+            </div>
+          </div>
           <SignInBottomSheet />
         </SignInProvider>
         <ScrollRestoration />

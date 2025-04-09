@@ -1,7 +1,6 @@
 import { ActionFunctionArgs, json, LoaderFunctionArgs, MetaFunction, redirect } from "@remix-run/cloudflare";
 import { useLoaderData } from "@remix-run/react";
 import { getAuthenticator } from "~/auth/authenticator.server";
-import { Title } from "~/components/atoms/typography";
 import { AddContentButton } from "~/components/molecules/editor";
 import { PickupHistoryView } from "~/components/organisms/pickup";
 import { UserPickupEventsQuery, UserPickupEventsQueryVariables } from "~/graphql/graphql";
@@ -65,26 +64,23 @@ export default function EditPickups() {
 
   return (
     <>
-      <Title text="모집 이력 관리" />
-      <div className="max-w-4xl">
-        <AddContentButton text="새로운 모집 이력 추가하기" link="/edit/pickups/new" />
+      <AddContentButton text="새로운 모집 이력 추가하기" link="/edit/pickups/new" />
 
-        {pickupHistories.map(({ uid, event, students }) => {
-          const pickupStudentIds = event.pickups
-            .map((pickup) => pickup.student?.studentId)
-            .filter((id) => id !== undefined);
+      {pickupHistories.map(({ uid, event, students }) => {
+        const pickupStudentIds = event.pickups
+          .map((pickup) => pickup.student?.studentId)
+          .filter((id) => id !== undefined);
 
-          return (
-            <PickupHistoryView
-              key={uid} uid={uid}
-              event={{ ...event, since: new Date(event.since) }}
-              tier3Students={students}
-              pickupStudentIds={pickupStudentIds}
-              editable={true}
-            />
-          );
-        })}
-      </div>
+        return (
+          <PickupHistoryView
+            key={uid} uid={uid}
+            event={{ ...event, since: new Date(event.since) }}
+            tier3Students={students}
+            pickupStudentIds={pickupStudentIds}
+            editable={true}
+          />
+        );
+      })}
     </>
   );
 }

@@ -7,7 +7,7 @@ import { updateSensei } from "~/models/sensei";
 import { graphql } from "~/graphql";
 import { runQuery } from "~/lib/baql";
 import type { ProfileStudentsQuery } from "~/graphql/graphql";
-import { SubTitle, Title } from "~/components/atoms/typography";
+import { SubTitle } from "~/components/atoms/typography";
 import dayjs from "dayjs";
 import utc from "dayjs/plugin/utc";
 import timezone from "dayjs/plugin/timezone";
@@ -95,8 +95,6 @@ export default function EditProfile() {
 
   return (
     <div className="pb-16 max-w-4xl">
-      <Title text="프로필" />
-
       <SubTitle text="계정 정보" />
       <Form method="post">
         <ProfileEditor

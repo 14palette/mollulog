@@ -118,7 +118,6 @@ export default function EditPickup() {
 
   return (
     <div className="min-h-screen max-w-4xl pb-96">
-      <Title text="모집 이력 관리" />
       <ContentSelector
         contents={events.map((event) => ({
           contentId: event.eventId,
