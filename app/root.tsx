@@ -57,12 +57,12 @@ export default function App() {
       </head>
       <body className="text-neutral-900 dark:bg-neutral-800 dark:text-neutral-200 transition">
         <SignInProvider>
-          <div className="mx-auto flex flex-col-reverse lg:flex-row">
-            <div className="px-4 py-6 w-80">
+          <div className="flex flex-col xl:flex-row">
+            <div className="fixed xl:relative w-full xl:w-96 xl:h-screen bg-white/90 dark:bg-neutral-800/90 backdrop-blur-sm border-b xl:border-b-0 xl:border-r border-neutral-200 dark:border-neutral-700 z-100">
               <Sidebar currentUsername={currentUsername} setDarkMode={setDarkMode} />
             </div>
-            <div className="w-full overflow-y-auto">
-              <div className="xl:h-screen max-w-3xl 2xl:max-w-4xl md:px-8 py-6 xl:border-l xl:border-r border-neutral-100 dark:border-neutral-700">
+            <div className="w-full pt-12 xl:pt-0 overflow-y-auto">
+              <div className="xl:h-screen mx-auto max-w-3xl px-4 md:px-8 py-6">
                 <Outlet />
                 <Footer />
               </div>

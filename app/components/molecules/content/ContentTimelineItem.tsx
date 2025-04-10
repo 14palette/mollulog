@@ -143,7 +143,6 @@ export default function ContentTimelineItem(
       {pickups && (
         <div className="my-2">
           <StudentCards
-            pcGrid={10}
             mobileGrid={5}
             students={pickups.map((pickup) => {
               const student = pickup.student;
