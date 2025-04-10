@@ -121,7 +121,7 @@ export default function RaidDetail() {
 
       <div className="xl:relative">
         {raid.rankVisible && (
-          <div className="fixed bottom-8 w-full max-w-3xl px-2 -mx-4 xl:mx-0 xl:px-0 xl:w-96 xl:absolute xl:left-0 xl:top-0 xl:-translate-x-full z-10">
+          <div className="fixed bottom-8 w-full max-w-3xl px-2 -mx-4 xl:-mx-8 xl:px-0 xl:w-96 xl:absolute xl:right-0 xl:top-0 xl:translate-x-full z-10">
             <RaidRankFilter
               raidType={raid.type}
               defenseTypes={raid.defenseTypes}

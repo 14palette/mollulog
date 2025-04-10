@@ -66,7 +66,7 @@ export default function Index() {
     <>
       <Title text="진행중인 컨텐츠" />
 
-      <div className="p-4 md:px-6 md:py-4 border border-neutral-100 dark:border-neutral-700 rounded-xl">
+      <div className="p-4 md:px-6 md:py-4 border border-neutral-200 dark:border-neutral-700 rounded-xl">
         <div className="my-2 flex items-center">
           <div className="w-3 h-3 bg-red-600 rounded-full animate-pulse" />
           <p className="ml-2 text-red-600 font-bold">진행중 이벤트</p>

@@ -3,7 +3,7 @@ import { Form, Link, useLoaderData, useRevalidator } from "@remix-run/react";
 import { startRegistration } from "@simplewebauthn/browser";
 import { useState } from "react";
 import { getAuthenticator } from "~/auth/authenticator.server";
-import { SubTitle, Title } from "~/components/atoms/typography";
+import { SubTitle } from "~/components/atoms/typography";
 import { deletePasskey, getPasskeysBySensei, updatePasskeyMemo } from "~/models/passkey";
 import dayjs from "dayjs";
 import utc from "dayjs/plugin/utc";
@@ -112,9 +112,7 @@ export default function EditSecurity() {
   };
 
   return (
-    <div className="pb-16">
-      <Title text="인증/보안" />
-
+    <>
       <SubTitle text="Passkey 관리" />
       <Button onClick={addPasskey} Icon={PlusIcon} text="Passkey 추가" />
 
@@ -126,6 +124,6 @@ export default function EditSecurity() {
       <Link to="/signout">
         <Button color="red">로그아웃</Button>
       </Link>
-    </div>
+    </>
   );
 }

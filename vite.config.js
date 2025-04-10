@@ -9,6 +9,7 @@ import { getLoadContext } from "./load-context";
 export default defineConfig({
   server: {
     port: 8787,
+    allowedHosts: process.env.ALLOWED_HOSTS?.split(","),
   },
   plugins: [
     remixCloudflareDevProxy({ getLoadContext }),

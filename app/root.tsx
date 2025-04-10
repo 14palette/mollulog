@@ -8,15 +8,16 @@ import {
   Scripts,
   ScrollRestoration,
   useLoaderData,
-  useMatches,
+  useNavigation,
 } from "@remix-run/react";
 import styles from "./tailwind.css?url";
 import { getAuthenticator } from "./auth/authenticator.server";
-import { Header, Footer } from "./components/organisms/base";
+import { Footer, Sidebar } from "./components/organisms/base";
 import { getPreference } from "./auth/preference.server";
-import { useState } from "react";
+import { useEffect, useRef, useState } from "react";
 import { SignInProvider } from "./contexts/SignInProvider";
 import { SignInBottomSheet } from "./components/molecules/auth";
+import LoadingBar, { LoadingBarRef } from "react-top-loading-bar";
 
 export const links = () => [
   ...(cssBundleHref ? [{ rel: "stylesheet", href: cssBundleHref }] : []),
@@ -41,9 +42,16 @@ export default function App() {
   const { currentUsername } = loaderData;
 
   const [darkMode, setDarkMode] = useState(loaderData.darkMode);
+  const loadingBarRef = useRef<LoadingBarRef>(null);
 
-  const matches = useMatches();
-  const pathname = matches[matches.length - 1].pathname;
+  const navigate = useNavigation();
+  useEffect(() => {
+    if (navigate.state === "loading") {
+      loadingBarRef.current?.continuousStart();
+    } else {
+      loadingBarRef.current?.complete();
+    }
+  }, [navigate.state]);
 
   return (
     <html lang="ko" className={darkMode ? "dark" : ""}>
@@ -60,14 +68,24 @@ export default function App() {
         <Links />
       </head>
       <body className="text-neutral-900 dark:bg-neutral-800 dark:text-neutral-200 transition">
+        <LoadingBar
+          ref={loadingBarRef}
+          color="#0ea5e9"
+          height={3}
+          waitingTime={300}
+        />
         <SignInProvider>
-          {pathname.startsWith("/edit") ? <Outlet /> : (
-            <div className="mx-auto max-w-3xl p-4">
-              <Header currentUsername={currentUsername} darkMode={darkMode} onToggleDarkMode={setDarkMode} />
-              <Outlet />
-              <Footer />
+          <div className="flex flex-col xl:flex-row">
+            <div className="fixed xl:relative w-full xl:w-96 xl:h-screen bg-white/90 dark:bg-neutral-800/90 backdrop-blur-sm border-b xl:border-b-0 xl:border-r border-neutral-200 dark:border-neutral-700 z-100">
+              <Sidebar currentUsername={currentUsername} setDarkMode={setDarkMode} />
             </div>
-          )}
+            <div className="w-full pt-12 xl:pt-0 overflow-y-auto">
+              <div className="xl:h-screen mx-auto max-w-3xl px-4 md:px-8 py-6">
+                <Outlet />
+                <Footer />
+              </div>
+            </div>
+          </div>
           <SignInBottomSheet />
         </SignInProvider>
         <ScrollRestoration />

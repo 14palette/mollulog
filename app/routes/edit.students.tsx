@@ -6,7 +6,6 @@ import { getAuthenticator } from "~/auth/authenticator.server";
 import { FloatingButton, Toggle } from "~/components/atoms/form";
 import { useToast } from "~/components/atoms/notification";
 import { EditTier } from "~/components/atoms/student";
-import { Title } from "~/components/atoms/typography";
 import { useStateFilter } from "~/components/organisms/student";
 import { studentImageUrl } from "~/models/assets";
 import { getUserStudentStates, updateStudentStates } from "~/models/student-state";
@@ -87,10 +86,9 @@ export default function EditStudents() {
 
   return (
     <>
-      <Title text="학생 명부" />
       {StateFilter}
 
-      <div className="mb-32 grid sm:grid-cols-2 md:grid-cols-2 lg:grid-cols-4 gap-4">
+      <div className="mb-32 grid sm:grid-cols-2 md:grid-cols-2 lg:grid-cols-3 gap-4">
         {filteredStates.map(({ student, owned, tier }) => {
           return (
             <div
@@ -110,13 +108,11 @@ export default function EditStudents() {
                 />
               </div>
               {owned && (
-                <div className="mt-4">
-                  <EditTier
-                    initialTier={student.initialTier}
-                    currentTier={tier ?? student.initialTier}
-                    onUpdate={(newTier) => updateState(student.id, { tier: newTier })}
-                  />
-                </div>
+                <EditTier
+                  initialTier={student.initialTier}
+                  currentTier={tier ?? student.initialTier}
+                  onUpdate={(newTier) => updateState(student.id, { tier: newTier })}
+                />
               )}
             </div>
           );

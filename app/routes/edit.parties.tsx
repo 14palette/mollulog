@@ -2,7 +2,6 @@ import type { ActionFunctionArgs, LoaderFunctionArgs } from "@remix-run/cloudfla
 import { json, redirect } from "@remix-run/cloudflare";
 import { useLoaderData } from "@remix-run/react";
 import { getAuthenticator } from "~/auth/authenticator.server";
-import { Title } from "~/components/atoms/typography";
 import { AddContentButton } from "~/components/molecules/editor";
 import { PartyView } from "~/components/organisms/party";
 import { graphql } from "~/graphql";
@@ -51,24 +50,21 @@ export const action = async ({ context, request }: ActionFunctionArgs) => {
 export default function EditParties() {
   const { parties, states, raids } = useLoaderData<typeof loader>();
   return (
-    <>
-      <Title text="편성 관리" />
-      <div className="max-w-4xl">
-        <AddContentButton text="새로운 편성 추가하기" link="/edit/parties/new" />
-        {parties.map((party) => (
-          <PartyView
-            key={party.uid}
-            party={party}
-            raids={raids.map((raid) => ({
-              ...raid,
-              since: new Date(raid.since),
-              until: new Date(raid.until),
-            }))}
-            studentStates={states || []}
-            editable
-          />
-        ))}
-      </div>
-    </>
+    <div className="max-w-4xl">
+      <AddContentButton text="새로운 편성 추가하기" link="/edit/parties/new" />
+      {parties.map((party) => (
+        <PartyView
+          key={party.uid}
+          party={party}
+          raids={raids.map((raid) => ({
+            ...raid,
+            since: new Date(raid.since),
+            until: new Date(raid.until),
+          }))}
+          studentStates={states || []}
+          editable
+        />
+      ))}
+    </div>
   );
 }

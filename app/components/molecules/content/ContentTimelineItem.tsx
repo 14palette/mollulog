@@ -88,9 +88,9 @@ export default function ContentTimelineItem(
   }
 
   const RaidInfo = () => raidInfo ? (
-    <div className="mt-2 mb-6 relative md:w-3/5">
+    <div className="mt-2 mb-6 relative md:w-96">
       <img
-        className="rounded-lg bg-linear-to-br from-neutral-50 to-neutral-300 dark:from-neutral-600 dark:to-neutral-800"
+        className="md:w-96 rounded-lg bg-linear-to-br from-neutral-50 to-neutral-300 dark:from-neutral-600 dark:to-neutral-800"
         src={bossImageUrl(raidInfo.boss)} alt={`총력전 보스 ${name}`} loading="lazy"
       />
       <div className="absolute bottom-0 right-0 flex gap-x-1 p-1 text-white text-sm">
