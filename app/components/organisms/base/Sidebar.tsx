@@ -32,7 +32,7 @@ function MenuItem({ to, name, OutlineIcon, SolidIcon, isActive, onItemClick }: M
   return (
     <Link
       to={to}
-      className={sanitizeClassName(`my-2 p-2 flex items-center hover:bg-neutral-200 dark:hover:bg-neutral-700 rounded-lg transition ${isActive ? "font-bold" : ""}`)}
+      className={sanitizeClassName(`my-2 p-2 flex items-center hover:bg-neutral-200 dark:hover:bg-neutral-700 rounded-lg transition ${isActive ? "font-bold drop-shadow-lg" : ""}`)}
       onClick={() => onItemClick?.()}
     >
       {isActive ? <SolidIcon className="inline-block mr-3 size-6" /> : <OutlineIcon className="inline-block mr-3 size-6" />}
@@ -134,7 +134,7 @@ export default function Sidebar({ currentUsername, setDarkMode }: SidebarProps) 
   };
 
   return (
-    <div className="px-4 py-4 xl:py-6">
+    <div className="px-4 py-4 xl:py-8">
       <div className="flex items-center">
         <Bars3Icon className="p-2 -m-2 block xl:hidden size-10" strokeWidth={2} onClick={() => setIsMenuOpen(!isMenuOpen)} />
         <h1 className="ml-1 xl:mt-4 px-2 text-2xl xl:text-3xl font-ingame">
