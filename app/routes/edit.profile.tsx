@@ -3,7 +3,7 @@ import { json, redirect } from "@remix-run/cloudflare";
 import { Form, useActionData, useLoaderData } from "@remix-run/react";
 import { ProfileEditor } from "~/components/organisms/profile";
 import { getAuthenticator, sessionStorage } from "~/auth/authenticator.server";
-import { updateSensei } from "~/models/sensei";
+import { getSenseiById, updateSensei } from "~/models/sensei";
 import { graphql } from "~/graphql";
 import { runQuery } from "~/lib/baql";
 import type { ProfileStudentsQuery } from "~/graphql/graphql";
@@ -37,8 +37,14 @@ export const loader = async ({ context, request }: LoaderFunctionArgs) => {
     throw new Error("failed to load students");
   }
 
+  const senseiData = (await getSenseiById(env, sensei.id))!;
   return json({
-    sensei,
+    sensei: {
+      username: senseiData.username,
+      bio: senseiData.bio,
+      profileStudentId: senseiData.profileStudentId,
+      friendCode: senseiData.friendCode,
+    },
     students: data.students,
   });
 }
