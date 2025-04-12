@@ -11,8 +11,8 @@ export type ProfileCardProps = {
   tierCounts: { [key: number]: number };
   loading: boolean;
   followability: "followable" | "following" | "unable";
-  following: number;
-  followers: number;
+  followingCount: number;
+  followerCount: number;
   onFollow: () => void;
   onUnfollow: () => void;
 };

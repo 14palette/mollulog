@@ -9,14 +9,14 @@ type ProfileUsernameProps = {
   friendCode: string | null;
   loading?: boolean;
   followability?: "followable" | "following" | "unable";
-  following?: number;
-  followers?: number;
+  followingCount?: number;
+  followerCount?: number;
   onFollow?: () => void;
   onUnfollow?: () => void;
 };
 
 export default function ProfileUsername({
-  imageUrl, username, bio, friendCode, loading, followability, followers, following, onFollow, onUnfollow,
+  imageUrl, username, bio, friendCode, loading, followability, followerCount, followingCount, onFollow, onUnfollow,
 }: ProfileUsernameProps) {
   return (
     <div className="m-4 md:m-6">
@@ -32,17 +32,17 @@ export default function ProfileUsername({
         <div className="ml-2 md:ml-4 grow">
           <p className="font-bold text-lg md:text-xl">@{username}</p>
           <div className="flex flex-col md:flex-row text-sm">
-            {followers !== undefined && following !== undefined && (
+            {followerCount !== undefined && followingCount !== undefined && (
               <p>
                 <Link to={`/@${username}/friends?tab=following`} className="hover:underline mr-2">
-                  {following} <span className="text-neutral-500 dark:text-neutral-400">팔로잉</span>
+                  {followingCount} <span className="text-neutral-500 dark:text-neutral-400">팔로잉</span>
                 </Link>
                 <Link to={`/@${username}/friends?tab=following`} className="hover:underline">
-                  {followers} <span className="text-neutral-500 dark:text-neutral-400">팔로워</span>
+                  {followerCount} <span className="text-neutral-500 dark:text-neutral-400">팔로워</span>
                 </Link>
               </p>
             )}
-            {followers !== undefined && following !== undefined && friendCode && (
+            {followerCount !== undefined && followingCount !== undefined && friendCode && (
               <span className="hidden md:inline text-neutral-300 dark:text-neutral-600 mx-1.5">|</span>
             )}
             {friendCode && (

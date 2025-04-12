@@ -4,7 +4,7 @@ import { Link, useFetcher, useLoaderData } from "@remix-run/react";
 import { Callout, SubTitle } from "~/components/atoms/typography";
 import type { ProfileCardProps } from "~/components/organisms/profile";
 import { ProfileCard } from "~/components/organisms/profile";
-import { getFollowers, getFollowings } from "~/models/followership";
+import { getFollowerIds, getFollowingIds } from "~/models/followership";
 import { getUserStudentStates } from "~/models/student-state";
 import type { ActionData } from "./api.followerships";
 import { getAuthenticator } from "~/auth/authenticator.server";
@@ -18,14 +18,14 @@ export const loader = async ({ context, request, params }: LoaderFunctionArgs) =
   const sensei = await getRouteSensei(env, params);
 
   // Get a relationship
-  const following = await getFollowings(env, sensei.id);
-  const followers = await getFollowers(env, sensei.id);
+  const followingIds = await getFollowingIds(env, sensei.id);
+  const followerIds = await getFollowerIds(env, sensei.id);
 
   const relationship = { followed: false, following: false };
   const currentUser = await getAuthenticator(env).isAuthenticated(request);
   if (currentUser) {
-    relationship.followed = following.find((each) => each.id === currentUser.id) !== undefined;
-    relationship.following = followers.find((each) => each.id === currentUser.id) !== undefined;
+    relationship.followed = followingIds.includes(currentUser.id);
+    relationship.following = followerIds.includes(currentUser.id);
   }
 
   // Get student tiers
@@ -47,8 +47,8 @@ export const loader = async ({ context, request, params }: LoaderFunctionArgs) =
       friendCode: sensei.friendCode ?? null,
     },
     relationship,
-    following: following.length,
-    followers: followers.length,
+    followingCount: followingIds.length,
+    followerCount: followerIds.length,
     tierCounts,
   });
 };
@@ -97,8 +97,8 @@ export default function UserIndex() {
           imageUrl={imageUrl}
           tierCounts={tierCounts}
           followability={followability}
-          followers={loaderData.followers}
-          following={loaderData.following}
+          followerCount={loaderData.followerCount}
+          followingCount={loaderData.followingCount}
           loading={fetcher.state !== "idle"}
           onFollow={() => currentUsername ? fetcher.submit({ username: sensei.username }, { method: "post", action: "/api/followerships" }) : showSignIn()}
           onUnfollow={() => currentUsername ? fetcher.submit({ username: sensei.username }, { method: "delete", action: "/api/followerships" }) : showSignIn()}
