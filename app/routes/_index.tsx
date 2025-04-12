@@ -8,7 +8,7 @@ import { RaidCard } from "~/components/organisms/raid";
 import { graphql } from "~/graphql";
 import type { IndexQuery } from "~/graphql/graphql";
 import { runQuery } from "~/lib/baql";
-import { getFavoritedCounts } from "~/models/content";
+import { getFavoritedCounts } from "~/models/favorite-students";
 
 const indexQuery = graphql(`
   query Index($now: ISO8601DateTime!) {

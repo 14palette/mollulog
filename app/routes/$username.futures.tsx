@@ -8,7 +8,8 @@ import { Link, useLoaderData } from "@remix-run/react";
 import { graphql } from "~/graphql";
 import { SubTitle } from "~/components/atoms/typography";
 import { sanitizeClassName } from "~/prophandlers";
-import { getUserFavoritedStudents, getUserMemos } from "~/models/content";
+import { getUserMemos } from "~/models/content";
+import { getUserFavoritedStudents } from "~/models/favorite-students";
 import { getRouteSensei } from "./$username";
 
 const userFuturesQuery = graphql(`

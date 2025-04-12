@@ -10,7 +10,8 @@ import { graphql } from "~/graphql";
 import type { FutureContentsQuery } from "~/graphql/graphql";
 import { runQuery } from "~/lib/baql";
 import { sanitizeClassName } from "~/prophandlers";
-import { setMemo, getUserFavoritedStudents, getUserMemos, favoriteStudent, unfavoriteStudent, getFavoritedCounts } from "~/models/content";
+import { getUserMemos, setMemo } from "~/models/content";
+import { favoriteStudent, getFavoritedCounts, getUserFavoritedStudents, unfavoriteStudent } from "~/models/favorite-students";
 import { useState } from "react";
 import { useSignIn } from "~/contexts/SignInProvider";
 

@@ -17,7 +17,8 @@ import { graphql } from "~/graphql";
 import type { EventStagesQuery, EventDetailQuery } from "~/graphql/graphql";
 import { runQuery } from "~/lib/baql";
 import { attackTypeLocale, defenseTypeLocale, eventTypeLocale, pickupLabelLocale, roleLocale } from "~/locales/ko";
-import { favoriteStudent, getContentMemos, getFavoritedCounts, getUserFavoritedStudents, setMemo, setMemoVisibility, unfavoriteStudent } from "~/models/content";
+import { getContentMemos, setMemo, setMemoVisibility } from "~/models/content";
+import { favoriteStudent, getFavoritedCounts, getUserFavoritedStudents, unfavoriteStudent } from "~/models/favorite-students";
 import type { StudentState} from "~/models/student-state";
 import { getUserStudentStates } from "~/models/student-state";
 
