@@ -105,7 +105,7 @@ export function parsePickupHistory(raw: string, students: { studentId: string, n
       tier3Count = count1;
     }
 
-    const tier3StudentIds = names.map((searchName) => {
+    const tier3StudentIds = tier3Count > 0 ? names.map((searchName) => {
       const studentId = studentMap.get(searchName);
       if (studentId) {
         return studentId;
@@ -118,7 +118,7 @@ export function parsePickupHistory(raw: string, students: { studentId: string, n
       })
 
       return expectingName ? studentMap.get(expectingName) ?? null : null;
-    }).filter((studentId) => studentId !== null);
+    }).filter((studentId) => studentId !== null) : [];
 
     result.push({
       trial,

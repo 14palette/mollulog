@@ -13,6 +13,7 @@ const students = [
   { name: "아츠코", studentId: "10032" },
   { name: "체리노", studentId: "10017" },
   { name: "미유", studentId: "10039" },
+  { name: "호시노(무장)", studentId: "10098" },
 ];
 
 const cases: [string, PickupHistory["result"]][] = [
@@ -51,6 +52,16 @@ const cases: [string, PickupHistory["result"]][] = [
   [
     "180 4/3/3 마키 아츠코 체리노 미유",
     [{ trial: 10, tier1Count: 3, tier2Count: 3, tier3Count: 4, tier3StudentIds: ["10007", "10032", "10017", "10039"] }],
+  ],
+  [
+    `
+      010 0/2/8 (단차 10장)
+      020 0/2/8 (단챠 10장)
+    `,
+    [
+      { trial: 10, tier1Count: 8, tier2Count: 2, tier3Count: 0, tier3StudentIds: [] },
+      { trial: 20, tier1Count: 8, tier2Count: 2, tier3Count: 0, tier3StudentIds: [] },
+    ],
   ],
 ];
 
