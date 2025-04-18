@@ -3,15 +3,10 @@ import { Toggle } from "~/components/atoms/form";
 import { Label } from "~/components/atoms/form";
 import { StudentSearch } from "~/components/molecules/student";
 import { XMarkIcon } from "@heroicons/react/24/outline";
-import { ChevronUpIcon, ChevronDownIcon } from "@heroicons/react/16/solid";
-import { sanitizeClassName } from "~/prophandlers";
-import { useState } from "react";
-import type { RaidType, DefenseType } from "~/models/content.d";
 import { useSignIn } from "~/contexts/SignInProvider";
+import { MagnifyingGlassIcon } from "@heroicons/react/24/outline";
 
 type RaidRankFilterProps = {
-  raidType: RaidType;
-  defenseTypes: { defenseType: DefenseType; }[];
   filters: RaidRankFilters;
   setRaidFilters: (filters: (prev: RaidRankFilters) => RaidRankFilters) => void;
 
@@ -20,10 +15,11 @@ type RaidRankFilterProps = {
     name: string;
   }[];
   signedIn: boolean;
+  onClose: () => void;
 };
 
 
-export default function RaidRankFilter({ filters, setRaidFilters, signedIn, students, raidType, defenseTypes }: RaidRankFilterProps) {
+export default function RaidRankFilter({ filters, setRaidFilters, signedIn, students, onClose }: RaidRankFilterProps) {
   const setRaidFilterAndResetPage = (setter: (prev: RaidRankFilters) => RaidRankFilters) => {
     setRaidFilters((prev) => {
       const newFilters = setter(prev);
@@ -31,75 +27,64 @@ export default function RaidRankFilter({ filters, setRaidFilters, signedIn, stud
     });
   };
 
-  const [show, setShow] = useState(false);
   const { showSignIn } = useSignIn();
 
   return (
-    <div className="xl:mx-4 bg-white dark:bg-neutral-800 rounded-xl shadow-lg shadow-neutral-200 dark:shadow-neutral-900">
-      <div
-        className={sanitizeClassName(`
-          p-4 flex justify-between items-center cursor-pointer bg-neutral-800 dark:bg-neutral-900 text-white
-          dark:border border-neutral-700 hover:bg-neutral-800 transition rounded-t-xl ${show ? "" : "rounded-b-xl"}
-        `)}
-        onClick={() => setShow(!show)}
-      >
-        <div>
-          <p className="text-lg font-bold">편성 찾기</p>
-          {!show && <p className="text-sm text-neutral-500">특정 학생을 포함/제외한 편성을 찾을 수 있어요.</p>}
-        </div>
-        {show ? <ChevronUpIcon className="size-6" /> : <ChevronDownIcon className="size-6" />}
+    <div className="h-full bg-white dark:bg-neutral-800 xl:opacity-100 border-t xl:border border-neutral-200 dark:border-neutral-700 rounded-t-xl xl:rounded-xl shadow-lg shadow-neutral-200 dark:shadow-neutral-900">
+      <div className="p-4 rounded-t-xl flex items-center">
+        <MagnifyingGlassIcon className="size-6 mr-2" strokeWidth={2} />
+        <p className="text-xl font-bold grow">편성 찾기</p>
+        <XMarkIcon className="xl:hidden size-6 ml-2" strokeWidth={2} onClick={onClose} />
       </div>
-      {show && (
-        <div className="px-4 pt-2 border-l border-r border-b border-neutral-200 dark:border-neutral-700 rounded-b-xl">
-          <Label text="포함할 학생" />
-          <p className="text-sm text-neutral-500">선택한 학생을 모두 포함</p>
+      <div className="px-4 pb-2">
+        <Label text="포함할 학생" />
+        <p className="text-sm text-neutral-500">선택한 학생을 모두 포함</p>
 
-          <StudentFilter
-            selectedStudents={filters.includeStudents}
-            students={students}
-            onSelect={(studentId) => {
-              setRaidFilterAndResetPage((prev) => {
-                if (prev.includeStudents.some(student => student.studentId === studentId)) {
-                  return prev;
-                }
-                return { ...prev, includeStudents: [...prev.includeStudents, { studentId, tier: 3 }] };
-              });
-            }}
-            onRemove={(studentId) => {
-              setRaidFilterAndResetPage((prev) => ({
-                ...prev,
-                includeStudents: prev.includeStudents.filter(student => student.studentId !== studentId)
-              }));
-            }}
-          />
+        <StudentFilter
+          selectedStudents={filters.includeStudents}
+          students={students}
+          onSelect={(studentId) => {
+            setRaidFilterAndResetPage((prev) => {
+              if (prev.includeStudents.some(student => student.studentId === studentId)) {
+                return prev;
+              }
+              return { ...prev, includeStudents: [...prev.includeStudents, { studentId, tier: 3 }] };
+            });
+          }}
+          onRemove={(studentId) => {
+            setRaidFilterAndResetPage((prev) => ({
+              ...prev,
+              includeStudents: prev.includeStudents.filter(student => student.studentId !== studentId)
+            }));
+          }}
+        />
 
-          <Label text="제외할 학생" />
-          <p className="text-sm text-neutral-500">선택한 학생이 한 명이라도 포함되면 제외</p>
-          <div onClick={() => { !signedIn && showSignIn() }}>
-            <Toggle
-              label="내가 모집하지 않은 학생"
-              disabled={!signedIn}
-              onChange={(value) => setRaidFilters((prev) => ({ ...prev, filterNotOwned: value }))}
-            />
-          </div>
-          <StudentFilter
-            selectedStudents={filters.excludeStudents}
-            students={students}
-            onSelect={(studentId) => {
-              setRaidFilterAndResetPage((prev) => ({
-                ...prev,
-                excludeStudents: [...prev.excludeStudents, { studentId, tier: 8 }]
-              }));
-            }}
-            onRemove={(studentId) => {
-              setRaidFilterAndResetPage((prev) => ({
-                ...prev,
-                excludeStudents: prev.excludeStudents.filter((student) => student.studentId !== studentId)
-              }));
-            }}
+        <Label text="제외할 학생" />
+        <p className="text-sm text-neutral-500">선택한 학생이 한 명이라도 포함되면 제외</p>
+        <div onClick={() => { !signedIn && showSignIn() }}>
+          <Toggle
+            label="내가 모집하지 않은 학생"
+            disabled={!signedIn}
+            onChange={(value) => setRaidFilters((prev) => ({ ...prev, filterNotOwned: value }))}
           />
         </div>
-      )}
+        <StudentFilter
+          selectedStudents={filters.excludeStudents}
+          students={students}
+          onSelect={(studentId) => {
+            setRaidFilterAndResetPage((prev) => ({
+              ...prev,
+              excludeStudents: [...prev.excludeStudents, { studentId, tier: 8 }]
+            }));
+          }}
+          onRemove={(studentId) => {
+            setRaidFilterAndResetPage((prev) => ({
+              ...prev,
+              excludeStudents: prev.excludeStudents.filter((student) => student.studentId !== studentId)
+            }));
+          }}
+        />
+      </div>
     </div>
   );
 }

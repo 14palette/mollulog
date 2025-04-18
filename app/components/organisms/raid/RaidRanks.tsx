@@ -67,7 +67,6 @@ export default function RaidRanks({ raidId, filters, setFilters }: RaidRanksProp
                   </p>
                   {parties.map((party) => (
                     <StudentCards
-                      pcGrid={10}
                       key={`party-${party.partyIndex}`}
                       students={party.slots.map((slot) => ({
                         studentId: slot.student?.studentId ?? null,

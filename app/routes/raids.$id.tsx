@@ -15,6 +15,8 @@ import type { RaidRankFilters } from "~/components/organisms/raid/RaidRanks";
 import { getAllStudents } from "~/models/student";
 import { FilterButtons } from "~/components/molecules/student";
 import { useSignIn } from "~/contexts/SignInProvider";
+import { MagnifyingGlassIcon } from "@heroicons/react/24/outline";
+import { FloatingButton } from "~/components/atoms/button";
 
 const raidDetailQuery = graphql(`
   query RaidDetail($raidId: String!) {
@@ -106,12 +108,14 @@ export default function RaidDetail() {
     rankBefore: null,
   });
 
+  const [openFilter, setOpenFilter] = useState(false);
+
   return (
     <>
       <Link to="/futures" className="xl:hidden">
         <p className="-mx-1 py-4 text-sm text-neutral-700 dark:text-neutral-300">← 전체 이벤트 미래시 보기</p>
       </Link>
-      <div className="mb-8 xl:mt-8">
+      <div className="mb-8 xl:mt-8 max-w-3xl mx-auto">
         <ContentHeader
           name={raid.name}
           type={raidTypeLocale[raid.type]}
@@ -122,20 +126,8 @@ export default function RaidDetail() {
         />
       </div>
 
-      <div className="xl:relative">
-        {raid.rankVisible && (
-          <div className="fixed bottom-8 w-full max-w-3xl px-2 -mx-4 xl:-mx-8 xl:px-0 xl:w-96 xl:absolute xl:right-0 xl:top-0 xl:translate-x-full z-10">
-            <RaidRankFilter
-              raidType={raid.type}
-              defenseTypes={raid.defenseTypes}
-              filters={filters}
-              setRaidFilters={setFilters}
-              signedIn={signedIn}
-              students={allStudents}
-            />
-          </div>
-        )}
-        <div>
+      <div className="flex flex-col-reverse xl:flex-row">
+        <div className="xl:w-3/5 shrink-0">
           <div className="mb-2">
             <SubTitle className="inline" text="일본 서비스 편성 정보 " />
             <sup>beta</sup>
@@ -166,8 +158,31 @@ export default function RaidDetail() {
             setFilters={setFilters}
           />
         </div>
-        
+
+        {raid.rankVisible && (
+          <>
+            <div className={`${openFilter ? "block" : "hidden"} -mx-4 xl:mx-4 xl:block w-full fixed bottom-0 xl:grow xl:sticky xl:top-4 xl:self-start`}>
+              <RaidRankFilter
+                filters={filters}
+                setRaidFilters={setFilters}
+                signedIn={signedIn}
+                students={allStudents}
+                onClose={() => setOpenFilter(false)}
+              />
+            </div>
+            {!openFilter && (
+              <div className="xl:hidden">
+                <FloatingButton
+                  Icon={<MagnifyingGlassIcon className="size-4 mr-2" strokeWidth={2} />}
+                  text="편성 찾기"
+                  onClick={() => setOpenFilter(true)}
+                />
+              </div>
+            )}
+          </>
+        )}
       </div>
+      
     </>
   );
 }

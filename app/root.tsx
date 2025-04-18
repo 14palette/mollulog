@@ -9,6 +9,7 @@ import {
   ScrollRestoration,
   useLoaderData,
   useNavigation,
+  useLocation,
 } from "@remix-run/react";
 import styles from "./tailwind.css?url";
 import { getAuthenticator } from "./auth/authenticator.server";
@@ -37,6 +38,8 @@ export const loader = async ({ request, context }: LoaderFunctionArgs) => {
   });
 };
 
+const wideLayout = ["/raids"];
+
 export default function App() {
   const loaderData = useLoaderData<typeof loader>();
   const { currentUsername } = loaderData;
@@ -52,6 +55,8 @@ export default function App() {
       loadingBarRef.current?.complete();
     }
   }, [navigate.state]);
+
+  const location = useLocation();
 
   return (
     <html lang="ko" className={darkMode ? "dark" : ""}>
@@ -80,7 +85,7 @@ export default function App() {
               <Sidebar currentUsername={currentUsername} setDarkMode={setDarkMode} />
             </div>
             <div className="w-full pt-10 xl:pt-0 overflow-y-auto">
-              <div className="xl:h-screen mx-auto max-w-3xl px-4 md:px-8 py-6">
+              <div className={`xl:h-screen mx-auto ${wideLayout.find((path) => location.pathname.startsWith(path)) ? "max-w-6xl" : "max-w-3xl"} px-4 md:px-8 py-6`}>
                 <Outlet />
                 <Footer />
               </div>
