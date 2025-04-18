@@ -1,6 +1,6 @@
 import { useNavigation, useSubmit, useLocation } from "@remix-run/react";
 import { startAuthentication } from "@simplewebauthn/browser";
-import { useState } from "react";
+import { useEffect, useState } from "react";
 import { PublicKeyCredentialRequestOptionsJSON } from "@simplewebauthn/server/script/deps";
 import { Button } from "~/components/atoms/form";
 import { useSignIn } from "~/contexts/SignInProvider";
@@ -14,11 +14,16 @@ export default function SignInBottomSheet() {
   const submit = useSubmit();
 
   const { isSignInVisible, hideSignIn } = useSignIn();
+  const redirectToCookie = `redirectTo=${encodeURIComponent(location.pathname + location.search)}; path=/; max-age=300;`;
+  useEffect(() => {
+    if (navigation.state === "idle") {
+      hideSignIn();
+    }
+  }, [navigation.state]);
+
   if (!isSignInVisible) {
     return null;
-  };
-
-  const redirectToCookie = `redirectTo=${encodeURIComponent(location.pathname + location.search)}; path=/; max-age=300;`;
+  }
 
   const signInWithGoogle = () => {
     document.cookie = redirectToCookie;

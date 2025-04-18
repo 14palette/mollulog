@@ -11,7 +11,7 @@ export default function Navigation({ links, allowPathPrefix }: NavigationProps) 
   const matches = useMatches();
   const pathname = matches[matches.length - 1].pathname;
   return (
-    <div className="flex w-full md:mb-8 text-neutral-700 dark:text-neutral-200 items-center gap-x-1">
+    <div className="flex w-full mt-4 md:mt-8 mb-4 text-neutral-700 dark:text-neutral-200 items-center gap-x-1">
       <Bars3Icon className="flex-none mr-2 my-2 h-5 w-5" strokeWidth={2} />
       <div className="py-2 flex flex-nowrap overflow-x-auto">
         {links.map(({ to, text, pathAliases }) => {

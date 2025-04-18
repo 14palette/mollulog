@@ -84,7 +84,7 @@ export default function App() {
             <div className="fixed xl:relative w-full xl:w-96 xl:h-screen bg-white/90 dark:bg-neutral-800/90 backdrop-blur-sm border-b xl:border-b-0 xl:border-r border-neutral-200 dark:border-neutral-700 shadow-xl shadow-neutral-200/30 dark:shadow-neutral-900/30 z-100">
               <Sidebar currentUsername={currentUsername} setDarkMode={setDarkMode} />
             </div>
-            <div className="w-full pt-10 xl:pt-0 overflow-y-auto">
+            <div className="w-full pt-10 xl:pt-0 overflow-y-scroll">
               <div className={`xl:h-screen mx-auto ${wideLayout.find((path) => location.pathname.startsWith(path)) ? "max-w-6xl" : "max-w-3xl"} px-4 md:px-8 py-6`}>
                 <Outlet />
                 <Footer />
