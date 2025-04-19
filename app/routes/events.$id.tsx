@@ -1,4 +1,4 @@
-import { ArrowTopRightOnSquareIcon, HeartIcon } from "@heroicons/react/16/solid";
+import { ChevronRightIcon, HeartIcon } from "@heroicons/react/16/solid";
 import type { ActionFunctionArgs, LoaderFunctionArgs, MetaFunction } from "@remix-run/cloudflare";
 import { defer, json, redirect } from "@remix-run/cloudflare";
 import { Await, isRouteErrorResponse, Link, useFetcher, useLoaderData, useRouteError } from "@remix-run/react";
@@ -39,7 +39,7 @@ const eventDetailQuery = graphql(`
       pickups {
         type
         rerun
-        student { studentId attackType defenseType role schaleDbId }
+        student { studentId attackType defenseType role }
         studentName
       }
     }
@@ -234,7 +234,7 @@ export default function EventDetail() {
           <SubTitle text="모집 학생" />
           {event.pickups.map((pickup) => {
             const studentId = pickup.student?.studentId ?? null;
-            const { attackType, defenseType, role, schaleDbId } = pickup.student ?? {};
+            const { attackType, defenseType, role } = pickup.student ?? {};
 
             const favorited = favoritedStudents.some((favorited) => favorited.studentId === studentId);
             return (
@@ -245,14 +245,10 @@ export default function EventDetail() {
                   </div>
                   <div className="px-2 md:px-4 grow">
                     <p className="text-xs text-neutral-500">{pickupLabelLocale(pickup)}</p>
-                    <span className="font-bold mr-1.5">{pickup.studentName}</span>
-                    {schaleDbId ?
-                      <a href={`https://schaledb.com/student/${schaleDbId}`} target="_blank" rel="noreferrer" className="hover:underline">
-                        <ArrowTopRightOnSquareIcon className="size-3 text-neutral-500 inline" />
-                        <span className="text-xs text-neutral-500">샬레DB</span>
-                      </a> :
-                      <span className="text-xs text-neutral-500">정보 준비중</span>
-                    }
+                    <Link to={`/students/${studentId}`} className="hover:underline">
+                      <span className="font-bold">{pickup.studentName}</span>
+                      {studentId && <ChevronRightIcon className="ml-1 size-4 inline" />}
+                    </Link>
                     {attackType && defenseType && role && (
                       <div className="py-1 flex text-sm gap-x-1 tracking-tighter md:tracking-normal">
                         <div className="px-2 flex items-center bg-neutral-200 dark:bg-neutral-800 rounded-full">

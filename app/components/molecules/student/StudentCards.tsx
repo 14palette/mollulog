@@ -76,6 +76,7 @@ export default function StudentCards({ students, mobileGrid, pcGrid, onSelect, o
             {(showInfo && selectedStudentId === studentId) && (
               <StudentInfo
                 student={{
+                  id: studentId!,
                   name,
                   attackType: student.attackType!,
                   defenseType: student.defenseType!,

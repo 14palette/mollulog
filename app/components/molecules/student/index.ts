@@ -3,6 +3,7 @@ import ResourceCards from "./ResourceCards";
 import StudentCards from "./StudentCards";
 import StudentSearch from "./StudentSearch";
 import StudentEventInfo from "./StudentEventInfo";
+import TierCounts from "./TierCounts";
 
 export {
   FilterButtons,
@@ -10,4 +11,5 @@ export {
   StudentCards,
   StudentSearch,
   StudentEventInfo,
+  TierCounts,
 };

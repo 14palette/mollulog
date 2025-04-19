@@ -1,15 +1,13 @@
-import { useFetcher, useOutletContext } from "@remix-run/react";
+import { Link, useFetcher, useOutletContext } from "@remix-run/react";
 import { RaidStatisticsData } from "./raids.data.$id.statistics";
 import { buttonColors, OutletContext } from "./raids.$id";
 import { defenseTypeLocale } from "~/locales/ko";
-import { FilterButtons } from "~/components/molecules/student";
+import { FilterButtons, TierCounts } from "~/components/molecules/student";
 import { useEffect, useState } from "react";
 import { type DefenseType } from "~/models/content.d";
 import { StudentCard } from "~/components/atoms/student";
 import { EmptyView, KeyValueTable } from "~/components/atoms/typography";
-import { ChevronDownIcon, ChevronUpIcon } from "@heroicons/react/16/solid";
-import { Progress } from "~/components/atoms/profile";
-import { type ProgressProps } from "~/components/atoms/profile/Progress";
+import { ChevronDownIcon, ChevronRightIcon, ChevronUpIcon } from "@heroicons/react/16/solid";
 import { TimelinePlaceholder } from "~/components/organisms/useractivity";
 
 export default function RaidStatistics() {
@@ -82,18 +80,6 @@ type SlotCountInfoProps = {
   assistsCount: number;
 }
 
-const colors: { [tier: number]: ProgressProps["color"] } = {
-  1: "red",
-  2: "orange",
-  3: "yellow",
-  4: "green",
-  5: "cyan",
-  6: "blue",
-  7: "purple",
-  8: "fuchsia",
-};
-
-
 function SlotCountInfo({ student, slotsCount, slotsByTier, assistsCount }: SlotCountInfoProps) {
   const slotsByTierMap = slotsByTier.reduce((acc, { tier, count }) => {
     acc[tier] = count;
@@ -107,7 +93,12 @@ function SlotCountInfo({ student, slotsCount, slotsByTier, assistsCount }: SlotC
           <StudentCard studentId={student.studentId} />
         </div>
         <div className="mx-4 grow">
-          <p className="font-bold mb-1">{student.name}</p>
+          <Link to={`/students/${student.studentId}`}>
+            <p className="font-bold mb-1 hover:underline">
+              <span>{student.name}</span>
+              <ChevronRightIcon className="inline size-4" />
+            </p>
+          </Link>
           <KeyValueTable keyPrefix={`${student.studentId}-slots-count`} items={[
             { key: "편성 횟수", value: `${slotsCount} 회 (${formatPercentage(slotsCount / 20000)})` },
             { key: "조력 횟수", value: `${assistsCount} 회 (${formatPercentage(assistsCount / 20000)})` },
@@ -116,21 +107,7 @@ function SlotCountInfo({ student, slotsCount, slotsByTier, assistsCount }: SlotC
       </div>
 
       <div className="xl:mx-2 mt-4">
-        {[8, 7, 6, 5, 4, 3].map((tier) => (
-          <div key={tier} className="flex">
-            <div className="w-fit shrink-0 flex items-center text-sm">
-              {(tier <= 5) ?
-                <span className="w-4 mr-1 inline-block text-yellow-500">★</span> :
-                <img className="w-4 h-4 mr-1 inline-block" src="/icons/exclusive_weapon.png" alt="고유 장비" />
-              }
-              <span className="w-3 inline-block mr-1">{tier <= 5 ? tier : tier - 5}</span>
-              <span className="w-18 inline-block">- {slotsByTierMap[tier] ?? 0}명</span>
-            </div>
-            <div className="grow">
-              <Progress ratio={slotsByTierMap[tier] / 20000} color={colors[tier]} />
-            </div>
-          </div>
-        ))}
+        <TierCounts tierCounts={slotsByTierMap} visibleTiers={[8, 7, 6, 5, 4, 3]} reducePaddings totalCount={20000} />
       </div>
     </div>
   );

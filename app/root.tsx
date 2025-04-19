@@ -86,7 +86,9 @@ export default function App() {
             </div>
             <div className="w-full pt-10 xl:pt-0 overflow-y-scroll">
               <div className={`xl:h-screen mx-auto ${wideLayout.find((path) => location.pathname.startsWith(path)) ? "max-w-6xl" : "max-w-3xl"} px-4 md:px-8 py-6`}>
-                <Outlet />
+                <div className="pb-32">
+                  <Outlet />
+                </div>
                 <Footer />
               </div>
             </div>

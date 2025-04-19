@@ -7,6 +7,13 @@ export const attackTypeLocale: Record<AttackType, string> = {
   sonic: "진동",
 };
 
+export const attackTypeColor: Record<AttackType, "red" | "yellow" | "blue" | "purple"> = {
+  explosive: "red",
+  piercing: "yellow",
+  mystic: "blue",
+  sonic: "purple",
+};
+
 export const defenseTypeLocale: Record<DefenseType, string> = {
   light: "경장갑",
   heavy: "중장갑",
@@ -14,9 +21,21 @@ export const defenseTypeLocale: Record<DefenseType, string> = {
   elastic: "탄력장갑",
 };
 
+export const defenseTypeColor: Record<DefenseType, "red" | "yellow" | "blue" | "purple"> = {
+  light: "red",
+  heavy: "yellow",
+  special: "blue",
+  elastic: "purple",
+};
+
 export const roleLocale: Record<Role, string> = {
   striker: "스트라이커",
   special: "스페셜",
+};
+
+export const roleColor: Record<Role, "red" | "yellow" | "blue" | "purple"> = {
+  striker: "red",
+  special: "blue",
 };
 
 export const terrainLocale: Record<Terrain, string> = {
@@ -77,3 +96,18 @@ export function pickupLabelLocale({ type, rerun }: { type: PickupType, rerun: bo
   return labelTexts.join(" ");
 }
 
+export const schoolNameLocale: Record<string, string> = {
+  abydos: "아비도스 고등학교",
+  shanhaijing: "산해경 고급중학교",
+  hyakkiyako: "백귀야행 연합학원",
+  millennium: "밀레니엄 사이언스 스쿨",
+  srt: "SRT 특수학원",
+  arius: "아리우스 분교",
+  trinity: "트리니티 종합학원",
+  gehenna: "게헨나 학원",
+  valkyrie: "발키리 경찰학교",
+  redwinter: "붉은겨울 연방학원",
+  sakugawa: "사쿠가와 중학교",
+  tokiwadai: "토키와다이 중학교",
+  others: "기타 학원",
+};
