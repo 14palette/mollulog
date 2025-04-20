@@ -38,7 +38,7 @@ export const loader = async ({ request, context }: LoaderFunctionArgs) => {
   });
 };
 
-const wideLayout = ["/raids"];
+const wideLayout = ["/raids", "/edit/students"];
 
 export default function App() {
   const loaderData = useLoaderData<typeof loader>();
