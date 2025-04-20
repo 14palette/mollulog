@@ -68,7 +68,7 @@ export default function PartyView({ party, sensei, students, studentStates, edit
         { text: "삭제", color: "red", form: { method: "post", hiddenInputs: [{ name: "uid", value: party.uid }] } },
       ] : []
     }>
-      <div className="-my-4">
+      <div className="-mt-4">
         <SubTitle text={party.name} />
       </div>
 
@@ -102,8 +102,6 @@ export default function PartyView({ party, sensei, students, studentStates, edit
           </div>
         </Link>
       )}
-
-      <div className="py-2 w-full border-t border-neutral-200 dark:border-neutral-700" />
 
       {party.studentIds.map((squad, index) => (
         <div key={`squad-${squad.join(":")}`} className={index > 0 ? "mt-2 pt-2 md:pt-0 border-t border-neutral-200 md:border-0" : undefined}>

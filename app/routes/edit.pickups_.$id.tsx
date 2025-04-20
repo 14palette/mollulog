@@ -5,7 +5,7 @@ import { useState } from "react";
 import { getAuthenticator } from "~/auth/authenticator.server";
 import { Button } from "~/components/atoms/form";
 import { StudentCard } from "~/components/atoms/student";
-import { SubTitle, Title } from "~/components/atoms/typography";
+import { SubTitle } from "~/components/atoms/typography";
 import { ContentSelector } from "~/components/molecules/editor";
 import { PickupHistoryEditor, PickupHistoryImporter } from "~/components/organisms/pickup";
 import { graphql } from "~/graphql";

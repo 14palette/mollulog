@@ -4,6 +4,7 @@ import {
   CalendarIcon as CalendarIconOutline,
   UserCircleIcon as UserCircleIconOutline,
   PencilSquareIcon as PencilSquareIconOutline,
+  IdentificationIcon as IdentificationIconOutline,
   Bars3Icon,
 } from "@heroicons/react/24/outline";
 import {
@@ -11,6 +12,7 @@ import {
   CalendarIcon as CalendarIconSolid,
   UserCircleIcon as UserCircleIconSolid,
   PencilSquareIcon as PencilSquareIconSolid,
+  IdentificationIcon as IdentificationIconSolid,
 } from "@heroicons/react/24/solid";
 import { Transition } from "@headlessui/react";
 import { Link, useMatches, useSubmit } from "@remix-run/react";
@@ -68,6 +70,14 @@ function MenuContent({ currentUsername, pathname, onMenuClose, onShowSignIn, onD
         OutlineIcon={CalendarIconOutline}
         SolidIcon={CalendarIconSolid}
         isActive={pathname.startsWith("/futures") || pathname.startsWith("/events") || pathname.startsWith("/raids")}
+        onItemClick={onMenuClose}
+      />
+      <MenuItem
+        to="/students"
+        name="학생부"
+        OutlineIcon={IdentificationIconOutline}
+        SolidIcon={IdentificationIconSolid}
+        isActive={pathname.startsWith("/students")}
         onItemClick={onMenuClose}
       />
       {currentUsername ? (

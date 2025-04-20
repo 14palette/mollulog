@@ -1,20 +1,16 @@
 import type { LoaderFunctionArgs, MetaFunction } from "@remix-run/cloudflare";
-import { json, Link, useLoaderData } from "@remix-run/react";
+import { json, Link, Outlet, useLoaderData } from "@remix-run/react";
 import dayjs from "dayjs";
-import { useState } from "react";
 import { getAuthenticator } from "~/auth/authenticator.server";
-import { Callout, SubTitle } from "~/components/atoms/typography";
+import { EmptyView, SubTitle } from "~/components/atoms/typography";
 import { ContentHeader } from "~/components/organisms/content";
+import { Navigation } from "~/components/organisms/navigation";
 import { graphql } from "~/graphql";
 import type { RaidDetailQuery } from "~/graphql/graphql";
 import { runQuery } from "~/lib/baql";
-import { defenseTypeLocale, raidTypeLocale } from "~/locales/ko";
+import { raidTypeLocale } from "~/locales/ko";
 import { bossBannerUrl } from "~/models/assets";
-import { RaidRanks, RaidRankFilter } from "~/components/organisms/raid";
-import type { RaidRankFilters } from "~/components/organisms/raid/RaidRanks";
 import { getAllStudents } from "~/models/student";
-import { FilterButtons } from "~/components/molecules/student";
-import { useSignIn } from "~/contexts/SignInProvider";
 
 const raidDetailQuery = graphql(`
   query RaidDetail($raidId: String!) {
@@ -24,6 +20,13 @@ const raidDetailQuery = graphql(`
     }
   }
 `);
+
+export const buttonColors = {
+  "light": "bg-linear-to-r from-red-500 to-orange-400",
+  "heavy": "bg-linear-to-r from-amber-500 to-yellow-400",
+  "special": "bg-linear-to-r from-blue-500 to-sky-400",
+  "elastic": "bg-linear-to-r from-purple-500 to-fuchsia-400",
+};
 
 export const loader = async ({ request, context, params }: LoaderFunctionArgs) => {
   const raidId = params.id;
@@ -75,7 +78,7 @@ export const meta: MetaFunction<typeof loader> = ({ data }) => {
 
   const { raid } = data;
   const title = `${raidTypeLocale[raid.type]} ${raid.name} 정보`;
-  const description = `블루 아카이브 ${raidTypeLocale[raid.type]} ${raid.name} 이벤트의 공략 정보 모음`;
+  const description = `블루 아카이브 ${raidTypeLocale[raid.type]} ${raid.name} 랭킹, 공략 정보 모음`;
   return [
     { title: `${title} | 몰루로그` },
     { name: "description", content: description },
@@ -86,32 +89,24 @@ export const meta: MetaFunction<typeof loader> = ({ data }) => {
   ];
 }
 
-const buttonColors = {
-  "light": "bg-linear-to-r from-red-500 to-orange-400",
-  "heavy": "bg-linear-to-r from-amber-500 to-yellow-400",
-  "special": "bg-linear-to-r from-blue-500 to-sky-400",
-  "elastic": "bg-linear-to-r from-purple-500 to-fuchsia-400",
+export type OutletContext = {
+  raid: NonNullable<RaidDetailQuery["raid"]>;
+  signedIn: boolean;
+  allStudents: {
+    studentId: string;
+    name: string;
+  }[];
 };
 
 export default function RaidDetail() {
   const { raid, signedIn, allStudents } = useLoaderData<typeof loader>();
-  const { showSignIn } = useSignIn();
-
-  const [filters, setFilters] = useState<RaidRankFilters>({
-    defenseType: raid.type === "elimination" ? raid.defenseTypes[0].defenseType : null,
-    filterNotOwned: false,
-    includeStudents: [],
-    excludeStudents: [],
-    rankAfter: null,
-    rankBefore: null,
-  });
 
   return (
     <>
       <Link to="/futures" className="xl:hidden">
         <p className="-mx-1 py-4 text-sm text-neutral-700 dark:text-neutral-300">← 전체 이벤트 미래시 보기</p>
       </Link>
-      <div className="mb-8 xl:mt-8">
+      <div className="mb-8 xl:mt-8 max-w-3xl mx-auto">
         <ContentHeader
           name={raid.name}
           type={raidTypeLocale[raid.type]}
@@ -122,52 +117,23 @@ export default function RaidDetail() {
         />
       </div>
 
-      <div className="xl:relative">
-        {raid.rankVisible && (
-          <div className="fixed bottom-8 w-full max-w-3xl px-2 -mx-4 xl:-mx-8 xl:px-0 xl:w-96 xl:absolute xl:right-0 xl:top-0 xl:translate-x-full z-10">
-            <RaidRankFilter
-              raidType={raid.type}
-              defenseTypes={raid.defenseTypes}
-              filters={filters}
-              setRaidFilters={setFilters}
-              signedIn={signedIn}
-              students={allStudents}
-            />
-          </div>
-        )}
-        <div>
-          <div className="mb-2">
+      {raid.rankVisible ?
+        <>
+          <div>
             <SubTitle className="inline" text="일본 서비스 편성 정보 " />
             <sup>beta</sup>
           </div>
-          <p className="mb-4 text-sm text-neutral-500">상위 2만명의 편성 정보를 제공해요.</p>
-          {raid.rankVisible && raid.type === "elimination" && (
-            <div className="mb-6">
-              <FilterButtons exclusive={true} buttonProps={
-                raid.defenseTypes.map(({ defenseType }, index) => ({
-                  text: defenseTypeLocale[defenseType],
-                  color: buttonColors[defenseType],
-                  active: index === 0,
-                  onToggle: () => setFilters((prev) => ({ ...prev, defenseType, rankAfter: null, rankBefore: null })),
-                }))
-              } />
-            </div>
-          )}
-          {!signedIn && (
-            <Callout className="my-4" emoji="✨">
-              <p>
-                <span className="cursor-pointer underline" onClick={() => showSignIn()}>로그인</span> 후 모집한 학생 정보를 등록하면 나에게 맞는 편성을 찾을 수 있어요.
-              </p>
-            </Callout>
-          )}
-          <RaidRanks
-            raidId={raid.raidId}
-            filters={filters}
-            setFilters={setFilters}
-          />
-        </div>
-        
-      </div>
+          <p className="mt-2 mb-4 text-sm text-neutral-500">상위 2만명의 편성 정보를 제공해요.</p>
+
+          <Navigation links={[
+            { to: `/raids/${raid.raidId}/`, text: "순위" },
+            { to: `/raids/${raid.raidId}/statistics`, text: "통계" },
+          ]} />
+
+          <Outlet context={{ raid, signedIn, allStudents }} />
+        </> :
+        <EmptyView text="순위 정보를 준비중이에요" />
+      }
     </>
   );
 }

@@ -165,7 +165,7 @@ export default function Futures() {
   };
 
   return (
-    <div className="pb-64">
+    <>
       <Title text="미래시" />
       <p className="text-neutral-500 dark:text-neutral-400 -mt-2 mb-4">미래시는 일본 서버 일정을 바탕으로 추정된 것으로, 실제 일정과 다를 수 있습니다.</p>
 
@@ -228,6 +228,6 @@ export default function Futures() {
           </div>
         </Link>
       )}
-    </div>
+    </>
   );
 }

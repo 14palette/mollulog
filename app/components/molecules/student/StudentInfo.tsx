@@ -1,10 +1,12 @@
-import { ArrowTopRightOnSquareIcon, XMarkIcon, HeartIcon as EmptyHeartIcon } from "@heroicons/react/24/outline";
+import { ArrowTopRightOnSquareIcon, XMarkIcon, HeartIcon as EmptyHeartIcon, IdentificationIcon } from "@heroicons/react/24/outline";
 import { HeartIcon as FilledHeartIcon } from "@heroicons/react/24/solid";
+import { Link } from "@remix-run/react";
 import { attackTypeLocale, defenseTypeLocale, roleLocale } from "~/locales/ko";
 import type { AttackType, DefenseType, Role } from "~/models/content";
 
 type StudentInfoProps = {
   student: {
+    id: string;
     name: string;
     attackType: AttackType;
     defenseType: DefenseType;
@@ -65,10 +67,16 @@ export default function StudentInfo({ student, favorited, onRemoveFavorite, onAd
           </div>
         )}
 
+        <Link to={`/students/${student.id}`}>
+          <div className="px-4 py-2 flex items-center hover:bg-neutral-700 transition cursor-pointer border-t border-neutral-700 rounded-b-lg">
+            <IdentificationIcon className="size-4" />
+            <span className="ml-1.5">학생부 보기</span>
+          </div>
+        </Link>
         <a href={`https://schaledb.com/student/${student.schaleDbId}`} target="_blank" rel="noreferrer">
           <div className="px-4 py-2 flex items-center hover:bg-neutral-700 transition cursor-pointer border-t border-neutral-700 rounded-b-lg">
             <ArrowTopRightOnSquareIcon className="size-4" />
-            <span className="ml-1.5">SchaleDB에서 학생 정보 보기</span>
+            <span className="ml-1.5">샬레DB에서 학생 정보 보기</span>
           </div>
         </a>
       </div>

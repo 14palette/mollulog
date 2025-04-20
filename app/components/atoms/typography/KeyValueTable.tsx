@@ -8,7 +8,7 @@ type KeyValueTableProps = {
 
 export default function KeyValueTable({ items, keyPrefix }: KeyValueTableProps) {
   return (
-    <div className="flex mt-4 mb-2 text-sm">
+    <div className="flex text-sm">
       <div className="mr-4 text-neutral-500 dark:text-neutral-400">
         {items.map(({ key }) => <p key={`${keyPrefix}-key-${key}`}>{key}</p>)}
       </div>

@@ -1,10 +1,10 @@
 import { StudentCards } from "~/components/molecules/student";
-import { useFetcher, useSearchParams } from "@remix-run/react";
+import { useFetcher } from "@remix-run/react";
 import { useEffect } from "react";
 import { EmptyView } from "~/components/atoms/typography";
-import { TimelinePlaceholder } from "../useractivity";
+import { TimelinePlaceholder } from "~/components/organisms/useractivity";
 import { ActionCard } from "~/components/molecules/editor";
-import { RaidRanksData } from "~/routes/raids.$id.ranks";
+import { RaidRanksData } from "~/routes/raids.data.$id.ranks";
 import { Button } from "~/components/atoms/form";
 import { type DefenseType } from "~/models/content.d";
 
@@ -43,11 +43,11 @@ export default function RaidRanks({ raidId, filters, setFilters }: RaidRanksProp
     if (filters.defenseType) {
       query.set("defenseType", filters.defenseType);
     }
-    rankFetcher.load(`/raids/${raidId}/ranks?${query.toString()}`);
+    rankFetcher.load(`/raids/data/${raidId}/ranks?${query.toString()}`);
   }, [raidId, filters]);
 
   if (rankFetcher.data && !rankFetcher.data.rankVisible) {
-    return <EmptyView text="순위 정보를 준비중이에요" />;
+    return null;
   }
 
   const showPrev = filters.rankAfter !== null || (filters.rankBefore !== null && (rankFetcher.data?.ranks[0]?.rank ?? 0) > 1 && rankFetcher.data?.hasMore);
@@ -67,7 +67,6 @@ export default function RaidRanks({ raidId, filters, setFilters }: RaidRanksProp
                   </p>
                   {parties.map((party) => (
                     <StudentCards
-                      pcGrid={10}
                       key={`party-${party.partyIndex}`}
                       students={party.slots.map((slot) => ({
                         studentId: slot.student?.studentId ?? null,

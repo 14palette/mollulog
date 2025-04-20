@@ -60,7 +60,9 @@ export default function PickupHistoryView({ uid, event, tier3Students, pickupStu
         }))}
       />
 
-      {keyValueItems.length > 0 && <KeyValueTable keyPrefix={`pickup-stats-${event.name}`} items={keyValueItems} />}
+      <div className="mt-4">
+        {keyValueItems.length > 0 && <KeyValueTable keyPrefix={`pickup-stats-${event.name}`} items={keyValueItems} />}
+      </div>
     </ActionCard>
   );
 }
