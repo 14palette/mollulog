@@ -109,5 +109,6 @@ export const schoolNameLocale: Record<string, string> = {
   redwinter: "붉은겨울 연방학원",
   sakugawa: "사쿠가와 중학교",
   tokiwadai: "토키와다이 중학교",
+  highlander: "하이랜더 철도학원",
   others: "기타 학원",
 };
