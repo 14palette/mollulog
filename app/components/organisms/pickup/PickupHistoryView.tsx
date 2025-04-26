@@ -1,13 +1,16 @@
 import dayjs from "dayjs";
 import { KeyValueTable, SubTitle } from "~/components/atoms/typography";
+import { ChevronRightIcon } from "@heroicons/react/16/solid";
 import { ActionCard, type ActionCardAction } from "~/components/molecules/editor";
 import { StudentCards } from "~/components/molecules/student";
 import { EventTypeEnum } from "~/graphql/graphql";
 import { eventTypeLocale } from "~/locales/ko";
+import { Link } from "@remix-run/react";
 
 type PickupHistoryViewProps = {
   uid: string;
   event: {
+    eventId: string;
     name: string;
     type: EventTypeEnum;
     since: Date;
@@ -43,9 +46,10 @@ export default function PickupHistoryView({ uid, event, tier3Students, pickupStu
 
   return (
     <ActionCard actions={actions}>
-      <div className="-my-4">
+      <Link to={`/events/${event.eventId}`} className="-my-4 flex items-center hover:underline">
         <SubTitle text={event.name} />
-      </div>
+        <ChevronRightIcon className="size-4" />
+      </Link>
       <p className="text-neutral-500 text-sm">
         {eventTypeLocale[event.type]} | {dayjs(event.since).format("YYYY-MM-DD")}
       </p>
