@@ -1,8 +1,8 @@
 import { ArrowTopRightOnSquareIcon, XMarkIcon, HeartIcon as EmptyHeartIcon, IdentificationIcon } from "@heroicons/react/24/outline";
 import { HeartIcon as FilledHeartIcon } from "@heroicons/react/24/solid";
-import { Link } from "@remix-run/react";
+import { Link } from "react-router";
 import { attackTypeLocale, defenseTypeLocale, roleLocale } from "~/locales/ko";
-import type { AttackType, DefenseType, Role } from "~/models/content";
+import type { AttackType, DefenseType, Role } from "~/models/content.d";
 
 type StudentInfoProps = {
   student: {

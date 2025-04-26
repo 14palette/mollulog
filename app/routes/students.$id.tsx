@@ -1,5 +1,5 @@
-import { MetaFunction, type LoaderFunctionArgs } from "@remix-run/cloudflare";
-import { Link, useLoaderData } from "@remix-run/react";
+import { MetaFunction, type LoaderFunctionArgs } from "react-router";
+import { Link, useLoaderData } from "react-router";
 import dayjs from "dayjs";
 import { useState } from "react";
 import { graphql } from "~/graphql";

@@ -1,4 +1,4 @@
-import type { LoaderFunctionArgs } from "@remix-run/cloudflare";
+import type { LoaderFunctionArgs } from "react-router";
 import {
   Links,
   Meta,
@@ -8,7 +8,7 @@ import {
   useLoaderData,
   useNavigation,
   useLocation,
-} from "@remix-run/react";
+} from "react-router";
 import styles from "./tailwind.css?url";
 import { getAuthenticator } from "./auth/authenticator.server";
 import { Footer, Sidebar } from "./components/organisms/base";

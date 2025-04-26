@@ -1,5 +1,5 @@
-import { LoaderFunctionArgs, MetaFunction } from "@remix-run/cloudflare";
-import { useLoaderData, useNavigate } from "@remix-run/react";
+import { LoaderFunctionArgs, MetaFunction } from "react-router";
+import { useLoaderData, useNavigate } from "react-router";
 import { Title } from "~/components/atoms/typography";
 import { StudentCards } from "~/components/molecules/student";
 import { getAllStudents } from "~/models/student";

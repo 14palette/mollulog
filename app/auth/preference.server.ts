@@ -1,4 +1,4 @@
-import { Cookie, createCookie } from "@remix-run/cloudflare";
+import { Cookie, createCookie } from "react-router";
 import { Env } from "~/env.server";
 
 let _preferenceCookie: Cookie;

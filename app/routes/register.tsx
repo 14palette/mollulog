@@ -1,6 +1,6 @@
-import type { ActionFunction, LoaderFunctionArgs, MetaFunction} from "@remix-run/cloudflare";
-import { redirect } from "@remix-run/cloudflare";
-import { Form, useActionData, useLoaderData } from "@remix-run/react";
+import type { ActionFunction, LoaderFunctionArgs, MetaFunction } from "react-router";
+import { redirect } from "react-router";
+import { Form, useActionData, useLoaderData } from "react-router";
 import { Title } from "~/components/atoms/typography";
 import { updateSensei } from "~/models/sensei";
 import { getAuthenticator, redirectTo, sessionStorage } from "~/auth/authenticator.server";

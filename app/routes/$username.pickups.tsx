@@ -1,10 +1,10 @@
-import { LoaderFunctionArgs, MetaFunction } from "@remix-run/cloudflare";
+import { LoaderFunctionArgs, MetaFunction } from "react-router";
 import { EventTypeEnum, UserPickupEventsQuery, UserPickupEventsQueryVariables } from "~/graphql/graphql";
 import { getAuthenticator } from "~/auth/authenticator.server";
 import { runQuery } from "~/lib/baql";
 import { getPickupHistories } from "~/models/pickup-history";
 import { getSenseiByUsername } from "~/models/sensei";
-import { useLoaderData } from "@remix-run/react";
+import { useLoaderData } from "react-router";
 import { ErrorPage } from "~/components/organisms/error";
 import { SparklesIcon } from "@heroicons/react/24/outline";
 import { AddContentButton } from "~/components/molecules/editor";

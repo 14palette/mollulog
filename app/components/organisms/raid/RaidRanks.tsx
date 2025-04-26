@@ -1,5 +1,5 @@
 import { StudentCards } from "~/components/molecules/student";
-import { useFetcher } from "@remix-run/react";
+import { useFetcher } from "react-router";
 import { useEffect } from "react";
 import { EmptyView } from "~/components/atoms/typography";
 import { TimelinePlaceholder } from "~/components/organisms/useractivity";

@@ -1,4 +1,4 @@
-import { ActionFunctionArgs, LoaderFunctionArgs } from "@remix-run/cloudflare";
+import { ActionFunctionArgs, LoaderFunctionArgs } from "react-router";
 import { AuthorizationError } from "remix-auth";
 import { getAuthenticator } from "~/auth/authenticator.server";
 import { createPasskeyAuthenticationOptions } from "~/models/passkey";

@@ -1,4 +1,4 @@
-import { Link, useFetcher, useOutletContext } from "@remix-run/react";
+import { Link, useFetcher, useOutletContext } from "react-router";
 import { RaidStatisticsData } from "./raids.data.$id.statistics";
 import { buttonColors, OutletContext } from "./raids.$id";
 import { defenseTypeLocale } from "~/locales/ko";

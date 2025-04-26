@@ -5,7 +5,7 @@ import { attackTypeColorMap, defenseTypeColorMap } from "~/models/content.d";
 import type { AttackType, DefenseType, EventType, PickupType, RaidType, Role, Terrain } from "~/models/content.d";
 import { StudentCards } from "../student";
 import type { ReactNode } from "react";
-import { Link } from "@remix-run/react";
+import { Link } from "react-router";
 import { MemoEditor } from "../editor";
 import { CheckIcon, ChevronRightIcon, ChartBarIcon } from "@heroicons/react/16/solid";
 import dayjs from "dayjs";

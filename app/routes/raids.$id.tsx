@@ -1,5 +1,5 @@
-import type { LoaderFunctionArgs, MetaFunction } from "@remix-run/cloudflare";
-import { Link, Outlet, useLoaderData } from "@remix-run/react";
+import type { LoaderFunctionArgs, MetaFunction } from "react-router";
+import { Link, Outlet, useLoaderData } from "react-router";
 import dayjs from "dayjs";
 import { getAuthenticator } from "~/auth/authenticator.server";
 import { EmptyView, SubTitle } from "~/components/atoms/typography";

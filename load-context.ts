@@ -1,4 +1,4 @@
-import { type AppLoadContext } from "@remix-run/cloudflare";
+import { type AppLoadContext } from "react-router";
 import { type PlatformProxy } from "wrangler";
 import { Env } from "~/env.server";
 

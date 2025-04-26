@@ -1,5 +1,5 @@
-import type { SessionStorage} from "@remix-run/cloudflare";
-import { createCookieSessionStorage } from "@remix-run/cloudflare";
+import type { SessionStorage } from "react-router";
+import { createCookieSessionStorage } from "react-router";
 import { Authenticator, AuthorizationError } from "remix-auth";
 import { GoogleStrategy } from "remix-auth-google";
 import type { Env } from "~/env.server";

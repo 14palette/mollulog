@@ -1,5 +1,5 @@
-import { ActionFunctionArgs, redirect } from "@remix-run/cloudflare";
-import { SubmitFunction } from "@remix-run/react";
+import { ActionFunctionArgs, redirect } from "react-router";
+import { SubmitFunction } from "react-router";
 import { serializePreference, type Preference } from "~/auth/preference.server";
 
 export async function submitPreference(fn: SubmitFunction, preference: Preference) {

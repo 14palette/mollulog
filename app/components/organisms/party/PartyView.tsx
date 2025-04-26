@@ -7,7 +7,7 @@ import type { StudentState } from "~/models/student-state";
 import { useState } from "react";
 import { ActionCard } from "~/components/molecules/editor";
 import { CheckCircleIcon } from "@heroicons/react/24/outline";
-import { Link } from "@remix-run/react";
+import { Link } from "react-router";
 import { ProfileImage } from "~/components/atoms/student";
 import { bossImageUrl } from "~/models/assets";
 import StudentCards from "~/components/molecules/student/StudentCards";

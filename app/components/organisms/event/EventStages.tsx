@@ -1,4 +1,4 @@
-import { Link } from "@remix-run/react";
+import { Link } from "react-router";
 import { ItemCard } from "~/components/atoms/item";
 import { SubTitle, Callout } from "~/components/atoms/typography";
 import { ItemCards } from "~/components/molecules/item";

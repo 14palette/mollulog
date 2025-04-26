@@ -1,6 +1,6 @@
-import type { ActionFunction, LoaderFunctionArgs, MetaFunction } from "@remix-run/cloudflare";
-import { redirect } from "@remix-run/cloudflare";
-import { Form, useLoaderData } from "@remix-run/react";
+import type { ActionFunction, LoaderFunctionArgs, MetaFunction } from "react-router";
+import { redirect } from "react-router";
+import { Form, useLoaderData } from "react-router";
 import { getAuthenticator } from "~/auth/authenticator.server";
 import { Title } from "~/components/atoms/typography";
 import { PartyGenerator } from "~/components/organisms/party";

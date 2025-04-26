@@ -1,5 +1,5 @@
 import { PencilSquareIcon, UserIcon, UserMinusIcon, UserPlusIcon, UsersIcon } from "@heroicons/react/20/solid";
-import { Link } from "@remix-run/react";
+import { Link } from "react-router";
 import { sanitizeClassName } from "~/prophandlers";
 
 type ProfileUsernameProps = {

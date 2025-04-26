@@ -1,5 +1,5 @@
-import type { LoaderFunctionArgs, MetaFunction } from "@remix-run/cloudflare";
-import { useLoaderData, Link } from "@remix-run/react";
+import type { LoaderFunctionArgs, MetaFunction } from "react-router";
+import { useLoaderData, Link } from "react-router";
 import { getUserStudentStates } from "~/models/student-state";
 import { useStateFilter } from "~/components/organisms/student";
 import { StudentCards } from "~/components/molecules/student";

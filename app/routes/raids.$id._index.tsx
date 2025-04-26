@@ -1,5 +1,5 @@
 import { MagnifyingGlassIcon } from "@heroicons/react/24/outline";
-import { useOutletContext } from "@remix-run/react";
+import { useOutletContext } from "react-router";
 import { useState } from "react";
 import { FloatingButton } from "~/components/atoms/button";
 import { Callout } from "~/components/atoms/typography";

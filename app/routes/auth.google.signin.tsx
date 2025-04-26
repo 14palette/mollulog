@@ -1,4 +1,4 @@
-import { ActionFunctionArgs } from "@remix-run/cloudflare";
+import { ActionFunctionArgs } from "react-router";
 import { getAuthenticator } from "~/auth/authenticator.server";
 
 export const action = async ({ context, request }: ActionFunctionArgs) => {

@@ -1,9 +1,9 @@
 import { ArrowRightIcon } from "@heroicons/react/24/outline";
-import type { LoaderFunctionArgs, MetaFunction} from "@remix-run/cloudflare";
+import type { LoaderFunctionArgs, MetaFunction } from "react-router";
 import { FuturePlan } from "~/components/organisms/future";
 import type { UserFuturesQuery } from "~/graphql/graphql";
 import { runQuery } from "~/lib/baql";
-import { Link, useLoaderData } from "@remix-run/react";
+import { Link, useLoaderData } from "react-router";
 import { graphql } from "~/graphql";
 import { SubTitle } from "~/components/atoms/typography";
 import { sanitizeClassName } from "~/prophandlers";

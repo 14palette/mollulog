@@ -1,4 +1,4 @@
-import { SessionStorage } from "@remix-run/cloudflare";
+import { SessionStorage } from "react-router";
 import { type AuthenticationResponseJSON } from "@simplewebauthn/server/script/deps";
 import { AuthenticateOptions, Strategy } from "remix-auth";
 

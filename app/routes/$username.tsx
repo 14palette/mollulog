@@ -1,5 +1,5 @@
-import { data } from "@remix-run/cloudflare";
-import { Outlet, Params, isRouteErrorResponse, useParams, useRouteError } from "@remix-run/react";
+import { data } from "react-router";
+import { Outlet, Params, isRouteErrorResponse, useParams, useRouteError } from "react-router";
 import { Title } from "~/components/atoms/typography";
 import { ErrorPage } from "~/components/organisms/error";
 import { Navigation } from "~/components/organisms/navigation";

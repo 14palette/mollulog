@@ -1,5 +1,5 @@
-import { ActionFunctionArgs, LoaderFunctionArgs, MetaFunction, redirect } from "@remix-run/cloudflare";
-import { Form, Link, useLoaderData, useRevalidator } from "@remix-run/react";
+import { ActionFunctionArgs, LoaderFunctionArgs, MetaFunction, redirect } from "react-router";
+import { Form, Link, useLoaderData, useRevalidator } from "react-router";
 import { startRegistration } from "@simplewebauthn/browser";
 import { useState } from "react";
 import { getAuthenticator } from "~/auth/authenticator.server";

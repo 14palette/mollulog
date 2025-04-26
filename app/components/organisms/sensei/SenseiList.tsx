@@ -1,4 +1,4 @@
-import { Link } from "@remix-run/react";
+import { Link } from "react-router";
 import { ProfileUsername } from "~/components/molecules/profile";
 import { studentImageUrl } from "~/models/assets";
 

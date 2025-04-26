@@ -1,4 +1,4 @@
-import { LoaderFunctionArgs } from "@remix-run/cloudflare";
+import { LoaderFunctionArgs } from "react-router";
 import { getAuthenticator } from "~/auth/authenticator.server";
 import { graphql } from "~/graphql";
 import { Defense, RaidRank, RaidRanksQuery } from "~/graphql/graphql";
@@ -43,7 +43,7 @@ export const loader = async ({ request, context, params }: LoaderFunctionArgs) =
   if (filterNotOwned) {
     const sensei = await getAuthenticator(context.cloudflare.env).isAuthenticated(request);
     if (sensei) {
-      const ownedStudentIds = (await getUserStudentStates(context.cloudflare.env, sensei.username) ?? [])
+      const ownedStudentIds = ((await getUserStudentStates(context.cloudflare.env, sensei.username)) ?? [])
         .filter((state) => !state.owned)
         .map((state) => state.student.id);
 
