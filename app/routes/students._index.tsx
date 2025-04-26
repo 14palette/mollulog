@@ -1,4 +1,4 @@
-import { LoaderFunctionArgs, MetaFunction } from "react-router";
+import type { LoaderFunctionArgs, MetaFunction } from "react-router";
 import { useLoaderData, useNavigate } from "react-router";
 import { Title } from "~/components/atoms/typography";
 import { StudentCards } from "~/components/molecules/student";

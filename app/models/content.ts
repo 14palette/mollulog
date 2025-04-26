@@ -1,7 +1,7 @@
-import { and, eq, not, or, sql, SQLWrapper } from "drizzle-orm";
+import { and, eq, not, or, sql, type SQLWrapper } from "drizzle-orm";
 import { drizzle } from "drizzle-orm/d1";
 import { int, sqliteTable, text } from "drizzle-orm/sqlite-core";
-import { Env } from "~/env.server";
+import type { Env } from "~/env.server";
 import { nanoid } from "nanoid/non-secure";
 import { senseisTable } from "./sensei";
 

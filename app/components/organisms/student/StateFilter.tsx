@@ -29,9 +29,9 @@ const buttonColors = {
 
 export function useStateFilter(
   initStates: StudentState[],
-  useFilter: boolean = true,
-  useSort: boolean = true,
-  useSearch: boolean = false,
+  useFilter = true,
+  useSort = true,
+  useSearch = false,
 ): [JSX.Element, StudentState[], Dispatch<SetStateAction<StudentState[]>>] {
   const [allStates, setAllStates] = useState(initStates);
   const [filter, setFilter] = useState<Filter>({

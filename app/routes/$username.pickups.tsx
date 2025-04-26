@@ -1,5 +1,5 @@
-import { LoaderFunctionArgs, MetaFunction } from "react-router";
-import { EventTypeEnum, UserPickupEventsQuery, UserPickupEventsQueryVariables } from "~/graphql/graphql";
+import type { LoaderFunctionArgs, MetaFunction } from "react-router";
+import { EventTypeEnum, type UserPickupEventsQuery, type UserPickupEventsQueryVariables } from "~/graphql/graphql";
 import { getAuthenticator } from "~/auth/authenticator.server";
 import { runQuery } from "~/lib/baql";
 import { getPickupHistories } from "~/models/pickup-history";

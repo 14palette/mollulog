@@ -1,7 +1,7 @@
-import { LoaderFunctionArgs } from "react-router";
+import type { LoaderFunctionArgs } from "react-router";
 import { getAuthenticator } from "~/auth/authenticator.server";
 import { graphql } from "~/graphql";
-import { Defense, RaidRank, RaidRanksQuery } from "~/graphql/graphql";
+import type { Defense, RaidRank, RaidRanksQuery } from "~/graphql/graphql";
 import { runQuery } from "~/lib/baql";
 import { getUserStudentStates } from "~/models/student-state";
 
@@ -36,7 +36,7 @@ export const loader = async ({ request, context, params }: LoaderFunctionArgs) =
   }
 
   const url = new URL(request.url);
-  let includeStudentIds: string[] = url.searchParams.get("includeStudentIds")?.split(",") ?? [];
+  const includeStudentIds: string[] = url.searchParams.get("includeStudentIds")?.split(",") ?? [];
   let excludeStudentIds: string[] = url.searchParams.get("excludeStudentIds")?.split(",") ?? [];
 
   const filterNotOwned = url.searchParams.get("filterNotOwned") === "true";
@@ -59,8 +59,8 @@ export const loader = async ({ request, context, params }: LoaderFunctionArgs) =
     defenseType: url.searchParams.get("defenseType") ? (url.searchParams.get("defenseType") as Defense) : undefined,
     includeStudents: includeStudents.length > 0 ? includeStudents : undefined,
     excludeStudents: excludeStudents.length > 0 ? excludeStudents : undefined,
-    rankAfter: url.searchParams.get("rankAfter") ? parseInt(url.searchParams.get("rankAfter")!) : undefined,
-    rankBefore: url.searchParams.get("rankBefore") ? parseInt(url.searchParams.get("rankBefore")!) : undefined,
+    rankAfter: url.searchParams.get("rankAfter") ? Number.parseInt(url.searchParams.get("rankAfter")!) : undefined,
+    rankBefore: url.searchParams.get("rankBefore") ? Number.parseInt(url.searchParams.get("rankBefore")!) : undefined,
   });
   if (error || !data?.raid?.ranks) {
     return { error: error?.message ?? "순위 정보를 가져오는 중 오류가 발생했어요" };

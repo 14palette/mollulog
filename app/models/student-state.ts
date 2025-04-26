@@ -13,7 +13,7 @@ export function userStateKeyById(id: number) {
   return `student-states:id:${id}`;
 }
 
-export async function getUserStudentStates(env: Env, username: string, includeUnreleased: boolean = false): Promise<StudentState[] | null> {
+export async function getUserStudentStates(env: Env, username: string, includeUnreleased = false): Promise<StudentState[] | null> {
   const sensei = await getSenseiByUsername(env, username);
   if (!sensei) {
     return null;
@@ -47,7 +47,7 @@ export async function filterSenseisByStudent(
     const states = (rawStates ? JSON.parse(rawStates) : []) as StudentState[];
     const state = states.find((state) => state.student.id === studentId);
     if (state && state.owned && state.tier && state.tier >= minTier) {
-      result.push({ senseiId: parseInt(key.name.split(":")[2]), tier: state.tier });
+      result.push({ senseiId: Number.parseInt(key.name.split(":")[2]), tier: state.tier });
     }
   }));
   return result;

@@ -1,7 +1,7 @@
 import { useNavigation, useSubmit, useLocation } from "react-router";
 import { startAuthentication } from "@simplewebauthn/browser";
 import { useEffect, useState } from "react";
-import { PublicKeyCredentialRequestOptionsJSON } from "@simplewebauthn/server/script/deps";
+import type { PublicKeyCredentialRequestOptionsJSON } from "@simplewebauthn/server/script/deps";
 import { Button } from "~/components/atoms/form";
 import { useSignIn } from "~/contexts/SignInProvider";
 

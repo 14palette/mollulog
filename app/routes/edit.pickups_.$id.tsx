@@ -1,4 +1,4 @@
-import { ActionFunctionArgs, LoaderFunctionArgs, MetaFunction, redirect } from "react-router";
+import { type ActionFunctionArgs, type LoaderFunctionArgs, type MetaFunction, redirect } from "react-router";
 import { useLoaderData, useSearchParams, useSubmit } from "react-router";
 import dayjs from "dayjs";
 import { useState } from "react";
@@ -9,9 +9,9 @@ import { SubTitle } from "~/components/atoms/typography";
 import { ContentSelector } from "~/components/molecules/editor";
 import { PickupHistoryEditor, PickupHistoryImporter } from "~/components/organisms/pickup";
 import { graphql } from "~/graphql";
-import { type PickupEventsQuery } from "~/graphql/graphql";
+import type { PickupEventsQuery } from "~/graphql/graphql";
 import { runQuery } from "~/lib/baql";
-import { createPickupHistory, getPickupHistory, PickupHistory, updatePickupHistory } from "~/models/pickup-history";
+import { createPickupHistory, getPickupHistory, type PickupHistory, updatePickupHistory } from "~/models/pickup-history";
 import { getAllStudents } from "~/models/student";
 
 const pickupEventsQuery = graphql(`

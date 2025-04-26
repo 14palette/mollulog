@@ -16,7 +16,7 @@ import { getPreference } from "./auth/preference.server";
 import { useEffect, useRef, useState } from "react";
 import { SignInProvider } from "./contexts/SignInProvider";
 import { SignInBottomSheet } from "./components/molecules/auth";
-import LoadingBar, { LoadingBarRef } from "react-top-loading-bar";
+import LoadingBar, { type LoadingBarRef } from "react-top-loading-bar";
 
 export const links = () => [
   { rel: "stylesheet", href: "https://cdnjs.cloudflare.com/ajax/libs/pretendard/1.3.8/static/pretendard.css" },

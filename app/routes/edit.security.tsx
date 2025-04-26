@@ -1,4 +1,4 @@
-import { ActionFunctionArgs, LoaderFunctionArgs, MetaFunction, redirect } from "react-router";
+import { type ActionFunctionArgs, type LoaderFunctionArgs, type MetaFunction, redirect } from "react-router";
 import { Form, Link, useLoaderData, useRevalidator } from "react-router";
 import { startRegistration } from "@simplewebauthn/browser";
 import { useState } from "react";

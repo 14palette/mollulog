@@ -1,4 +1,4 @@
-import { ActionFunctionArgs } from "react-router";
+import type { ActionFunctionArgs } from "react-router";
 import { getAuthenticator } from "~/auth/authenticator.server";
 
 export const action = async ({ context, request }: ActionFunctionArgs) => {

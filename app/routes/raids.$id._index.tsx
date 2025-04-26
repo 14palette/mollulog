@@ -5,9 +5,9 @@ import { FloatingButton } from "~/components/atoms/button";
 import { Callout } from "~/components/atoms/typography";
 import { FilterButtons } from "~/components/molecules/student";
 import { RaidRankFilter } from "~/components/organisms/raid";
-import RaidRanks, { RaidRankFilters } from "~/components/organisms/raid/RaidRanks";
+import RaidRanks, { type RaidRankFilters } from "~/components/organisms/raid/RaidRanks";
 import { defenseTypeLocale } from "~/locales/ko";
-import { buttonColors, OutletContext } from "./raids.$id";
+import { buttonColors, type OutletContext } from "./raids.$id";
 import { useSignIn } from "~/contexts/SignInProvider";
 
 export default function RaidDetailIndex() {

@@ -16,7 +16,7 @@
     "db:prod:migrate": "wrangler d1 migrations apply --remote DB",
     "test": "jest",
     "typecheck": "react-router typegen && tsc",
-    "lint": "biome lint"
+    "lint": "biome lint --write"
   },
   "dependencies": {
     "@cloudflare/kv-asset-handler": "^0.4.0",

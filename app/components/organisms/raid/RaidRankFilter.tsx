@@ -1,4 +1,4 @@
-import { RaidRankFilters } from "./RaidRanks";
+import type { RaidRankFilters } from "./RaidRanks";
 import { Toggle } from "~/components/atoms/form";
 import { Label } from "~/components/atoms/form";
 import { StudentSearch } from "~/components/molecules/student";

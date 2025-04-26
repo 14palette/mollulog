@@ -1,5 +1,5 @@
-import { Cookie, createCookie } from "react-router";
-import { Env } from "~/env.server";
+import { type Cookie, createCookie } from "react-router";
+import type { Env } from "~/env.server";
 
 let _preferenceCookie: Cookie;
 

@@ -1,7 +1,7 @@
 import { useState } from "react";
 import { Button, Textarea } from "~/components/atoms/form";
 import { PickupStudentSelectCard } from "~/components/molecules/pickup";
-import { parsePickupHistory, PickupHistory } from "~/models/pickup-history";
+import { parsePickupHistory, type PickupHistory } from "~/models/pickup-history";
 
 type PickupHistoryImporterProps = {
   tier3Students: {

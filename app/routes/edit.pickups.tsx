@@ -1,9 +1,9 @@
-import { ActionFunctionArgs, LoaderFunctionArgs, MetaFunction, redirect } from "react-router";
+import { type ActionFunctionArgs, type LoaderFunctionArgs, type MetaFunction, redirect } from "react-router";
 import { useLoaderData } from "react-router";
 import { getAuthenticator } from "~/auth/authenticator.server";
 import { AddContentButton } from "~/components/molecules/editor";
 import { PickupHistoryView } from "~/components/organisms/pickup";
-import { UserPickupEventsQuery, UserPickupEventsQueryVariables } from "~/graphql/graphql";
+import type { UserPickupEventsQuery, UserPickupEventsQueryVariables } from "~/graphql/graphql";
 import { runQuery } from "~/lib/baql";
 import { deletePickupHistory, getPickupHistories } from "~/models/pickup-history";
 import { getAllStudentsMap } from "~/models/student";

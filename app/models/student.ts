@@ -1,9 +1,9 @@
-import { Env } from "~/env.server";
-import { AllStudentsQuery } from "~/graphql/graphql";
+import type { Env } from "~/env.server";
+import type { AllStudentsQuery } from "~/graphql/graphql";
 import { runQuery } from "~/lib/baql";
 import { fetchCached } from "./base";
 import { graphql } from "~/graphql";
-import { AttackType, DefenseType } from "./content.d";
+import type { AttackType, DefenseType } from "./content.d";
 
 export type Role = "striker" | "special";
 export type Student = {
@@ -38,14 +38,14 @@ const allStudentsQuery = graphql(`
   }
 `);
 
-export async function getAllStudents(env: Env, includeUnreleased: boolean = false): Promise<Student[]> {
+export async function getAllStudents(env: Env, includeUnreleased = false): Promise<Student[]> {
   return fetchCached(env, `students::list::includeUnreleased=${includeUnreleased}`, async () => {
     const { data } = await runQuery<AllStudentsQuery>(allStudentsQuery, {});
     return (data?.students ?? []).filter(({ released }) => includeUnreleased || released);
   }, 10 * 60);
 };
 
-export async function getAllStudentsMap(env: Env, includeUnreleased: boolean = false): Promise<StudentMap> {
+export async function getAllStudentsMap(env: Env, includeUnreleased = false): Promise<StudentMap> {
   return fetchCached(env, `students::map::includeUnreleased=${includeUnreleased}`, async () => {
     const { data } = await runQuery<AllStudentsQuery>(allStudentsQuery, {});
     const students = (data?.students ?? []).filter(({ released }) => includeUnreleased || released);
