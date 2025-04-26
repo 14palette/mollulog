@@ -1,4 +1,4 @@
-import { json, LoaderFunctionArgs } from "@remix-run/cloudflare";
+import { LoaderFunctionArgs } from "@remix-run/cloudflare";
 import { graphql } from "~/graphql";
 import { runQuery } from "~/lib/baql";
 import type { Defense,RaidStatisticsQuery } from "~/graphql/graphql";
@@ -38,7 +38,7 @@ export const loader = async ({ request, params }: LoaderFunctionArgs) => {
     throw new Response("Error fetching raid statistics", { status: 500 });
   }
 
-  return json<RaidStatisticsData>({
+  return {
     statistics: data.raid?.statistics?.filter(({ slotsCount, assistsCount }) => slotsCount + assistsCount > 100),
-  });
+  };
 }

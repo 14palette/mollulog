@@ -1,4 +1,4 @@
-import { json, LoaderFunctionArgs, MetaFunction } from "@remix-run/cloudflare";
+import { LoaderFunctionArgs, MetaFunction } from "@remix-run/cloudflare";
 import { EventTypeEnum, UserPickupEventsQuery, UserPickupEventsQueryVariables } from "~/graphql/graphql";
 import { getAuthenticator } from "~/auth/authenticator.server";
 import { runQuery } from "~/lib/baql";
@@ -87,7 +87,7 @@ export const loader = async ({ context, request, params }: LoaderFunctionArgs) =
   };
 
   const currentUser = await getAuthenticator(env).isAuthenticated(request);
-  return json({
+  return {
     me: sensei.username === currentUser?.username,
     pickupHistories: aggregatedHistories.map((history) => ({
       uid: history.uid,
@@ -96,7 +96,7 @@ export const loader = async ({ context, request, params }: LoaderFunctionArgs) =
       trial: history.result.length > 0 ? history.result[history.result.length - 1].trial : 0,
     })),
     pickupStatistics,
-  });
+  };
 };
 
 export default function UserPickups() {

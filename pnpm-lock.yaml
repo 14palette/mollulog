@@ -35,9 +35,6 @@ importers:
       '@remix-run/cloudflare-pages':
         specifier: ^2.16.4
         version: 2.16.4(@cloudflare/workers-types@4.20250407.0)(typescript@5.8.3)
-      '@remix-run/css-bundle':
-        specifier: ^2.16.4
-        version: 2.16.4
       '@remix-run/react':
         specifier: ^2.16.4
         version: 2.16.4(react-dom@18.3.1(react@18.3.1))(react@18.3.1)(typescript@5.8.3)
@@ -1705,10 +1702,6 @@ packages:
     peerDependenciesMeta:
       typescript:
         optional: true
-
-  '@remix-run/css-bundle@2.16.4':
-    resolution: {integrity: sha512-tZPqjYCMl7g1thCmkwo2c3ZlxRvfsP5b0ukjbzHbmx2qGDFkPi3fMluKo/OAY1LOHMf1fqg9/SzwKSX1QRwq+g==}
-    engines: {node: '>=18.0.0'}
 
   '@remix-run/dev@2.16.4':
     resolution: {integrity: sha512-MzmcIjeEQkWAamSqWZm0tCdxxcK4HPFzaL8XCqkcRHVfhwJJXOZLp1GN/dHaokekI0cUvNIgCtm/bvHgjHb3Ng==}
@@ -8103,8 +8096,6 @@ snapshots:
       '@remix-run/server-runtime': 2.16.4(typescript@5.8.3)
     optionalDependencies:
       typescript: 5.8.3
-
-  '@remix-run/css-bundle@2.16.4': {}
 
   '@remix-run/dev@2.16.4(@remix-run/react@2.16.4(react-dom@18.3.1(react@18.3.1))(react@18.3.1)(typescript@5.8.3))(@types/node@22.8.1)(jiti@2.4.2)(lightningcss@1.29.2)(terser@5.39.0)(ts-node@10.9.2(@types/node@22.8.1)(typescript@5.8.3))(typescript@5.8.3)(vite@6.2.5(@types/node@22.8.1)(jiti@2.4.2)(lightningcss@1.29.2)(terser@5.39.0)(yaml@2.6.0))(wrangler@4.8.0(@cloudflare/workers-types@4.20250407.0))(yaml@2.6.0)':
     dependencies:

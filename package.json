@@ -25,7 +25,6 @@
     "@heroicons/react": "^2.2.0",
     "@remix-run/cloudflare": "^2.16.4",
     "@remix-run/cloudflare-pages": "^2.16.4",
-    "@remix-run/css-bundle": "^2.16.4",
     "@remix-run/react": "^2.16.4",
     "@simplewebauthn/browser": "^11.0.0",
     "@simplewebauthn/server": "^11.0.0",

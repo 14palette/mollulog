@@ -1,4 +1,4 @@
-import { ActionFunctionArgs, json, LoaderFunctionArgs, MetaFunction, redirect } from "@remix-run/cloudflare";
+import { ActionFunctionArgs, LoaderFunctionArgs, MetaFunction, redirect } from "@remix-run/cloudflare";
 import { useLoaderData } from "@remix-run/react";
 import { getAuthenticator } from "~/auth/authenticator.server";
 import { AddContentButton } from "~/components/molecules/editor";
@@ -38,7 +38,7 @@ export const loader = async ({ request, context }: LoaderFunctionArgs) => {
       .map((student) => ({ studentId: student.id, name: student.name })),
   })).sort((a, b) => dayjs(b.event.since).diff(dayjs(a.event.since)));
 
-  return json({ pickupHistories: aggregatedHistories });
+  return { pickupHistories: aggregatedHistories };
 };
 
 export const action = async ({ context, request }: ActionFunctionArgs) => {

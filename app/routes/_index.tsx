@@ -1,4 +1,3 @@
-import { defer } from "@remix-run/cloudflare";
 import type { LoaderFunctionArgs, MetaFunction } from "@remix-run/cloudflare";
 import { Link, useLoaderData } from "@remix-run/react";
 import { SubTitle, Title } from "~/components/atoms/typography";
@@ -53,11 +52,11 @@ export const loader = async ({ context }: LoaderFunctionArgs) => {
     return [];
   }).filter((studentId) => studentId !== null);
 
-  return defer({
+  return {
     events: data.events.nodes,
     raids: data.raids.nodes,
     favoritedCounts: await getFavoritedCounts(env, pickupStudentIds),
-  });
+  };
 }
 
 export default function Index() {

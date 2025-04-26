@@ -1,4 +1,4 @@
-import { json, LoaderFunctionArgs } from "@remix-run/cloudflare";
+import { LoaderFunctionArgs } from "@remix-run/cloudflare";
 import { getAuthenticator } from "~/auth/authenticator.server";
 import { graphql } from "~/graphql";
 import { Defense, RaidRank, RaidRanksQuery } from "~/graphql/graphql";
@@ -63,12 +63,12 @@ export const loader = async ({ request, context, params }: LoaderFunctionArgs) =
     rankBefore: url.searchParams.get("rankBefore") ? parseInt(url.searchParams.get("rankBefore")!) : undefined,
   });
   if (error || !data?.raid?.ranks) {
-    return json({ error: error?.message ?? "순위 정보를 가져오는 중 오류가 발생했어요" }, { status: 500 });
+    return { error: error?.message ?? "순위 정보를 가져오는 중 오류가 발생했어요" };
   }
 
-  return json({
+  return {
     rankVisible: data.raid.rankVisible,
     ranks: url.searchParams.get("rankBefore") ? data.raid.ranks.slice(1, 11) : data.raid.ranks.slice(0, 10),
     hasMore: data.raid.ranks.length === 11,
-  });
+  };
 };

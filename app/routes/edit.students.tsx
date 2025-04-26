@@ -1,5 +1,5 @@
 import type { ActionFunctionArgs, LoaderFunctionArgs, MetaFunction} from "@remix-run/cloudflare";
-import { json, redirect } from "@remix-run/cloudflare";
+import { redirect } from "@remix-run/cloudflare";
 import { Link, useFetcher, useLoaderData } from "@remix-run/react";
 import { useEffect, useState } from "react";
 import { getAuthenticator } from "~/auth/authenticator.server";
@@ -21,9 +21,9 @@ export const loader = async ({ context, request }: LoaderFunctionArgs) => {
     return redirect("/unauthorized");
   }
 
-  return json({
+  return {
     states: (await getUserStudentStates(env, sensei.username))!,
-  });
+  };
 };
 
 export const action = async ({ context, request }: ActionFunctionArgs) => {
@@ -36,7 +36,7 @@ export const action = async ({ context, request }: ActionFunctionArgs) => {
   const formData = await request.formData();
   const states = JSON.parse(formData.get("states") as string);
   await updateStudentStates(env, sensei, states);
-  return json({});
+  return {};
 };
 
 export default function EditStudents() {

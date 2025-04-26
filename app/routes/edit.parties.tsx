@@ -1,5 +1,5 @@
 import type { ActionFunctionArgs, LoaderFunctionArgs } from "@remix-run/cloudflare";
-import { json, redirect } from "@remix-run/cloudflare";
+import { redirect } from "@remix-run/cloudflare";
 import { useLoaderData } from "@remix-run/react";
 import { getAuthenticator } from "~/auth/authenticator.server";
 import { AddContentButton } from "~/components/molecules/editor";
@@ -32,7 +32,7 @@ export const loader = async ({ context, request }: LoaderFunctionArgs) => {
 
   const parties = (await getUserParties(env, currentUser.username)).reverse();
   const states = await getUserStudentStates(env, currentUser.username, true);
-  return json({ parties, states, raids: raidQueryResult.data.raids.nodes });
+  return { parties, states, raids: raidQueryResult.data.raids.nodes };
 };
 
 export const action = async ({ context, request }: ActionFunctionArgs) => {

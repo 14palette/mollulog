@@ -1,4 +1,4 @@
-import { ActionFunctionArgs, json, LoaderFunctionArgs, MetaFunction, redirect } from "@remix-run/cloudflare";
+import { ActionFunctionArgs, LoaderFunctionArgs, MetaFunction, redirect } from "@remix-run/cloudflare";
 import { useLoaderData, useSearchParams, useSubmit } from "@remix-run/react";
 import dayjs from "dayjs";
 import { useState } from "react";
@@ -51,13 +51,13 @@ export const loader = async ({ context, request, params }: LoaderFunctionArgs) =
   }
 
   const now = dayjs();
-  return json({
+  return {
     events: data.events.nodes.filter((event) => event.pickups.length > 0 && dayjs(event.since).isBefore(now)).reverse(),
     tier3Students: (await getAllStudents(env))
       .filter((student) => student.initialTier === 3)
       .map((student) => ({ studentId: student.id, name: student.name })),
     currentPickupHistory,
-  });
+  };
 };
 
 type ActionData = {

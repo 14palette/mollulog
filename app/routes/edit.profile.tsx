@@ -1,5 +1,5 @@
 import type { ActionFunction, LoaderFunctionArgs, MetaFunction } from "@remix-run/cloudflare";
-import { json, redirect } from "@remix-run/cloudflare";
+import { redirect } from "@remix-run/cloudflare";
 import { Form, useActionData, useLoaderData } from "@remix-run/react";
 import { ProfileEditor } from "~/components/organisms/profile";
 import { getAuthenticator, sessionStorage } from "~/auth/authenticator.server";
@@ -38,7 +38,7 @@ export const loader = async ({ context, request }: LoaderFunctionArgs) => {
   }
 
   const senseiData = (await getSenseiById(env, sensei.id))!;
-  return json({
+  return {
     sensei: {
       username: senseiData.username,
       bio: senseiData.bio,
@@ -46,7 +46,7 @@ export const loader = async ({ context, request }: LoaderFunctionArgs) => {
       friendCode: senseiData.friendCode,
     },
     students: data.students,
-  });
+  };
 }
 
 type ActionData = {
@@ -73,18 +73,18 @@ export const action: ActionFunction = async ({ request, context }) => {
   sensei.friendCode = getStringOrNull("friendCode");
 
   if (!/^[a-zA-Z0-9_]{4,20}$/.test(sensei.username)) {
-    return json<ActionData>({ error: { username: "4~20글자의 영숫자 및 _ 기호만 사용 가능합니다." } })
+    return { error: { username: "4~20글자의 영숫자 및 _ 기호만 사용 가능합니다." } };
   }
   if (sensei.bio && sensei.bio.length > 100) {
-    return json<ActionData>({ error: { bio: "100자 이하로 작성해주세요." } });
+    return { error: { bio: "100자 이하로 작성해주세요." } };
   }
   if (sensei.friendCode && !/^[A-Z]{8}$/.test(sensei.friendCode)) {
-    return json<ActionData>({ error: { friendCode: "친구 코드는 알파벳 8글자에요." } });
+    return { error: { friendCode: "친구 코드는 알파벳 8글자에요." } };
   }
 
   const result = await updateSensei(env, sensei.id, sensei);
   if (result.error) {
-    return json<ActionData>({ error: result.error });
+    return { error: result.error };
   }
 
   const { getSession, commitSession } = sessionStorage(env);

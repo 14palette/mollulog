@@ -1,4 +1,4 @@
-import { json, MetaFunction, type LoaderFunctionArgs } from "@remix-run/cloudflare";
+import { MetaFunction, type LoaderFunctionArgs } from "@remix-run/cloudflare";
 import { Link, useLoaderData } from "@remix-run/react";
 import dayjs from "dayjs";
 import { useState } from "react";
@@ -39,7 +39,7 @@ export const loader = async ({ params }: LoaderFunctionArgs) => {
     throw new Response("Error fetching student detail", { status: 500 });
   }
 
-  return json({ student: data.student });
+  return { student: data.student };
 };
 
 export const meta: MetaFunction<typeof loader> = ({ data }) => {

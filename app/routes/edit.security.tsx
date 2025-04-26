@@ -1,4 +1,4 @@
-import { ActionFunctionArgs, json, LoaderFunctionArgs, MetaFunction, redirect } from "@remix-run/cloudflare";
+import { ActionFunctionArgs, LoaderFunctionArgs, MetaFunction, redirect } from "@remix-run/cloudflare";
 import { Form, Link, useLoaderData, useRevalidator } from "@remix-run/react";
 import { startRegistration } from "@simplewebauthn/browser";
 import { useState } from "react";
@@ -25,7 +25,7 @@ export const loader = async ({ context, request }: LoaderFunctionArgs) => {
   if (!sensei) {
     return redirect("/unauthorized");
   }
-  return json({ passkeys: await getPasskeysBySensei(env, sensei) });
+  return { passkeys: await getPasskeysBySensei(env, sensei) };
 }
 
 export const action = async ({ context, request }: ActionFunctionArgs) => {

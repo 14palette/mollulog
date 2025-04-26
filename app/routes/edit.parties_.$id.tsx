@@ -1,5 +1,5 @@
 import type { ActionFunction, LoaderFunctionArgs, MetaFunction } from "@remix-run/cloudflare";
-import { json, redirect } from "@remix-run/cloudflare";
+import { redirect } from "@remix-run/cloudflare";
 import { Form, useLoaderData } from "@remix-run/react";
 import { getAuthenticator } from "~/auth/authenticator.server";
 import { Title } from "~/components/atoms/typography";
@@ -40,11 +40,11 @@ export const loader = async ({ context, request, params }: LoaderFunctionArgs) =
   }
 
   let states = await getUserStudentStates(env, sensei.username);
-  return json({
+  return {
     states: states!,
     raids: data.raids.nodes,
     party,
-  });
+  };
 };
 
 export const action: ActionFunction = async ({ context, request }) => {

@@ -1,5 +1,5 @@
 import type { ActionFunction, LoaderFunctionArgs, MetaFunction} from "@remix-run/cloudflare";
-import { json, redirect } from "@remix-run/cloudflare";
+import { redirect } from "@remix-run/cloudflare";
 import { Form, useActionData, useLoaderData } from "@remix-run/react";
 import { Title } from "~/components/atoms/typography";
 import { updateSensei } from "~/models/sensei";
@@ -26,7 +26,7 @@ export const loader = async ({ request, context }: LoaderFunctionArgs) => {
     throw new Error("failed to load students");
   }
 
-  return json({ students: data.students });
+  return { students: data.students };
 }
 
 type ActionData = {
@@ -49,7 +49,7 @@ export const action: ActionFunction = async ({ request, context }) => {
   sensei.username = formData.get("username") as string;
   sensei.profileStudentId = formData.has("profileStudentId") ? formData.get("profileStudentId") as string : null;
   if (!/^[a-zA-Z0-9_]{4,20}$/.test(sensei.username)) {
-    return json<ActionData>({ error: { username: "4~20글자의 영숫자 및 _ 기호만 사용 가능합니다." } })
+    return { error: { username: "4~20글자의 영숫자 및 _ 기호만 사용 가능합니다." } };
   }
 
   await updateSensei(env, sensei.id, sensei);

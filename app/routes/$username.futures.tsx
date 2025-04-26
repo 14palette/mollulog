@@ -1,6 +1,5 @@
 import { ArrowRightIcon } from "@heroicons/react/24/outline";
 import type { LoaderFunctionArgs, MetaFunction} from "@remix-run/cloudflare";
-import { json } from "@remix-run/cloudflare";
 import { FuturePlan } from "~/components/organisms/future";
 import type { UserFuturesQuery } from "~/graphql/graphql";
 import { runQuery } from "~/lib/baql";
@@ -56,11 +55,11 @@ export const loader = async ({ context, params }: LoaderFunctionArgs) => {
   const events = data.events.nodes.filter((event) => plannedContentIds.includes(event.eventId));
   const memos = (await getUserMemos(env, sensei.id)).filter((memo) => plannedContentIds.includes(memo.contentId));
 
-  return json({
+  return {
     events,
     favoritedStudents,
     memos,
-  });
+  };
 }
 
 export default function UserFutures() {
