@@ -8,7 +8,7 @@ import { sanitizeClassName } from "~/prophandlers";
 
 type PickupStudentSelectCardProps = {
   studentId: string | null;
-  name?: string;
+  name?: string | null;
   tier3Students: {
     studentId: string;
     name: string;

@@ -16,8 +16,8 @@ type PickupHistoryViewProps = {
     since: Date;
   };
   tier3Students: {
-    studentId: string;
-    name: string;
+    studentId: string | null;
+    name: string | null;
   }[];
   pickupStudentIds: string[];
   trial?: number;
@@ -60,7 +60,7 @@ export default function PickupHistoryView({ uid, event, tier3Students, pickupStu
         students={tier3Students.map(({ studentId, name }) => ({
           studentId,
           name,
-          label: pickupStudentIds.includes(studentId) ? <span className="text-yellow-500">픽업</span> : undefined,
+          label: pickupStudentIds.includes(studentId ?? "") ? <span className="text-yellow-500">픽업</span> : undefined,
         }))}
       />
 

@@ -34,7 +34,7 @@ export default function Edit() {
   return (
     <>
       <Title text="프로필 관리" />
-      <Navigation links={navigations} />
+      <Navigation links={navigations} allowPathPrefix />
       <Outlet />
     </>
   );

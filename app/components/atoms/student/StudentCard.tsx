@@ -4,7 +4,7 @@ import { studentImageUrl } from "~/models/assets";
 
 type StudentCardProps = {
   studentId: string | null;
-  name?: string;
+  name?: string | null;
   nameSize?: "small" | "normal";
 
   tier?: number | null;
@@ -51,7 +51,7 @@ export default function StudentCard(
         <img
           className={`rounded-lg ${grayscale ? "grayscale opacity-75" : ""} transition`}
           src={studentImageUrl(studentId || "unlisted")}
-          alt={name} loading="lazy"
+          alt={name ?? undefined} loading="lazy"
         />
         {(favoritedCount || favorited) && (
           <div className={`px-1 absolute top-0.5 right-0.5 text-white border rounded-lg flex items-center transition ${(favorited === undefined || favorited === true) ? "bg-red-500/90" : "bg-neutral-500/90"}`}>

@@ -3,7 +3,6 @@ import { EventTypeEnum, type UserPickupEventsQuery, type UserPickupEventsQueryVa
 import { getAuthenticator } from "~/auth/authenticator.server";
 import { runQuery } from "~/lib/baql";
 import { getPickupHistories } from "~/models/pickup-history";
-import { getSenseiByUsername } from "~/models/sensei";
 import { useLoaderData } from "react-router";
 import { ErrorPage } from "~/components/organisms/error";
 import { SparklesIcon } from "@heroicons/react/24/outline";
@@ -54,7 +53,7 @@ export const loader = async ({ context, request, params }: LoaderFunctionArgs) =
     ...history,
     event: data.events.nodes.find((event) => event.eventId === history.eventId)!,
     students: history.result
-      .flatMap((trial) => trial.tier3StudentIds.map((studentId) => allStudentsMap[studentId]))
+      .flatMap((trial) => trial.tier3StudentIds.filter((studentId) => studentId).map((studentId) => allStudentsMap[studentId]))
       .map((student) => ({ studentId: student.id, name: student.name })),
   })).sort((a, b) => dayjs(b.event.since).diff(dayjs(a.event.since)));
 

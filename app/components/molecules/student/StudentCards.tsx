@@ -7,7 +7,7 @@ import type { AttackType, DefenseType, Role } from "~/models/content.d";
 type StudentCardsProps = {
   students?: {
     studentId: string | null;
-    name?: string;
+    name?: string | null;
     attackType?: AttackType;
     defenseType?: DefenseType;
     role?: Role;

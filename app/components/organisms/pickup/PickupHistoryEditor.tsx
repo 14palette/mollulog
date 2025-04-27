@@ -1,4 +1,4 @@
-import { useState } from "react";
+import { useEffect, useState } from "react";
 import { Button, Input, Label } from "~/components/atoms/form";
 import { PickupStudentSelectCard } from "~/components/molecules/pickup";
 import { StudentSearch } from "~/components/molecules/student";
@@ -27,13 +27,19 @@ export default function PickupHistoryEditor(
   const [tier3Count, setTier3Count] = useState(initialTier3Count);
   const [tier3StudentIds, setTier3StudentIds] = useState(initialTier3StudentIds ?? []);
 
-  const studentCards: { studentId: string | null; name?: string }[] = tier3StudentIds.map((studentId) => ({
-    studentId,
-    name: tier3Students.find((student) => student.studentId === studentId)?.name,
-  }));
-  if (tier3Count && tier3Count > tier3StudentIds.length) {
-    studentCards.push(...Array(tier3Count - tier3StudentIds.length).fill({ studentId: null }));
-  }
+  const [studentCards, setStudentCards] = useState<{ studentId: string | null; name: string | null }[]>([]);
+  useEffect(() => {
+    const newStudentCards = tier3StudentIds.map((studentId) => ({
+      studentId,
+      name: tier3Students.find((student) => student.studentId === studentId)?.name ?? null,
+    }));
+
+    if (tier3Count && tier3Count > newStudentCards.length) {
+      newStudentCards.push(...Array(tier3Count - newStudentCards.length).fill({ studentId: null }));
+    }
+
+    setStudentCards(newStudentCards);
+  }, [tier3StudentIds]);
 
   return (
     <>
@@ -65,9 +71,11 @@ export default function PickupHistoryEditor(
                 name={student.name}
                 tier3Students={tier3Students}
                 onChange={(newStudentId) => {
-                  const newStudentIds = [...tier3StudentIds];
-                  newStudentIds[index] = newStudentId;
-                  setTier3StudentIds(newStudentIds);
+                  setTier3StudentIds((prev) => {
+                    const newStudentIds = [...prev];
+                    newStudentIds[index] = newStudentId;
+                    return newStudentIds;
+                  });
                 }}
               />
             );
