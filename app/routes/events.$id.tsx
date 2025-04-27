@@ -148,7 +148,7 @@ export const action = async ({ params, request, context }: ActionFunctionArgs) =
   }
 
   const contentId = params.id!;
-  const actionData = await request.json<ActionData>();
+  const actionData = await request.json() as ActionData;
   if (actionData.favorite) {
     const { studentId, favorited } = actionData.favorite;
     const run = favorited ? favoriteStudent : unfavoriteStudent;

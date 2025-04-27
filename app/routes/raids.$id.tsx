@@ -1,5 +1,5 @@
 import type { LoaderFunctionArgs, MetaFunction } from "react-router";
-import { Link, Outlet, useLoaderData } from "react-router";
+import { isRouteErrorResponse, Link, Outlet, useLoaderData, useRouteError } from "react-router";
 import dayjs from "dayjs";
 import { getAuthenticator } from "~/auth/authenticator.server";
 import { EmptyView, SubTitle } from "~/components/atoms/typography";
@@ -11,6 +11,7 @@ import { runQuery } from "~/lib/baql";
 import { raidTypeLocale } from "~/locales/ko";
 import { bossBannerUrl } from "~/models/assets";
 import { getAllStudents } from "~/models/student";
+import { ErrorPage } from "~/components/organisms/error";
 
 const raidDetailQuery = graphql(`
   query RaidDetail($raidId: String!) {
@@ -96,6 +97,15 @@ export type OutletContext = {
     studentId: string;
     name: string;
   }[];
+};
+
+export const ErrorBoundary = () => {
+  const error = useRouteError();
+  if (isRouteErrorResponse(error)) {
+    return <ErrorPage message={error.data.error.message} />;
+  } else {
+    return <ErrorPage />;
+  }
 };
 
 export default function RaidDetail() {

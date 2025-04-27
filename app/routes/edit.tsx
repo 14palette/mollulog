@@ -1,8 +1,9 @@
-import { Outlet, useMatches } from "react-router";
+import { Outlet, useMatches, useRouteError, isRouteErrorResponse } from "react-router";
 import { DocumentDuplicateIcon, KeyIcon, Squares2X2Icon, UserCircleIcon, UsersIcon } from "@heroicons/react/24/outline";
 import { useEffect } from "react";
 import { Navigation } from "~/components/organisms/navigation";
 import { Title } from "~/components/atoms/typography";
+import { ErrorPage } from "~/components/organisms/error";
 
 const navigations = [
   { text: "프로필", to: "/edit/profile", icon: UserCircleIcon },
@@ -11,6 +12,15 @@ const navigations = [
   { text: "편성/공략", to: "/edit/parties", icon: Squares2X2Icon },
   { text: "인증/보안", to: "/edit/security", icon: KeyIcon },
 ];
+
+export const ErrorBoundary = () => {
+  const error = useRouteError();
+  if (isRouteErrorResponse(error)) {
+    return <ErrorPage message={error.data.error.message} />;
+  } else {
+    return <ErrorPage />;
+  }
+};
 
 export default function Edit() {
   const matches = useMatches();

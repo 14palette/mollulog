@@ -35,19 +35,22 @@ export default function RaidStatistics() {
         </div>
       )}
       {(!fetcher.data || fetcher.state !== "idle") && <TimelinePlaceholder />}
-      {fetcher.data?.statistics && fetcher.data.statistics.length > 0 ?
-        <div className="xl:grid xl:grid-cols-2 xl:gap-4">
-          <div>
-            <p className="text-lg font-bold">스트라이커 편성 횟수</p>
-            <SlotCountInfos statistics={fetcher.data.statistics!.filter(({ student }) => student.role === "striker")} />
+      {fetcher.state === "idle" && fetcher.data?.statistics && (
+        fetcher.data.statistics.length > 0 ? (
+          <div className="xl:grid xl:grid-cols-2 xl:gap-4">
+            <div>
+              <p className="text-lg font-bold">스트라이커 편성 횟수</p>
+              <SlotCountInfos statistics={fetcher.data.statistics!.filter(({ student }) => student.role === "striker")} />
+            </div>
+            <div>
+              <p className="text-lg font-bold">스페셜 편성 횟수</p>
+              <SlotCountInfos statistics={fetcher.data.statistics!.filter(({ student }) => student.role === "special")} />
+            </div>
           </div>
-          <div>
-            <p className="text-lg font-bold">스페셜 편성 횟수</p>
-            <SlotCountInfos statistics={fetcher.data.statistics!.filter(({ student }) => student.role === "special")} />
-          </div>
-        </div> :
-        <EmptyView text="통계 정보를 준비중이에요" />
-      }
+        ) : (
+          <EmptyView text="통계 정보를 준비중이에요" />
+        )
+      )}
     </div>
   );
 }

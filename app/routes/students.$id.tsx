@@ -1,5 +1,5 @@
 import type { MetaFunction, LoaderFunctionArgs } from "react-router";
-import { Link, useLoaderData } from "react-router";
+import { isRouteErrorResponse, Link, useLoaderData, useRouteError } from "react-router";
 import dayjs from "dayjs";
 import { useState } from "react";
 import { graphql } from "~/graphql";
@@ -14,6 +14,7 @@ import { EmptyView, SubTitle, Title } from "~/components/atoms/typography";
 import { TierCounts } from "~/components/molecules/student";
 import { ArrowTopRightOnSquareIcon, ChevronDownIcon, ChevronRightIcon, ChevronUpIcon } from "@heroicons/react/16/solid";
 import { OptionBadge } from "~/components/atoms/student";
+import { ErrorPage } from "~/components/organisms/error";
 
 const studentDetailQuery = graphql(`
   query StudentDetail($uid: String!, $raidSince: ISO8601DateTime!) {
@@ -35,11 +36,21 @@ export const loader = async ({ params }: LoaderFunctionArgs) => {
 
   const raidSince = dayjs().subtract(1, "year").toISOString();
   const { data, error } = await runQuery<StudentDetailQuery>(studentDetailQuery, { uid, raidSince });
+  let errorMessage: string | null = null;
   if (error || !data) {
-    throw new Response("Error fetching student detail", { status: 500 });
+    errorMessage = error?.message ?? "학생 정보를 가져오는 중 오류가 발생했어요";
+  } else if (!data.student) {
+    errorMessage = "학생 정보를 찾을 수 없어요";
   }
 
-  return { student: data.student };
+  if (errorMessage) {
+    throw new Response(JSON.stringify({ error: { message: errorMessage } }), {
+      status: 404,
+      headers: { "Content-Type": "application/json" },
+    });
+  }
+
+  return { student: data!.student! };
 };
 
 export const meta: MetaFunction<typeof loader> = ({ data }) => {
@@ -58,6 +69,15 @@ export const meta: MetaFunction<typeof loader> = ({ data }) => {
     { name: "twitter:title", content: title },
     { name: "twitter:description", content: description },
   ];
+};
+
+export const ErrorBoundary = () => {
+  const error = useRouteError();
+  if (isRouteErrorResponse(error)) {
+    return <ErrorPage message={error.data.error.message} />;
+  } else {
+    return <ErrorPage />;
+  }
 };
 
 export default function StudentDetail() {
