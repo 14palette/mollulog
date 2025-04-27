@@ -129,10 +129,11 @@ function MenuContent({ currentUsername, pathname, onMenuClose, onShowSignIn, onD
 
 type SidebarProps = {
   currentUsername: string | null;
+  darkMode: boolean;
   setDarkMode: (fn: (prev: boolean) => boolean) => void;
 };
 
-export default function Sidebar({ currentUsername, setDarkMode }: SidebarProps) {
+export default function Sidebar({ currentUsername, darkMode, setDarkMode }: SidebarProps) {
   const matches = useMatches();
   const pathname = matches[matches.length - 1].pathname;
 
@@ -147,7 +148,8 @@ export default function Sidebar({ currentUsername, setDarkMode }: SidebarProps) 
     <div className="px-4 py-4 xl:py-8">
       <div className="flex items-center">
         <Bars3Icon className="p-2 -m-2 block xl:hidden size-10" strokeWidth={2} onClick={() => setIsMenuOpen(!isMenuOpen)} />
-        <h1 className="ml-1 xl:mt-4 px-2 text-2xl xl:text-3xl font-ingame">
+        <img src={darkMode ? "/logo-dark.png" : "/logo-light.png"} alt="몰루로그 로고" className="mx-2 object-cover h-8 xl:h-10 aspect-4/3" />
+        <h1 className="text-2xl xl:text-3xl font-ingame">
           <span className="font-bold">몰루</span>로그
         </h1>
       </div>
