@@ -1,4 +1,4 @@
-import { Link } from "@remix-run/react";
+import { Link } from "react-router";
 import { ItemCard } from "~/components/atoms/item";
 import { SubTitle, Callout } from "~/components/atoms/typography";
 import { ItemCards } from "~/components/molecules/item";
@@ -41,7 +41,7 @@ export default function EventStages({ stages, signedIn, ownedStudentIds }: Event
       maxRatio: number,
     },
   } = {};
-  for (const reward of stages.map((stage) => stage.rewards).flat()) {
+  for (const reward of stages.flatMap((stage) => stage.rewards)) {
     const { item, amount } = reward;
     if (itemBonuses[item.itemId] || amount < 1) {
       continue;

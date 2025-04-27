@@ -40,13 +40,13 @@ export default function PickupHistoryEditor(
       <Input
         type="number" label="총 모집 횟수" description="전체 모집 횟수를 입력해주세요 (예: 200)"
         defaultValue={initialTotalCount?.toString()}
-        onChange={(value) => setTotlaCount(parseInt(value))}
+        onChange={(value) => setTotlaCount(Number.parseInt(value))}
       />
       <Input
         type="number" label="모집한 ★3 횟수"
         defaultValue={initialTier3Count?.toString()}
         onChange={(value) => {
-          const newCount = parseInt(value);
+          const newCount = Number.parseInt(value);
           setTier3Count(isNaN(newCount) ? 0 : newCount);
           if (tier3StudentIds.length > newCount) {
             setTier3StudentIds((prev) => prev.slice(0, newCount));

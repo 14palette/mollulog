@@ -1,10 +1,16 @@
 {
-  "include": ["env.d.ts", "**/*.ts", "**/*.tsx", "app/lib/device/index.client./ts"],
+  "include": [
+    "env.d.ts",
+    "**/*.ts",
+    "**/*.tsx",
+    ".react-router/types/**/*",
+  ],
   "compilerOptions": {
-    "types": ["@remix-run/cloudflare", "vite/client"],
+    "types": ["@react-router/cloudflare", "vite/client"],
+    "rootDirs": [".", "./.react-router/types"],
     "skipLibCheck": true,
     "module": "ESNext",
-    "moduleResolution": "node",
+    "moduleResolution": "Bundler",
     "lib": ["DOM", "DOM.Iterable", "ES2022"],
     "isolatedModules": true,
     "esModuleInterop": true,

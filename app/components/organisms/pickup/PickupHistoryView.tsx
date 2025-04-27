@@ -3,9 +3,9 @@ import { KeyValueTable, SubTitle } from "~/components/atoms/typography";
 import { ChevronRightIcon } from "@heroicons/react/16/solid";
 import { ActionCard, type ActionCardAction } from "~/components/molecules/editor";
 import { StudentCards } from "~/components/molecules/student";
-import { EventTypeEnum } from "~/graphql/graphql";
+import type { EventTypeEnum } from "~/graphql/graphql";
 import { eventTypeLocale } from "~/locales/ko";
-import { Link } from "@remix-run/react";
+import { Link } from "react-router";
 
 type PickupHistoryViewProps = {
   uid: string;

@@ -1,12 +1,12 @@
-import {
-  type AuthenticationResponseJSON,
-  type PublicKeyCredentialRequestOptionsJSON,
-  type PublicKeyCredentialCreationOptionsJSON,
-  type RegistrationResponseJSON,
+import type {
+  AuthenticationResponseJSON,
+  PublicKeyCredentialRequestOptionsJSON,
+  PublicKeyCredentialCreationOptionsJSON,
+  RegistrationResponseJSON,
 } from "@simplewebauthn/server/script/deps";
 import { nanoid } from "nanoid/non-secure";
-import { Env } from "~/env.server";
-import { getSenseiById, Sensei } from "./sensei";
+import type { Env } from "~/env.server";
+import { getSenseiById, type Sensei } from "./sensei";
 import { verifyAuthenticationResponse, verifyRegistrationResponse } from "@simplewebauthn/server";
 
 export type Passkey = {

@@ -1,12 +1,12 @@
 import { StudentCards } from "~/components/molecules/student";
-import { useFetcher } from "@remix-run/react";
+import { useFetcher } from "react-router";
 import { useEffect } from "react";
 import { EmptyView } from "~/components/atoms/typography";
 import { TimelinePlaceholder } from "~/components/organisms/useractivity";
 import { ActionCard } from "~/components/molecules/editor";
-import { RaidRanksData } from "~/routes/raids.data.$id.ranks";
+import type { RaidRanksData } from "~/routes/raids.data.$id.ranks";
 import { Button } from "~/components/atoms/form";
-import { type DefenseType } from "~/models/content.d";
+import type { DefenseType } from "~/models/content.d";
 
 export type RaidRankFilters = {
   defenseType: DefenseType | null;

@@ -1,4 +1,4 @@
-import type { LoaderFunctionArgs } from "@remix-run/cloudflare";
+import type { LoaderFunctionArgs } from "react-router";
 import { getAuthenticator } from "~/auth/authenticator.server";
 
 export const loader = async ({ request, context }: LoaderFunctionArgs) => {

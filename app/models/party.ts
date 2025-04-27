@@ -35,7 +35,7 @@ export async function getUserParties(env: Env, username: string): Promise<Party[
   return result.results.map(toModel);
 }
 
-export async function getPartiesByRaidId(env: Env, raidId: string, includeSensei: boolean = false): Promise<Party[]> {
+export async function getPartiesByRaidId(env: Env, raidId: string, includeSensei = false): Promise<Party[]> {
   const result = await env.DB.prepare(GET_PARTIES_BY_RAID_QUERY).bind(raidId).all<DBParty>();
   const rows = result.results;
   if (rows.length === 0) {

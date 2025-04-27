@@ -10,7 +10,7 @@ export function filterStatesByName(keyword: string, states: StudentState[]): Stu
 export function filterStudentByName<T extends { name: string }>(keyword: string, students: T[], count?: number): T[] {
   let currentCount = 0;
   return students.filter((student) => {
-    if (currentCount >= (count ?? Infinity)) {
+    if (currentCount >= (count ?? Number.POSITIVE_INFINITY)) {
       return false;
     }
 

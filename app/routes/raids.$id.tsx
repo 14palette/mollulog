@@ -1,5 +1,5 @@
-import type { LoaderFunctionArgs, MetaFunction } from "@remix-run/cloudflare";
-import { json, Link, Outlet, useLoaderData } from "@remix-run/react";
+import type { LoaderFunctionArgs, MetaFunction } from "react-router";
+import { Link, Outlet, useLoaderData } from "react-router";
 import dayjs from "dayjs";
 import { getAuthenticator } from "~/auth/authenticator.server";
 import { EmptyView, SubTitle } from "~/components/atoms/typography";
@@ -61,14 +61,14 @@ export const loader = async ({ request, context, params }: LoaderFunctionArgs) =
 
   const sensei = await getAuthenticator(env).isAuthenticated(request);
   const allStudents = await getAllStudents(env, true);
-  return json({
+  return {
     raid: data!.raid!,
     signedIn: sensei !== null,
     allStudents: allStudents.map((student) => ({
       studentId: student.id,
       name: student.name,
     })),
-  });
+  };
 };
 
 export const meta: MetaFunction<typeof loader> = ({ data }) => {

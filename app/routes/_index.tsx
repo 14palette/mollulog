@@ -1,6 +1,5 @@
-import { defer } from "@remix-run/cloudflare";
-import type { LoaderFunctionArgs, MetaFunction } from "@remix-run/cloudflare";
-import { Link, useLoaderData } from "@remix-run/react";
+import type { LoaderFunctionArgs, MetaFunction } from "react-router";
+import { Link, useLoaderData } from "react-router";
 import { SubTitle, Title } from "~/components/atoms/typography";
 import { ContentTimelineItem } from "~/components/molecules/content";
 import { contentOrders } from "~/components/organisms/content/ContentTimeline";
@@ -53,11 +52,11 @@ export const loader = async ({ context }: LoaderFunctionArgs) => {
     return [];
   }).filter((studentId) => studentId !== null);
 
-  return defer({
+  return {
     events: data.events.nodes,
     raids: data.raids.nodes,
     favoritedCounts: await getFavoritedCounts(env, pickupStudentIds),
-  });
+  };
 }
 
 export default function Index() {

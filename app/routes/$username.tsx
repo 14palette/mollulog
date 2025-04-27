@@ -1,9 +1,9 @@
-import { json } from "@remix-run/cloudflare";
-import { Outlet, Params, isRouteErrorResponse, useParams, useRouteError } from "@remix-run/react";
+import { data } from "react-router";
+import { Outlet, type Params, isRouteErrorResponse, useParams, useRouteError } from "react-router";
 import { Title } from "~/components/atoms/typography";
 import { ErrorPage } from "~/components/organisms/error";
 import { Navigation } from "~/components/organisms/navigation";
-import { Env } from "~/env.server";
+import type { Env } from "~/env.server";
 import { getSenseiByUsername, type Sensei } from "~/models/sensei";
 
 export async function getRouteSensei(env: Env, params: Params<string>): Promise<Sensei> {
@@ -15,7 +15,7 @@ export async function getRouteSensei(env: Env, params: Params<string>): Promise<
   const username = usernameParam.replace("@", "");
   const sensei = await getSenseiByUsername(env, username);
   if (!sensei) {
-    throw json(
+    throw data(
       { error: { message: "선생님을 찾을 수 없어요", data: { username } } },
       { status: 404 },
     );

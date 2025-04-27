@@ -1,4 +1,4 @@
-import { LoaderFunctionArgs } from "@remix-run/cloudflare";
+import type { LoaderFunctionArgs } from "react-router";
 import { getAuthenticator } from "~/auth/authenticator.server";
 import { migrateFavoriteCounts } from "~/models/favorite-students";
 

@@ -1,10 +1,10 @@
-import { json, LoaderFunctionArgs, MetaFunction } from "@remix-run/cloudflare";
-import { EventTypeEnum, UserPickupEventsQuery, UserPickupEventsQueryVariables } from "~/graphql/graphql";
+import type { LoaderFunctionArgs, MetaFunction } from "react-router";
+import { EventTypeEnum, type UserPickupEventsQuery, type UserPickupEventsQueryVariables } from "~/graphql/graphql";
 import { getAuthenticator } from "~/auth/authenticator.server";
 import { runQuery } from "~/lib/baql";
 import { getPickupHistories } from "~/models/pickup-history";
 import { getSenseiByUsername } from "~/models/sensei";
-import { useLoaderData } from "@remix-run/react";
+import { useLoaderData } from "react-router";
 import { ErrorPage } from "~/components/organisms/error";
 import { SparklesIcon } from "@heroicons/react/24/outline";
 import { AddContentButton } from "~/components/molecules/editor";
@@ -87,7 +87,7 @@ export const loader = async ({ context, request, params }: LoaderFunctionArgs) =
   };
 
   const currentUser = await getAuthenticator(env).isAuthenticated(request);
-  return json({
+  return {
     me: sensei.username === currentUser?.username,
     pickupHistories: aggregatedHistories.map((history) => ({
       uid: history.uid,
@@ -96,7 +96,7 @@ export const loader = async ({ context, request, params }: LoaderFunctionArgs) =
       trial: history.result.length > 0 ? history.result[history.result.length - 1].trial : 0,
     })),
     pickupStatistics,
-  });
+  };
 };
 
 export default function UserPickups() {

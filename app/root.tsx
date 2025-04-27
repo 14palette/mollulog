@@ -1,6 +1,4 @@
-import { json } from "@remix-run/cloudflare";
-import type { LoaderFunctionArgs } from "@remix-run/cloudflare";
-import { cssBundleHref } from "@remix-run/css-bundle";
+import type { LoaderFunctionArgs } from "react-router";
 import {
   Links,
   Meta,
@@ -10,7 +8,7 @@ import {
   useLoaderData,
   useNavigation,
   useLocation,
-} from "@remix-run/react";
+} from "react-router";
 import styles from "./tailwind.css?url";
 import { getAuthenticator } from "./auth/authenticator.server";
 import { Footer, Sidebar } from "./components/organisms/base";
@@ -18,10 +16,9 @@ import { getPreference } from "./auth/preference.server";
 import { useEffect, useRef, useState } from "react";
 import { SignInProvider } from "./contexts/SignInProvider";
 import { SignInBottomSheet } from "./components/molecules/auth";
-import LoadingBar, { LoadingBarRef } from "react-top-loading-bar";
+import LoadingBar, { type LoadingBarRef } from "react-top-loading-bar";
 
 export const links = () => [
-  ...(cssBundleHref ? [{ rel: "stylesheet", href: cssBundleHref }] : []),
   { rel: "stylesheet", href: "https://cdnjs.cloudflare.com/ajax/libs/pretendard/1.3.8/static/pretendard.css" },
   { rel: "stylesheet", href: "https://cdn.jsdelivr.net/gh/Nyannnnnng/GyeonggiTitleWoff/stylesheet.css" },
   { rel: "stylesheet", href: styles },
@@ -32,10 +29,10 @@ export const loader = async ({ request, context }: LoaderFunctionArgs) => {
 
   const sensei = await getAuthenticator(env).isAuthenticated(request);
   const preference = await getPreference(env, request);
-  return json({
+  return {
     currentUsername: sensei?.username ?? null,
     darkMode: preference.darkMode ?? false,
-  });
+  };
 };
 
 const wideLayout = ["/raids", "/edit/students"];

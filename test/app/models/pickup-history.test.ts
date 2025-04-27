@@ -1,5 +1,5 @@
 import { describe, expect, it } from "@jest/globals";
-import { parsePickupHistory, PickupHistory } from "../../../app/models/pickup-history";
+import { parsePickupHistory, type PickupHistory } from "../../../app/models/pickup-history";
 
 const students = [
   { name: "코코나", studentId: "10050" },

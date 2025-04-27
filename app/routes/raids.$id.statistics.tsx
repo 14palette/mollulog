@@ -1,10 +1,10 @@
-import { Link, useFetcher, useOutletContext } from "@remix-run/react";
-import { RaidStatisticsData } from "./raids.data.$id.statistics";
-import { buttonColors, OutletContext } from "./raids.$id";
+import { Link, useFetcher, useOutletContext } from "react-router";
+import type { RaidStatisticsData } from "./raids.data.$id.statistics";
+import { buttonColors, type OutletContext } from "./raids.$id";
 import { defenseTypeLocale } from "~/locales/ko";
 import { FilterButtons, TierCounts } from "~/components/molecules/student";
 import { useEffect, useState } from "react";
-import { type DefenseType } from "~/models/content.d";
+import type { DefenseType } from "~/models/content.d";
 import { StudentCard } from "~/components/atoms/student";
 import { EmptyView, KeyValueTable } from "~/components/atoms/typography";
 import { ChevronDownIcon, ChevronRightIcon, ChevronUpIcon } from "@heroicons/react/16/solid";

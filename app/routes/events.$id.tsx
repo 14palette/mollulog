@@ -1,7 +1,14 @@
 import { ChevronRightIcon, HeartIcon } from "@heroicons/react/16/solid";
-import type { ActionFunctionArgs, LoaderFunctionArgs, MetaFunction } from "@remix-run/cloudflare";
-import { defer, json, redirect } from "@remix-run/cloudflare";
-import { Await, isRouteErrorResponse, Link, useFetcher, useLoaderData, useRouteError } from "@remix-run/react";
+import type { ActionFunctionArgs, LoaderFunctionArgs, MetaFunction } from "react-router";
+import { redirect } from "react-router";
+import {
+  Await,
+  isRouteErrorResponse,
+  Link,
+  useFetcher,
+  useLoaderData,
+  useRouteError,
+} from "react-router";
 import dayjs from "dayjs";
 import { Suspense } from "react";
 import { getAuthenticator } from "~/auth/authenticator.server";
@@ -104,13 +111,13 @@ export const loader = async ({ params, context, request }: LoaderFunctionArgs) =
   const sensei = await getAuthenticator(env).isAuthenticated(request);
   let studentStates: StudentState[] = [];
   if (sensei) {
-    studentStates = await getUserStudentStates(env, sensei.username, true) ?? [];
+    studentStates = (await getUserStudentStates(env, sensei.username, true)) ?? [];
   }
 
   const memos = await getContentMemos(env, content.eventId, sensei?.id);
   const myMemo = memos.find((memo) => memo.sensei.username === sensei?.username);
 
-  return defer({
+  return {
     event: content,
     stages: getEventStages(params.id as string),
     studentStates,
@@ -119,7 +126,7 @@ export const loader = async ({ params, context, request }: LoaderFunctionArgs) =
     signedIn: sensei !== null,
     memos: memos.filter((memo) => memo.uid !== myMemo?.uid),
     myMemo,
-  });
+  };
 };
 
 type ActionData = {
@@ -154,7 +161,7 @@ export const action = async ({ params, request, context }: ActionFunctionArgs) =
     await setMemoVisibility(env, currentUser.id, contentId, actionData.memo.visibility);
   }
 
-  return json({});
+  return {};
 };
 
 export const meta: MetaFunction<typeof loader> = ({ data }) => {

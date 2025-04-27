@@ -1,9 +1,9 @@
-import { ActionFunctionArgs, json, LoaderFunctionArgs, MetaFunction, redirect } from "@remix-run/cloudflare";
-import { useLoaderData } from "@remix-run/react";
+import { type ActionFunctionArgs, type LoaderFunctionArgs, type MetaFunction, redirect } from "react-router";
+import { useLoaderData } from "react-router";
 import { getAuthenticator } from "~/auth/authenticator.server";
 import { AddContentButton } from "~/components/molecules/editor";
 import { PickupHistoryView } from "~/components/organisms/pickup";
-import { UserPickupEventsQuery, UserPickupEventsQueryVariables } from "~/graphql/graphql";
+import type { UserPickupEventsQuery, UserPickupEventsQueryVariables } from "~/graphql/graphql";
 import { runQuery } from "~/lib/baql";
 import { deletePickupHistory, getPickupHistories } from "~/models/pickup-history";
 import { getAllStudentsMap } from "~/models/student";
@@ -38,7 +38,7 @@ export const loader = async ({ request, context }: LoaderFunctionArgs) => {
       .map((student) => ({ studentId: student.id, name: student.name })),
   })).sort((a, b) => dayjs(b.event.since).diff(dayjs(a.event.since)));
 
-  return json({ pickupHistories: aggregatedHistories });
+  return { pickupHistories: aggregatedHistories };
 };
 
 export const action = async ({ context, request }: ActionFunctionArgs) => {

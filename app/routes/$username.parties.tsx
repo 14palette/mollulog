@@ -1,6 +1,5 @@
-import type { LoaderFunctionArgs, MetaFunction } from "@remix-run/cloudflare";
-import { json } from "@remix-run/cloudflare";
-import { Link, useLoaderData } from "@remix-run/react";
+import type { LoaderFunctionArgs, MetaFunction } from "react-router";
+import { Link, useLoaderData } from "react-router";
 import { getAuthenticator } from "~/auth/authenticator.server";
 import { Callout } from "~/components/atoms/typography";
 import { AddContentButton } from "~/components/molecules/editor";
@@ -41,12 +40,12 @@ export const loader = async ({ context, request, params }: LoaderFunctionArgs) =
   const parties = (await getUserParties(env, sensei.username)).reverse();
   const states = await getUserStudentStates(env, sensei.username, true);
 
-  return json({
+  return {
     me: sensei.username === currentUser?.username,
     states: states!,
     parties,
     raids: data.raids.nodes,
-  });
+  };
 };
 
 export default function UserPartyPage() {

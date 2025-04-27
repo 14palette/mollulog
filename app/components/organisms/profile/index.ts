@@ -3,6 +3,6 @@ import ProfileEditor from "./ProfileEditor";
 
 export {
   ProfileCard,
-  ProfileCardProps,
+  type ProfileCardProps,
   ProfileEditor,
 };

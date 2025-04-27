@@ -1,6 +1,6 @@
-import type { ActionFunctionArgs, LoaderFunctionArgs, MetaFunction} from "@remix-run/cloudflare";
-import { json, redirect } from "@remix-run/cloudflare";
-import { Link, useFetcher, useLoaderData } from "@remix-run/react";
+import type { ActionFunctionArgs, LoaderFunctionArgs, MetaFunction } from "react-router";
+import { redirect } from "react-router";
+import { Link, useFetcher, useLoaderData } from "react-router";
 import { CalendarDateRangeIcon } from "@heroicons/react/24/solid";
 import { getAuthenticator } from "~/auth/authenticator.server";
 import { Title } from "~/components/atoms/typography";
@@ -77,13 +77,13 @@ export const loader = async ({ request, context }: LoaderFunctionArgs) => {
   const env = context.cloudflare.env;
   const currentUser = await getAuthenticator(env).isAuthenticated(request);
   const signedIn = currentUser !== null;
-  return json({
+  return {
     signedIn,
     contents: data.contents.nodes,
     favoritedStudents: signedIn ? await getUserFavoritedStudents(env, currentUser.id) : null,
     favoritedCounts: await getFavoritedCounts(env, allStudentIds),
     memos: signedIn ? await getUserMemos(env, currentUser.id) : [],
-  });
+  };
 };
 
 type ActionData = {
@@ -117,7 +117,7 @@ export const action = async ({ request, context }: ActionFunctionArgs) => {
     }
   }
 
-  return json({});
+  return {};
 };
 
 function equalFavorites(a: { contentId: string, studentId: string }, b: { contentId: string, studentId: string }): boolean {

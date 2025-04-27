@@ -1,9 +1,9 @@
-import { json, MetaFunction, type LoaderFunctionArgs } from "@remix-run/cloudflare";
-import { Link, useLoaderData } from "@remix-run/react";
+import type { MetaFunction, LoaderFunctionArgs } from "react-router";
+import { Link, useLoaderData } from "react-router";
 import dayjs from "dayjs";
 import { useState } from "react";
 import { graphql } from "~/graphql";
-import { type StudentDetailQuery } from "~/graphql/graphql";
+import type { StudentDetailQuery } from "~/graphql/graphql";
 import { runQuery } from "~/lib/baql";
 import {
   attackTypeColor, attackTypeLocale, defenseTypeColor, defenseTypeLocale,
@@ -39,7 +39,7 @@ export const loader = async ({ params }: LoaderFunctionArgs) => {
     throw new Response("Error fetching student detail", { status: 500 });
   }
 
-  return json({ student: data.student });
+  return { student: data.student };
 };
 
 export const meta: MetaFunction<typeof loader> = ({ data }) => {

@@ -1,6 +1,5 @@
-import type { LoaderFunctionArgs } from "@remix-run/cloudflare";
-import { json } from "@remix-run/cloudflare";
-import { useLoaderData, useSearchParams } from "@remix-run/react";
+import type { LoaderFunctionArgs } from "react-router";
+import { useLoaderData, useSearchParams } from "react-router";
 import { SparklesIcon, UsersIcon } from "@heroicons/react/24/outline";
 import { useEffect, useState } from "react";
 import { SubTitle } from "~/components/atoms/typography";
@@ -14,10 +13,10 @@ import { getRouteSensei } from "./$username";
 export const loader = async ({ params, context }: LoaderFunctionArgs) => {
   const env = context.cloudflare.env;
   const sensei = await getRouteSensei(env, params);
-  return json({
+  return {
     following: await getFollowings(env, sensei.id),
     followers: await getFollowers(env, sensei.id),
-  });
+  };
 };
 
 export default function UserFollowing() {

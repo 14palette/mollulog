@@ -1,6 +1,5 @@
-import type { LoaderFunctionArgs, MetaFunction } from "@remix-run/cloudflare";
-import { json } from "@remix-run/cloudflare";
-import { Link, useLoaderData } from "@remix-run/react";
+import type { LoaderFunctionArgs, MetaFunction } from "react-router";
+import { useLoaderData, Link } from "react-router";
 import { getUserStudentStates } from "~/models/student-state";
 import { useStateFilter } from "~/components/organisms/student";
 import { StudentCards } from "~/components/molecules/student";
@@ -12,11 +11,11 @@ export const loader = async ({ context, request, params }: LoaderFunctionArgs) =
   const env = context.cloudflare.env;
   const currentUser = await getAuthenticator(env).isAuthenticated(request);
   const sensei = await getRouteSensei(env, params);
-  return json({
+  return {
     currentUsername: currentUser?.username,
     username: sensei.username,
     states: await getUserStudentStates(env, sensei.username, false),
-  });
+  };
 };
 
 export const meta: MetaFunction = ({ params }) => {

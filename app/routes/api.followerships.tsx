@@ -1,5 +1,5 @@
-import type { ActionFunction } from "@remix-run/cloudflare";
-import { redirect } from "@remix-run/cloudflare";
+import type { ActionFunction } from "react-router";
+import { redirect } from "react-router";
 import { getAuthenticator } from "~/auth/authenticator.server";
 import { follow, unfollow } from "~/models/followership";
 import { getSenseiByUsername } from "~/models/sensei";

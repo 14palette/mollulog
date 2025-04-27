@@ -1,6 +1,6 @@
-import type { ActionFunction, LoaderFunctionArgs, MetaFunction } from "@remix-run/cloudflare";
-import { json, redirect } from "@remix-run/cloudflare";
-import { Form, useLoaderData } from "@remix-run/react";
+import type { ActionFunction, LoaderFunctionArgs, MetaFunction } from "react-router";
+import { redirect } from "react-router";
+import { Form, useLoaderData } from "react-router";
 import { getAuthenticator } from "~/auth/authenticator.server";
 import { Title } from "~/components/atoms/typography";
 import { PartyGenerator } from "~/components/organisms/party";
@@ -39,12 +39,12 @@ export const loader = async ({ context, request, params }: LoaderFunctionArgs) =
     throw "failed to load data";
   }
 
-  let states = await getUserStudentStates(env, sensei.username);
-  return json({
+  const states = await getUserStudentStates(env, sensei.username);
+  return {
     states: states!,
     raids: data.raids.nodes,
     party,
-  });
+  };
 };
 
 export const action: ActionFunction = async ({ context, request }) => {

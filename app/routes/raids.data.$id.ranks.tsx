@@ -1,7 +1,7 @@
-import { json, LoaderFunctionArgs } from "@remix-run/cloudflare";
+import type { LoaderFunctionArgs } from "react-router";
 import { getAuthenticator } from "~/auth/authenticator.server";
 import { graphql } from "~/graphql";
-import { Defense, RaidRank, RaidRanksQuery } from "~/graphql/graphql";
+import type { Defense, RaidRank, RaidRanksQuery } from "~/graphql/graphql";
 import { runQuery } from "~/lib/baql";
 import { getUserStudentStates } from "~/models/student-state";
 
@@ -36,14 +36,14 @@ export const loader = async ({ request, context, params }: LoaderFunctionArgs) =
   }
 
   const url = new URL(request.url);
-  let includeStudentIds: string[] = url.searchParams.get("includeStudentIds")?.split(",") ?? [];
+  const includeStudentIds: string[] = url.searchParams.get("includeStudentIds")?.split(",") ?? [];
   let excludeStudentIds: string[] = url.searchParams.get("excludeStudentIds")?.split(",") ?? [];
 
   const filterNotOwned = url.searchParams.get("filterNotOwned") === "true";
   if (filterNotOwned) {
     const sensei = await getAuthenticator(context.cloudflare.env).isAuthenticated(request);
     if (sensei) {
-      const ownedStudentIds = (await getUserStudentStates(context.cloudflare.env, sensei.username) ?? [])
+      const ownedStudentIds = ((await getUserStudentStates(context.cloudflare.env, sensei.username)) ?? [])
         .filter((state) => !state.owned)
         .map((state) => state.student.id);
 
@@ -59,16 +59,16 @@ export const loader = async ({ request, context, params }: LoaderFunctionArgs) =
     defenseType: url.searchParams.get("defenseType") ? (url.searchParams.get("defenseType") as Defense) : undefined,
     includeStudents: includeStudents.length > 0 ? includeStudents : undefined,
     excludeStudents: excludeStudents.length > 0 ? excludeStudents : undefined,
-    rankAfter: url.searchParams.get("rankAfter") ? parseInt(url.searchParams.get("rankAfter")!) : undefined,
-    rankBefore: url.searchParams.get("rankBefore") ? parseInt(url.searchParams.get("rankBefore")!) : undefined,
+    rankAfter: url.searchParams.get("rankAfter") ? Number.parseInt(url.searchParams.get("rankAfter")!) : undefined,
+    rankBefore: url.searchParams.get("rankBefore") ? Number.parseInt(url.searchParams.get("rankBefore")!) : undefined,
   });
   if (error || !data?.raid?.ranks) {
-    return json({ error: error?.message ?? "순위 정보를 가져오는 중 오류가 발생했어요" }, { status: 500 });
+    return { error: error?.message ?? "순위 정보를 가져오는 중 오류가 발생했어요" };
   }
 
-  return json({
+  return {
     rankVisible: data.raid.rankVisible,
     ranks: url.searchParams.get("rankBefore") ? data.raid.ranks.slice(1, 11) : data.raid.ranks.slice(0, 10),
     hasMore: data.raid.ranks.length === 11,
-  });
+  };
 };

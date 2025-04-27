@@ -1,0 +1,12 @@
+{
+  "files": {
+    "include": ["app/**/*.tsx", "app/**/*.ts"],
+    "ignore": ["app/graphql/**/*"]
+  },
+  "linter": {
+    "enabled": true,
+    "rules": {
+      "recommended": true
+    }
+  }
+}

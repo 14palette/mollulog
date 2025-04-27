@@ -1,5 +1,5 @@
-import { json, LoaderFunctionArgs, MetaFunction } from "@remix-run/cloudflare";
-import { useLoaderData, useNavigate } from "@remix-run/react";
+import type { LoaderFunctionArgs, MetaFunction } from "react-router";
+import { useLoaderData, useNavigate } from "react-router";
 import { Title } from "~/components/atoms/typography";
 import { StudentCards } from "~/components/molecules/student";
 import { getAllStudents } from "~/models/student";
@@ -7,9 +7,9 @@ import { getAllStudents } from "~/models/student";
 export const loader = async ({ context }: LoaderFunctionArgs) => {
   const env = context.cloudflare.env;
   const students = await getAllStudents(env, true);
-  return json({
+  return {
     students: students.sort((a, b) => a.order - b.order),
-  });
+  };
 };
 
 export const meta: MetaFunction = () => {

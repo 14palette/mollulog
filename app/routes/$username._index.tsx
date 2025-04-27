@@ -1,6 +1,5 @@
-import type { LoaderFunctionArgs, MetaFunction } from "@remix-run/cloudflare";
-import { json } from "@remix-run/cloudflare";
-import { Link, useFetcher, useLoaderData } from "@remix-run/react";
+import type { LoaderFunctionArgs, MetaFunction } from "react-router";
+import { Link, useFetcher, useLoaderData } from "react-router";
 import { Callout, SubTitle } from "~/components/atoms/typography";
 import type { ProfileCardProps } from "~/components/organisms/profile";
 import { ProfileCard } from "~/components/organisms/profile";
@@ -29,7 +28,7 @@ export const loader = async ({ context, request, params }: LoaderFunctionArgs) =
   }
 
   // Get student tiers
-  const states = await getUserStudentStates(env, sensei.username) ?? [];
+  const states = (await getUserStudentStates(env, sensei.username)) ?? [];
   const tierCounts: { [key: number]: number } = {};
   states.forEach(({ student, tier, owned }) => {
     if (owned) {
@@ -38,7 +37,7 @@ export const loader = async ({ context, request, params }: LoaderFunctionArgs) =
     }
   });
 
-  return json({
+  return {
     currentUsername: currentUser?.username ?? null,
     sensei: {
       username: sensei.username,
@@ -50,7 +49,7 @@ export const loader = async ({ context, request, params }: LoaderFunctionArgs) =
     followingCount: followingIds.length,
     followerCount: followerIds.length,
     tierCounts,
-  });
+  };
 };
 
 export const meta: MetaFunction = ({ params }) => {

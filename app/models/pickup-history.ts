@@ -2,7 +2,7 @@ import { and, eq, sql } from "drizzle-orm";
 import { drizzle } from "drizzle-orm/d1";
 import { sqliteTable, int, text } from "drizzle-orm/sqlite-core";
 import { nanoid } from "nanoid/non-secure";
-import { Env } from "~/env.server";
+import type { Env } from "~/env.server";
 
 export type PickupHistory = {
   uid: string;
@@ -79,7 +79,7 @@ export function parsePickupHistory(raw: string, students: { studentId: string, n
   let trial = 0;
   raw.split("\n").forEach((line) => {
     const matched = line.matchAll(/(?<!\d)\d{1}(?!\d)/g);
-    const [count1, count2, count3] = Array.from(matched).map((m) => parseInt(m[0]));
+    const [count1, count2, count3] = Array.from(matched).map((m) => Number.parseInt(m[0]));
     if (count1 === undefined || count2 === undefined || count3 === undefined) {
       return;
     }
@@ -140,7 +140,7 @@ type DBPickupHistory = {
   rawResult: string | null;
 };
 
-function toModel(dbResult: DBPickupHistory, includeRaw: boolean = false): PickupHistory {
+function toModel(dbResult: DBPickupHistory, includeRaw = false): PickupHistory {
   const result: PickupHistory = {
     uid: dbResult.uid,
     userId: dbResult.userId,

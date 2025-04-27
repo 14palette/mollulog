@@ -1,5 +1,5 @@
 import { PlusCircleIcon } from "@heroicons/react/16/solid";
-import { Link } from "@remix-run/react";
+import { Link } from "react-router";
 import { sanitizeClassName } from "~/prophandlers";
 
 type AddContentButtonProps = {
