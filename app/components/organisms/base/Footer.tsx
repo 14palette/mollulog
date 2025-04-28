@@ -8,8 +8,8 @@ export default function Footer() {
       </p>
 
       <p className="mt-2 mb-4 text-sm text-neutral-500">
-        몰루로그는 게임 &lt;블루 아카이브&gt;의 팬 사이트로 공식 사이트가 아닙니다.<br />
-        &lt;블루 아카이브&gt;의 각종 에셋 및 컨텐츠의 권리는 넥슨코리아, 넥슨게임즈 및 Yostar에 있습니다.
+        게임 &lt;블루 아카이브&gt;의 각종 에셋 및 컨텐츠의 권리는 넥슨, 넥슨게임즈 및 Yostar에 있습니다.<br />
+        몰루로그는 &lt;블루 아카이브&gt;의 팬 사이트이며 컨텐츠를 상업적으로 이용하지 않습니다.
       </p>
 
       <a href="https://github.com/hellodhlyn/mollulog" target="_blank" rel="noreferrer">

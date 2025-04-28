@@ -10,4 +10,8 @@ export interface Env {
   SESSION_SECRET: string;
   GOOGLE_CLIENT_SECRET: string;
   SUPERUSER_NAME: string;
+
+  EMAIL_ROUTE_HOST: string;
+  EMAIL_ROUTE_API_KEY: string;
+  EMAIL_ROUTE_DESTINATION: string;
 }

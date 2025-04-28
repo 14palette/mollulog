@@ -1,4 +1,4 @@
-import { MoonIcon } from "@heroicons/react/16/solid";
+import { MoonIcon, EnvelopeIcon } from "@heroicons/react/16/solid";
 import {
   HomeIcon as HomeIconOutline,
   CalendarIcon as CalendarIconOutline,
@@ -112,7 +112,7 @@ function MenuContent({ currentUsername, pathname, onMenuClose, onShowSignIn, onD
       )}
 
       <div
-        className="w-fit mb-2 mt-6 py-1 px-2 flex items-center font-bold text-yellow-600 dark:text-yellow-400 cursor-pointer"
+        className="w-fit mb-2 mt-8 py-1 px-2 flex items-center font-bold text-yellow-600 dark:text-yellow-400 cursor-pointer hover:underline"
         onClick={() => {
           onDarkModeToggle((prev) => {
             submitPreference(submit, { darkMode: !prev });
@@ -123,6 +123,16 @@ function MenuContent({ currentUsername, pathname, onMenuClose, onShowSignIn, onD
         <MoonIcon className="size-4" />
         <span className="ml-2">다크 모드</span>
       </div>
+      {currentUsername && (
+        <Link
+          to="/contact"
+          className="w-fit mb-2 mt-2 py-1 px-2 flex items-center font-bold text-neutral-500 dark:text-neutral-400 cursor-pointer hover:underline"
+          onClick={onMenuClose}
+        >
+          <EnvelopeIcon className="size-4" />
+          <span className="ml-2">제안/문의</span>
+        </Link>
+      )}
     </>
   );
 }
@@ -148,7 +158,7 @@ export default function Sidebar({ currentUsername, darkMode, setDarkMode }: Side
     <div className="px-4 py-4 xl:py-8">
       <div className="flex items-center">
         <Bars3Icon className="p-2 -m-2 block xl:hidden size-10" strokeWidth={2} onClick={() => setIsMenuOpen(!isMenuOpen)} />
-        <img src={darkMode ? "/logo-dark.png" : "/logo-light.png"} alt="몰루로그 로고" className="mx-2 object-cover h-8 xl:h-10 aspect-4/3" />
+        <img src={darkMode ? "/logo-dark.png" : "/logo-light.png"} alt="몰루로그 로고" className="ml-2 mr-1 xl:mr-2 object-cover h-8 xl:h-10 aspect-4/3" />
         <h1 className="text-2xl xl:text-3xl font-ingame">
           <span className="font-bold">몰루</span>로그
         </h1>
