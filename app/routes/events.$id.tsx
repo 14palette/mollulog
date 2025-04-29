@@ -170,10 +170,10 @@ export const meta: MetaFunction<typeof loader> = ({ data }) => {
   }
 
   const { event } = data;
-  const title = `${event.name} - 이벤트 정보`;
-  const description = `블루 아카이브 "${event.name}" 이벤트의 공략, 픽업 정보 모음`;
+  const title = event.name;
+  const description = `블루 아카이브 "${event.name}" 이벤트의 픽업, 보상 정보 등을 확인해보세요.`;
   return [
-    { title: `${title} | 몰루로그` },
+    { title: `${title} - 이벤트 | 몰루로그` },
     { name: "description", content: description },
     { name: "og:title", content: title },
     { name: "og:image", content: event.imageUrl },

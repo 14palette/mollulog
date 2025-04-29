@@ -1,6 +1,6 @@
 import dayjs from "dayjs";
 import { useLoaderData, useFetcher, useRouteError, isRouteErrorResponse } from "react-router";
-import type { LoaderFunctionArgs, ActionFunctionArgs } from "react-router";
+import type { LoaderFunctionArgs, ActionFunctionArgs, MetaFunction } from "react-router";
 import { useState, useEffect } from "react";
 import { ClipboardDocumentIcon } from "@heroicons/react/24/outline";
 import { CheckCircleIcon, ArrowPathIcon } from "@heroicons/react/20/solid";
@@ -64,6 +64,13 @@ export const action = async ({ context, request }: ActionFunctionArgs) => {
   const expirationTtl = Math.max(0, route.expireAt - now) / 1000;
   await env.KV_USERDATA.put(userEmailRouteKey, JSON.stringify(route), { expirationTtl });
   return route;
+};
+
+export const meta: MetaFunction = () => {
+  return [
+    { title: "제안/문의 | 몰루로그" },
+    { name: "description", content: "게임 <블루 아카이브> 관련 컨텐츠 제안, 오류 신고, 기타 문의 사항이 있다면 연락해주세요." },
+  ];
 };
 
 export function ErrorBoundary() {

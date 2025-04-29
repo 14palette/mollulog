@@ -1,5 +1,4 @@
-import type { ActionFunctionArgs, LoaderFunctionArgs, MetaFunction } from "react-router";
-import { redirect } from "react-router";
+import type { LoaderFunctionArgs, MetaFunction } from "react-router";
 import { Link, useFetcher, useLoaderData } from "react-router";
 import { CalendarDateRangeIcon } from "@heroicons/react/24/solid";
 import { getAuthenticator } from "~/auth/authenticator.server";
@@ -10,10 +9,11 @@ import { graphql } from "~/graphql";
 import type { FutureContentsQuery } from "~/graphql/graphql";
 import { runQuery } from "~/lib/baql";
 import { sanitizeClassName } from "~/prophandlers";
-import { getUserMemos, setMemo } from "~/models/content";
-import { favoriteStudent, getFavoritedCounts, getUserFavoritedStudents, unfavoriteStudent } from "~/models/favorite-students";
+import { getUserMemos } from "~/models/content";
+import { getFavoritedCounts, getUserFavoritedStudents } from "~/models/favorite-students";
 import { useState } from "react";
 import { useSignIn } from "~/contexts/SignInProvider";
+import { ActionData } from "./api.contents";
 
 export const futureContentsQuery = graphql(`
   query FutureContents($now: ISO8601DateTime!) {
@@ -86,40 +86,6 @@ export const loader = async ({ request, context }: LoaderFunctionArgs) => {
   };
 };
 
-type ActionData = {
-  memo?: {
-    contentId: string;
-    body: string;
-  };
-  favorite?: {
-    studentId: string;
-    contentId: string;
-    favorited: boolean;
-  };
-};
-
-export const action = async ({ request, context }: ActionFunctionArgs) => {
-  const env = context.cloudflare.env;
-  const currentUser = await getAuthenticator(env).isAuthenticated(request);
-  if (!currentUser) {
-    return redirect("/unauthorized");
-  }
-
-  const actionData = await request.json<ActionData>();
-  if (actionData.memo) {
-    await setMemo(env, currentUser.id, actionData.memo.contentId, actionData.memo.body);
-  }
-  if (actionData.favorite) {
-    if (actionData.favorite.favorited) {
-      await favoriteStudent(env, currentUser.id, actionData.favorite.studentId, actionData.favorite.contentId);
-    } else {
-      await unfavoriteStudent(env, currentUser.id, actionData.favorite.studentId, actionData.favorite.contentId);
-    }
-  }
-
-  return {};
-};
-
 function equalFavorites(a: { contentId: string, studentId: string }, b: { contentId: string, studentId: string }): boolean {
   return a.contentId === b.contentId && a.studentId === b.studentId;
 }
@@ -132,7 +98,7 @@ export default function Futures() {
   const { showSignIn } = useSignIn();
 
   const fetcher = useFetcher();
-  const submit = (data: ActionData) => fetcher.submit(data, { method: "post", encType: "application/json" });
+  const submit = (data: ActionData) => fetcher.submit(data, { action: "/api/contents", method: "post", encType: "application/json" });
 
   const [favoritedStudents, setFavoritedStudents] = useState<{ contentId: string, studentId: string }[] | undefined>(loaderData.favoritedStudents ?? undefined);
   const [favoritedCounts, setFavoritedCounts] = useState(loaderData.favoritedCounts);

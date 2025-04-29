@@ -78,8 +78,9 @@ export const meta: MetaFunction<typeof loader> = ({ data }) => {
   }
 
   const { raid } = data;
-  const title = `${raidTypeLocale[raid.type]} ${raid.name} 정보`;
-  const description = `블루 아카이브 ${raidTypeLocale[raid.type]} ${raid.name} 랭킹, 공략 정보 모음`;
+  const since = dayjs(raid.since);
+  const title = `${raidTypeLocale[raid.type]} ${raid.name}(${since.year()}년 ${since.month() + 1}월) 정보`;
+  const description = `${since.year()}년 ${since.month() + 1}월에 진행${dayjs(raid.until).isAfter(dayjs()) ? "될" : "된"} ${raidTypeLocale[raid.type]} ${raid.name}의 토먼트/루나틱 랭킹, 파티, 학생 통계 정보 등을 확인해보세요.`;
   return [
     { title: `${title} | 몰루로그` },
     { name: "description", content: description },

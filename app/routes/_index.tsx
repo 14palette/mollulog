@@ -1,13 +1,16 @@
 import type { LoaderFunctionArgs, MetaFunction } from "react-router";
-import { Link, useLoaderData } from "react-router";
+import { Link, useFetcher, useLoaderData } from "react-router";
+import { getAuthenticator } from "~/auth/authenticator.server";
 import { SubTitle, Title } from "~/components/atoms/typography";
 import { ContentTimelineItem } from "~/components/molecules/content";
 import { contentOrders } from "~/components/organisms/content/ContentTimeline";
 import { RaidCard } from "~/components/organisms/raid";
+import { useSignIn } from "~/contexts/SignInProvider";
 import { graphql } from "~/graphql";
 import type { IndexQuery } from "~/graphql/graphql";
 import { runQuery } from "~/lib/baql";
-import { getFavoritedCounts } from "~/models/favorite-students";
+import { getFavoritedCounts, getUserFavoritedStudents } from "~/models/favorite-students";
+import type { ActionData } from "./api.contents";
 
 const indexQuery = graphql(`
   query Index($now: ISO8601DateTime!) {
@@ -16,7 +19,7 @@ const indexQuery = graphql(`
         name since until eventId type rerun
         pickups {
           type rerun
-          student { studentId name }
+          student { studentId name attackType defenseType role schaleDbId }
         }
       }
     }
@@ -30,12 +33,12 @@ const indexQuery = graphql(`
 
 export const meta: MetaFunction = () => {
   return [
-    { title: "몰루로그" },
-    { name: "description", content: "블루 아카이브 이벤트/컨텐츠 미래시 정보 모음" },
+    { title: "몰루로그 - 블루 아카이브 미래시/컨텐츠 정보 모음" },
+    { name: "description", content: "게임 <블루 아카이브>의 미래시, 컨텐츠 통계 정보 등을 확인하고 내 정보와 계획을 관리해보세요." },
   ];
 };
 
-export const loader = async ({ context }: LoaderFunctionArgs) => {
+export const loader = async ({ context, request }: LoaderFunctionArgs) => {
   const truncatedNow = new Date();
   truncatedNow.setMinutes(0, 0, 0);
 
@@ -52,15 +55,24 @@ export const loader = async ({ context }: LoaderFunctionArgs) => {
     return [];
   }).filter((studentId) => studentId !== null);
 
+  const currentUser = await getAuthenticator(env).isAuthenticated(request);
+  const signedIn = currentUser !== null;
   return {
     events: data.events.nodes,
     raids: data.raids.nodes,
     favoritedCounts: await getFavoritedCounts(env, pickupStudentIds),
+    favoritedStudents: signedIn ? await getUserFavoritedStudents(env, currentUser.id) : [],
+    signedIn,
   };
 }
 
 export default function Index() {
-  const { events, raids, favoritedCounts } = useLoaderData<typeof loader>();
+  const { showSignIn } = useSignIn();
+  const { events, raids, favoritedCounts, favoritedStudents, signedIn } = useLoaderData<typeof loader>();
+
+  const fetcher = useFetcher();
+  const submit = (data: ActionData) => fetcher.submit(data, { action: "/api/contents", method: "post", encType: "application/json" });
+
   return (
     <>
       <Title text="진행중인 컨텐츠" />
@@ -95,9 +107,21 @@ export default function Index() {
                 studentName: pickup.student?.name ?? "",
                 student: {
                   studentId: pickup.student?.studentId ?? "",
+                  attackType: pickup.student?.attackType,
+                  defenseType: pickup.student?.defenseType,
+                  role: pickup.student?.role,
+                  schaleDbId: pickup.student?.schaleDbId,
                 },
               }))}
               favoritedCounts={contentFavoritedCounts}
+              favoritedStudents={signedIn ? favoritedStudents.filter((each) => each.contentId === event.eventId).map((each) => each.studentId) : undefined}
+              onFavorite={(studentId, favorited) => {
+                if (!signedIn) {
+                  showSignIn();
+                  return;
+                }
+                submit({ favorite: { contentId: event.eventId, studentId, favorited } });
+              }}
             />
           )
         })}
