@@ -71,22 +71,7 @@ export async function favoriteStudent(env: Env, userId: number, studentId: strin
     .values({ uid: nanoid(8), userId, studentId, contentId })
     .onConflictDoNothing();
 
-  const [result] = await db.select({ count: count().as("count") })
-    .from(favoriteStudentsTable)
-    .where(eq(favoriteStudentsTable.studentId, studentId))
-    .groupBy(favoriteStudentsTable.studentId)
-    .all();
-
-  const favoriteCount = result?.count ?? 0;
-  await db.insert(contentFavoriteCountsTable)
-    .values({ studentId, contentId, count: favoriteCount })
-    .onConflictDoUpdate({
-      target: [contentFavoriteCountsTable.studentId, contentFavoriteCountsTable.contentId],
-      set: {
-        count: favoriteCount,
-        updatedAt: sql`current_timestamp`,
-      },
-    });
+  await updateFavoritedCount(env, studentId, contentId);
 }
 
 export async function unfavoriteStudent(env: Env, userId: number, studentId: string, contentId: string): Promise<void> {
@@ -97,9 +82,17 @@ export async function unfavoriteStudent(env: Env, userId: number, studentId: str
     eq(favoriteStudentsTable.contentId, contentId),
   ));
 
+  await updateFavoritedCount(env, studentId, contentId);
+}
+
+async function updateFavoritedCount(env: Env, studentId: string, contentId: string): Promise<void> {
+  const db = drizzle(env.DB);
   const [result] = await db.select({ count: count().as("count") })
     .from(favoriteStudentsTable)
-    .where(eq(favoriteStudentsTable.studentId, studentId))
+    .where(and(
+      eq(favoriteStudentsTable.studentId, studentId),
+      eq(favoriteStudentsTable.contentId, contentId),
+    ))
     .groupBy(favoriteStudentsTable.studentId)
     .all();
 

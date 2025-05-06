@@ -122,7 +122,7 @@ export const loader = async ({ params, context, request }: LoaderFunctionArgs) =
     stages: getEventStages(params.id as string),
     studentStates,
     favoritedStudents: sensei ? await getUserFavoritedStudents(env, sensei.id, content.eventId) : [],
-    favoritedCounts: await getFavoritedCounts(env, pickupStudentIds),
+    favoritedCounts: (await getFavoritedCounts(env, pickupStudentIds)).filter((favorited) => favorited.contentId === content.eventId),
     signedIn: sensei !== null,
     memos: memos.filter((memo) => memo.uid !== myMemo?.uid),
     myMemo,
