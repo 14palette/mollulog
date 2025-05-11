@@ -1,7 +1,7 @@
 import { useFetcher, useOutletContext } from "react-router";
 import type { RaidStatisticsData } from "./raids.data.$id.statistics";
-import { buttonColors, type OutletContext } from "./raids.$id";
-import { defenseTypeLocale } from "~/locales/ko";
+import { type OutletContext } from "./raids.$id";
+import { defenseTypeColor, defenseTypeLocale } from "~/locales/ko";
 import { FilterButtons } from "~/components/molecules/student";
 import { useEffect, useState } from "react";
 import type { DefenseType } from "~/models/content.d";
@@ -27,7 +27,7 @@ export default function RaidStatistics() {
           <FilterButtons exclusive buttonProps={
             raid.defenseTypes.map((each) => ({
               text: defenseTypeLocale[each.defenseType],
-              color: buttonColors[each.defenseType],
+              color: defenseTypeColor[each.defenseType],
               active: each.defenseType === defenseType,
               onToggle: () => setDefenseType(each.defenseType),
             }))

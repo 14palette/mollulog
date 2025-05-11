@@ -39,7 +39,7 @@ export default function UserPage() {
   const noOwned = states.every(({ owned }) => !owned);
   const isNewbee = (currentUsername === username) && noOwned;
 
-  const [StateFilter, filteredStates] = useStateFilter(states);
+  const [StateFilter, filteredStates] = useStateFilter(states, true, true, true);
   return (
     <>
       {isNewbee && (

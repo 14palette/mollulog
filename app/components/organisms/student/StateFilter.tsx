@@ -1,43 +1,47 @@
-import { ArrowsUpDownIcon, BarsArrowDownIcon, FireIcon, MagnifyingGlassIcon, StarIcon } from '@heroicons/react/24/outline';
+import { ArrowsUpDownIcon, BarsArrowDownIcon, FireIcon, MagnifyingGlassIcon, ShieldCheckIcon } from '@heroicons/react/24/outline';
 import hangul from 'hangul-js';
 import type { Dispatch, SetStateAction} from "react";
 import { useEffect, useState } from "react";
 import { Input } from "~/components/atoms/form";
 import { FilterButtons } from "~/components/molecules/student";
-import type { AttackType } from "~/models/content";
+import type { AttackType, DefenseType } from "~/models/content.d";
 import type { Role } from "~/models/student";
-import type { StudentState } from '~/models/student-state';
 
 const { disassemble, search } = hangul;
 
+type FilterableStudentState = {
+  student: {
+    name: string;
+    attackType: AttackType;
+    defenseType: DefenseType;
+    role: Role;
+    order: number;
+    initialTier: number;
+  };
+  tier?: number | null;
+}
+
 type Filter = {
-  minimumTier: number;
   role: Role | null;
   attackTypes: AttackType[];
+  defenseTypes: DefenseType[];
 }
 
 type Sort = {
   by: "tier" | "name" | null;
 }
 
-const buttonColors = {
-  "red": "bg-linear-to-r from-red-500 to-orange-400",
-  "yellow": "bg-linear-to-r from-amber-500 to-yellow-400",
-  "blue": "bg-linear-to-r from-blue-500 to-sky-400",
-  "purple": "bg-linear-to-r from-purple-500 to-fuchsia-400",
-};
-
-export function useStateFilter(
-  initStates: StudentState[],
+export function useStateFilter<T extends FilterableStudentState>(
+  initStates: T[],
   useFilter = true,
-  useSort = true,
+  useSort: boolean | { by: ("tier" | "name")[] } = true,
   useSearch = false,
-): [JSX.Element, StudentState[], Dispatch<SetStateAction<StudentState[]>>] {
+): [JSX.Element, T[], Dispatch<SetStateAction<T[]>>] {
   const [allStates, setAllStates] = useState(initStates);
   const [filter, setFilter] = useState<Filter>({
-    minimumTier: 1,
     role: null,
     attackTypes: [],
+    defenseTypes: [],
   });
   const [sort, setSort] = useState<Sort>({
     by: null,
@@ -56,15 +60,29 @@ export function useStateFilter(
         return prev;
       });
     };
-  }
+  };
 
-  const filterAndSort = (): StudentState[] => {
+  const toggleDefenseType = (defenseType: DefenseType): (activated: boolean) => void => {
+    return (activated: boolean) => {
+      setFilter((prev) => {
+        if (activated && !prev.defenseTypes.includes(defenseType)) {
+          return { ...prev, defenseTypes: [...prev.defenseTypes, defenseType] };
+        }
+        if (!activated && prev.defenseTypes.includes(defenseType)) {
+          return { ...prev, defenseTypes: prev.defenseTypes.filter((type) => type !== defenseType) };
+        }
+        return prev;
+      });
+    };
+  };
+
+  const filterAndSort = (): T[] => {
     const results = allStates.filter(({ student }) => {
       // 학생 능력치로 필터
-      if (student.initialTier < filter.minimumTier) {
+      if (filter.attackTypes.length > 0 && !filter.attackTypes.includes(student.attackType)) {
         return false;
       }
-      if (filter.attackTypes.length > 0 && !filter.attackTypes.includes(student.attackType)) {
+      if (filter.defenseTypes.length > 0 && !filter.defenseTypes.includes(student.defenseType)) {
         return false;
       }
       if (filter.role && student.role !== filter.role) {
@@ -112,25 +130,25 @@ export function useStateFilter(
       </p>
       {useFilter && (
         <>
-          <FilterButtons Icon={StarIcon} buttonProps={[
-            {
-              text: "3성 미만 감추기",
-              onToggle: (activated) => { setFilter((prev) => ({ ...prev, minimumTier: activated ? 3 : 1 })) },
-            },
-          ]} />
           <FilterButtons Icon={FireIcon} buttonProps={[
-            { text: "폭발", color: buttonColors["red"], onToggle: toggleAttackType("explosive") },
-            { text: "관통", color: buttonColors["yellow"], onToggle: toggleAttackType("piercing") },
-            { text: "신비", color: buttonColors["blue"], onToggle: toggleAttackType("mystic") },
-            { text: "진동", color: buttonColors["purple"], onToggle: toggleAttackType("sonic") },
+            { text: "폭발", color: "red", onToggle: toggleAttackType("explosive") },
+            { text: "관통", color: "yellow", onToggle: toggleAttackType("piercing") },
+            { text: "신비", color: "blue", onToggle: toggleAttackType("mystic") },
+            { text: "진동", color: "purple", onToggle: toggleAttackType("sonic") },
+          ]} />
+          <FilterButtons Icon={ShieldCheckIcon} buttonProps={[
+            { text: "경장갑", color: "red", onToggle: toggleDefenseType("light") },
+            { text: "중장갑", color: "yellow", onToggle: toggleDefenseType("heavy") },
+            { text: "특수", color: "blue", onToggle: toggleDefenseType("special") },
+            { text: "탄력", color: "purple", onToggle: toggleDefenseType("elastic") },
           ]} />
           <FilterButtons Icon={ArrowsUpDownIcon} exclusive={true} buttonProps={[
             {
-              text: "스트라이커", color: buttonColors["red"],
+              text: "스트라이커", color: "red",
               onToggle: (activated) => { setFilter((prev) => ({ ...prev, role: activated ? "striker" : null })) },
             },
             {
-              text: "스페셜", color: buttonColors["blue"],
+              text: "스페셜", color: "blue",
               onToggle: (activated) => { setFilter((prev) => ({ ...prev, role: activated ? "special" : null })) },
             },
           ]} />
@@ -138,10 +156,12 @@ export function useStateFilter(
       )}
 
       {useSort && (
-        <FilterButtons Icon={BarsArrowDownIcon} exclusive={true} buttonProps={[
-          { text: "★ 등급", onToggle: (activated) => { setSort({ by: activated ? "tier" : null }) } },
-          { text: "이름", onToggle: (activated) => { setSort({ by: activated ? "name" : null }) } },
-        ]} />
+        <FilterButtons Icon={BarsArrowDownIcon} exclusive={true} buttonProps={
+          [
+            (useSort === true || useSort.by.includes("tier")) ? { text: "★ 등급순", onToggle: (activated: boolean) => { setSort({ by: activated ? "tier" : null }) } } : null,
+            (useSort === true || useSort.by.includes("name")) ? { text: "이름순", onToggle: (activated: boolean) => { setSort({ by: activated ? "name" : null }) } } : null,
+          ].filter((button) => button !== null)
+        } />
       )}
 
       {useSearch && (

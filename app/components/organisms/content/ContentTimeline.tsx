@@ -1,3 +1,4 @@
+import { FunnelIcon } from "@heroicons/react/24/outline";
 import dayjs from "dayjs";
 import { useState } from "react";
 import type { ContentTimelineItemProps } from "~/components/molecules/content";
@@ -103,12 +104,15 @@ export default function ContentTimeline({ contents, favoritedStudents, favorited
   return (
     <>
       <div className="my-6">
-        <FilterButtons buttonProps={[
-          { text: "스토리", onToggle: (activated) => { onToggleFilter(activated, ["main_story"]) } },
-          { text: "이벤트", onToggle: (activated) => { onToggleFilter(activated, ["event", "immortal_event", "fes", "collab", "mini_event"]) } },
-          { text: "캠페인", onToggle: (activated) => { onToggleFilter(activated, ["campaign"]) } },
-          { text: "총력전/대결전", onToggle: (activated) => { onToggleFilter(activated, ["total_assault", "elimination", "unlimit"]) } },
-        ]} />
+        <FilterButtons
+          Icon={FunnelIcon}
+          buttonProps={[
+            { text: "스토리", onToggle: (activated) => { onToggleFilter(activated, ["main_story"]) } },
+            { text: "이벤트", onToggle: (activated) => { onToggleFilter(activated, ["event", "immortal_event", "fes", "collab", "mini_event"]) } },
+            { text: "캠페인", onToggle: (activated) => { onToggleFilter(activated, ["campaign"]) } },
+            { text: "총력전/대결전", onToggle: (activated) => { onToggleFilter(activated, ["total_assault", "elimination", "unlimit"]) } },
+          ]}
+        />
       </div>
 
       {contentGroups.map((group) => {

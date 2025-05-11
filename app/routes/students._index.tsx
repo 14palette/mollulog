@@ -3,6 +3,7 @@ import { useLoaderData, useNavigate } from "react-router";
 import { Title } from "~/components/atoms/typography";
 import { StudentCards } from "~/components/molecules/student";
 import { getAllStudents } from "~/models/student";
+import { useStateFilter } from "~/components/organisms/student";
 
 export const loader = async ({ context }: LoaderFunctionArgs) => {
   const env = context.cloudflare.env;
@@ -28,14 +29,20 @@ export const meta: MetaFunction = () => {
 export default function Students() {
   const { students } = useLoaderData<typeof loader>();
   const navigate = useNavigate();
+  const [StateFilter, filteredStates] = useStateFilter(
+    students.map((student) => ({ student })),
+    true, { by: ["name"] }, true
+  );
+
   return (
     <>
       <Title text="학생부" />
       <p className="text-neutral-500 dark:text-neutral-400 -mt-2 mb-4">
         학생들의 프로필과 통계 정보를 확인할 수 있어요.
       </p>
+      {StateFilter}
       <StudentCards
-        students={students.map((student) => ({
+        students={filteredStates.map(({ student }) => ({
           studentId: student.id,
           name: student.name,
         }))}
