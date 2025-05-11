@@ -100,12 +100,15 @@ export default function SlotCountInfo({ student, raid, slotsCount, assistsCount,
         </div>
       )}
 
-      <div className="p-4 xl:px-6">
-        <div className="-mx-1 mb-2 flex gap-2">
-          <FilterButtons buttonProps={[
-            { text: "편성 횟수", active: true, onToggle: () => setShowSlots(true) },
-            { text: "조력 횟수", onToggle: () => setShowSlots(false) },
-          ]} exclusive atLeastOne />
+      <div className="p-4 xl:px-6 xl:pb-6">
+        <div className="-mx-1 flex gap-2">
+          <FilterButtons
+            buttonProps={[
+              { text: "편성 횟수", active: true, onToggle: () => setShowSlots(true) },
+              { text: "조력 횟수", onToggle: () => setShowSlots(false) },
+            ]}
+            exclusive atLeastOne inBlock
+          />
         </div>
         <TierCounts tierCounts={showSlots ? slotsByTierMap : assistsByTierMap} visibleTiers={[8, 7, 6, 5, 4, 3]} reducePaddings totalCount={20000} />
       </div>
