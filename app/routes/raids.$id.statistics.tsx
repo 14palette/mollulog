@@ -9,6 +9,7 @@ import { EmptyView } from "~/components/atoms/typography";
 import { ChevronDownIcon, ChevronUpIcon } from "@heroicons/react/16/solid";
 import { TimelinePlaceholder } from "~/components/organisms/useractivity";
 import { SlotCountInfo } from "~/components/organisms/raid";
+import { ShieldCheckIcon } from "@heroicons/react/24/outline";
 
 export default function RaidStatistics() {
   const { raid } = useOutletContext<OutletContext>();
@@ -24,14 +25,18 @@ export default function RaidStatistics() {
     <div className="flex flex-col">
       {raid.rankVisible && raid.type === "elimination" && (
         <div className="mb-6">
-          <FilterButtons exclusive buttonProps={
-            raid.defenseTypes.map((each) => ({
-              text: defenseTypeLocale[each.defenseType],
-              color: defenseTypeColor[each.defenseType],
-              active: each.defenseType === defenseType,
-              onToggle: () => setDefenseType(each.defenseType),
-            }))
-          } />
+          <FilterButtons
+            Icon={ShieldCheckIcon}
+            buttonProps={
+              raid.defenseTypes.map((each) => ({
+                text: defenseTypeLocale[each.defenseType],
+                color: defenseTypeColor[each.defenseType],
+                active: each.defenseType === defenseType,
+                onToggle: () => setDefenseType(each.defenseType),
+              }))
+            }
+            exclusive atLeastOne
+          />
         </div>
       )}
       {(!fetcher.data || fetcher.state !== "idle") && <TimelinePlaceholder />}

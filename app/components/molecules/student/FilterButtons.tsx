@@ -14,7 +14,7 @@ export default function FilterButtons({ Icon, buttonProps, exclusive, atLeastOne
   const [actives, setActives] = useState(buttonProps.map((prop) => prop.active ?? false));
 
   return (
-    <div className="my-2 flex flex-wrap items-center gap-1">
+    <div className="my-2 flex flex-wrap items-center gap-1 md:gap-1.5">
       {Icon && <Icon className="h-5 w-5 mr-1" strokeWidth={2} />}
       {buttonProps.map((prop, index) => (
         <FilterButton

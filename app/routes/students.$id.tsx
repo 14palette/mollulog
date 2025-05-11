@@ -35,7 +35,7 @@ const studentDetailQuery = graphql(`
 export const loader = async ({ params }: LoaderFunctionArgs) => {
   const uid = params.id!;
 
-  const raidSince = dayjs().subtract(1, "year").toISOString();
+  const raidSince = dayjs().subtract(6, "month").toISOString();
   const { data, error } = await runQuery<StudentDetailQuery>(studentDetailQuery, { uid, raidSince });
   let errorMessage: string | null = null;
   if (error || !data) {

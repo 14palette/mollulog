@@ -1,4 +1,4 @@
-import { MagnifyingGlassIcon } from "@heroicons/react/24/outline";
+import { MagnifyingGlassIcon, ShieldCheckIcon } from "@heroicons/react/24/outline";
 import { useOutletContext } from "react-router";
 import { useState } from "react";
 import { FloatingButton } from "~/components/atoms/button";
@@ -31,14 +31,18 @@ export default function RaidDetailIndex() {
       <div className="xl:w-3/5 shrink-0">
         {raid.rankVisible && raid.type === "elimination" && (
           <div className="mb-6">
-            <FilterButtons exclusive={true} buttonProps={
-              raid.defenseTypes.map(({ defenseType }, index) => ({
-                text: defenseTypeLocale[defenseType],
-                color: defenseTypeColor[defenseType],
-                active: index === 0,
-                onToggle: () => setFilters((prev) => ({ ...prev, defenseType, rankAfter: null, rankBefore: null })),
-              }))
-            } />
+            <FilterButtons
+              Icon={ShieldCheckIcon}
+              buttonProps={
+                raid.defenseTypes.map(({ defenseType }, index) => ({
+                  text: defenseTypeLocale[defenseType],
+                  color: defenseTypeColor[defenseType],
+                  active: index === 0,
+                  onToggle: () => setFilters((prev) => ({ ...prev, defenseType, rankAfter: null, rankBefore: null })),
+                }))
+              }
+              exclusive atLeastOne
+            />
           </div>
         )}
         {!signedIn && (

@@ -13,7 +13,7 @@ export type ContentTimelineProps = {
     until: Date;
     rerun: boolean;
     contentId: string;
-    link: string | null;
+    link: string;
     contentType: EventType | RaidType;
     pickups?: ContentTimelineItemProps["pickups"];
     raidInfo?: ContentTimelineItemProps["raidInfo"];
@@ -150,7 +150,6 @@ export default function ContentTimeline({ contents, favoritedStudents, favorited
                     <ContentTimelineItem
                       key={content.contentId}
                       {...content}
-                      until={isCurrent ? content.until : null}
 
                       showMemo={showMemo}
                       initialMemo={showMemo ? memo : undefined}

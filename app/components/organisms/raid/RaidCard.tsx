@@ -1,9 +1,8 @@
-import { defenseTypeLocale, attackTypeLocale, terrainLocale, raidTypeLocale } from "~/locales/ko";
-import { bossImageUrl } from "~/models/assets";
-import { defenseTypeColorMap, attackTypeColorMap } from "~/models/content.d";
-import type { AttackType, DefenseType, RaidType, Terrain } from "~/models/content.d";
-import { Chip } from "~/components/atoms/button";
 import dayjs from "dayjs";
+import { defenseTypeLocale, attackTypeLocale, terrainLocale, raidTypeLocale, attackTypeColor, defenseTypeColor } from "~/locales/ko";
+import { bossImageUrl } from "~/models/assets";
+import type { AttackType, DefenseType, RaidType, Terrain } from "~/models/content.d";
+import { OptionBadge } from "~/components/atoms/student";
 
 type RaidCardProps = {
   name: string;
@@ -40,9 +39,9 @@ export default function RaidCard({
           </div>
         )}
         <div className="absolute bottom-0 right-0 flex gap-x-1 p-1 text-white text-sm">
-          <Chip text={terrainLocale[terrain]} color="black" />
-          <Chip text={attackTypeLocale[attackType]} color={attackTypeColorMap[attackType]} />
-          <Chip text={defenseTypeLocale[defenseType]} color={defenseTypeColorMap[defenseType]} />
+          <OptionBadge dark text={terrainLocale[terrain]} />
+          <OptionBadge dark text={attackTypeLocale[attackType]} color={attackTypeColor[attackType]} />
+          <OptionBadge dark text={defenseTypeLocale[defenseType]} color={defenseTypeColor[defenseType]} />
         </div>
       </div>
       <div className="p-4 border rounded-b-lg border-neutral-200 dark:border-neutral-700">

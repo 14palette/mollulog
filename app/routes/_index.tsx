@@ -86,8 +86,6 @@ export default function Index() {
         {events.sort((a, b) => {
           return contentOrders.indexOf(a.type) - contentOrders.indexOf(b.type);
         }).map((event) => {
-          const showLink = ["event", "immortal_event", "main_story"];
-
           const contentFavoritedCounts: Record<string, number> = {};
           favoritedCounts.filter((each) => each.contentId === event.eventId)
             .forEach((each) => contentFavoritedCounts[each.studentId] = each.count);
@@ -98,8 +96,9 @@ export default function Index() {
               name={event.name}
               contentType={event.type}
               rerun={event.rerun}
+              since={new Date(event.since)}
               until={new Date(event.until)}
-              link={showLink ? `/events/${event.eventId}` : null}
+              link={`/events/${event.eventId}`}
               showMemo={false}
               pickups={event.pickups.map((pickup) => ({
                 type: pickup.type,

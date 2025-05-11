@@ -1,14 +1,13 @@
-import { Chip } from "~/components/atoms/button";
-import { attackTypeLocale, contentTypeLocale, defenseTypeLocale, pickupLabelLocale, terrainLocale } from "~/locales/ko";
+import { attackTypeColor, attackTypeLocale, contentTypeLocale, defenseTypeColor, defenseTypeLocale, pickupLabelLocale, terrainLocale } from "~/locales/ko";
 import { bossImageUrl } from "~/models/assets";
-import { attackTypeColorMap, defenseTypeColorMap } from "~/models/content.d";
 import type { AttackType, DefenseType, EventType, PickupType, RaidType, Role, Terrain } from "~/models/content.d";
 import { StudentCards } from "../student";
 import type { ReactNode } from "react";
 import { Link } from "react-router";
 import { MemoEditor } from "../editor";
-import { CheckIcon, ChevronRightIcon, ChartBarIcon } from "@heroicons/react/16/solid";
+import { ChevronRightIcon, ChartBarIcon, ClockIcon, CheckCircleIcon } from "@heroicons/react/16/solid";
 import dayjs from "dayjs";
+import { OptionBadge } from "~/components/atoms/student";
 
 export type ContentTimelineItemProps = {
   name: string;
@@ -16,7 +15,7 @@ export type ContentTimelineItemProps = {
   rerun: boolean;
   since?: Date | null;
   until: Date | null;
-  link: string | null;
+  link: string;
   confirmed?: boolean;
 
   showMemo: boolean;
@@ -56,10 +55,10 @@ function ContentTitles({ name, showLink }: { name: string, showLink: boolean }):
     titles.map((titleLine, index) => {
       const key = `${name}-${index}`;
       if (index < titles.length - 1) {
-        return <p key={key} className="my-1">{titleLine}</p>;
+        return <p key={key} className="text-lg md:text-xl font-bold">{titleLine}</p>;
       } else {
         return (
-          <div key={key}>
+          <div key={key} className="text-lg md:text-xl font-bold flex items-center">
             <span className="inline">{titleLine}</span>
             {showLink && <ChevronRightIcon className="inline size-4" strokeWidth={2} />}
           </div>
@@ -75,16 +74,25 @@ export default function ContentTimelineItem(
     showMemo, initialMemo, onUpdateMemo, favoritedStudents, favoritedCounts, onFavorite,
   }: ContentTimelineItemProps,
 ) {
+  let daysLabel = null;
   const now = dayjs();
-  const remainingDays = until ? dayjs(until).startOf("day").diff(now.startOf("day"), "day") : null;
+  const sinceDayjs = dayjs(since);
+  const untilDayjs = dayjs(until);
 
-  let remainingDaysText = "";
-  if (remainingDays === 1) {
-    remainingDaysText = "내일 종료";
-  } else if (remainingDays === 0) {
-    remainingDaysText = "오늘 종료";
-  } else if (remainingDays !== null) {
-    remainingDaysText = `${remainingDays}일 남음`;
+  let finishSoon = false;
+  if (since && until && sinceDayjs.isBefore(now)) {
+    const remainingDays = untilDayjs.startOf("day").diff(now.startOf("day"), "day");
+    if (remainingDays >= 2) {
+      daysLabel = `${remainingDays}일`;
+    } else {
+      const remainingHours = untilDayjs.startOf("hour").diff(now.startOf("hour"), "hour");
+      finishSoon = true;
+      if (remainingHours > 24) {
+        daysLabel = `내일 종료`;
+      } else {
+        daysLabel = `${remainingHours}시간 남음`;
+      }
+    }
   }
 
   const RaidInfo = () => raidInfo ? (
@@ -94,50 +102,47 @@ export default function ContentTimelineItem(
         src={bossImageUrl(raidInfo.boss)} alt={`총력전 보스 ${name}`} loading="lazy"
       />
       <div className="absolute bottom-0 right-0 flex gap-x-1 p-1 text-white text-sm">
-        <Chip text={terrainLocale[raidInfo.terrain]} color="black" />
-        <Chip text={attackTypeLocale[raidInfo.attackType]} color={attackTypeColorMap[raidInfo.attackType]} />
-        <Chip text={defenseTypeLocale[raidInfo.defenseType]} color={defenseTypeColorMap[raidInfo.defenseType]} />
+        <OptionBadge dark text={terrainLocale[raidInfo.terrain]} />
+        <OptionBadge dark text={attackTypeLocale[raidInfo.attackType]} color={attackTypeColor[raidInfo.attackType]} />
+        <OptionBadge dark text={defenseTypeLocale[raidInfo.defenseType]} color={defenseTypeColor[raidInfo.defenseType]} />
       </div>
     </div>
   ) : null;
 
   return (
-    <div className="my-6">
+    <div className="my-4 md:my-6">
       {/* 컨텐츠 분류 */}
-      <div className="my-1 flex items-center gap-x-1">
-        <span className="mr-1 text-sm text-neutral-500 dark:text-neutral-400">
-          {(contentType === "event" || contentType === "pickup") && rerun && "복각 "}{contentTypeLocale[contentType]}
-        </span>
-        {remainingDaysText && (
-          <span className="py-0.5 px-2 text-xs bg-neutral-900 text-white rounded-full">
-            {remainingDaysText}
+      <div className="flex items-center gap-x-1 md:my-1">
+        <div className="my-1 flex flex-wrap gap-1 text-sm">
+          <span className="pr-1 py-0.5 text-neutral-500 dark:text-neutral-400">
+            {(contentType === "event" || contentType === "pickup") && rerun && "복각 "}{contentTypeLocale[contentType]}
           </span>
-        )}
-        {confirmed && (since && dayjs(since).isAfter(now)) && (
-          <span className="p-0.5 px-2 text-xs bg-green-600 text-white rounded-full">
-            <CheckIcon className="inline size-4" />
-            확정
-          </span>
-        )}
-        {raidInfo && raidInfo.rankVisible && (
-          <span className="p-0.5 px-2 text-xs bg-neutral-900 text-white rounded-full">
-            <ChartBarIcon className="inline size-4 mr-1" />
-            순위 정보
-          </span>
-        )}
+          {daysLabel && (
+            <span className={`flex items-center px-2 py-0.5 rounded-full ${finishSoon ? "bg-red-100 text-red-800 dark:bg-red-900 dark:text-red-200" : "bg-neutral-100 dark:bg-neutral-700"}`}>
+              <ClockIcon className="inline size-4 mr-1" />
+              {daysLabel}
+            </span>
+          )}
+          {confirmed && (since && sinceDayjs.isAfter(now)) && (
+            <span className="flex items-center px-2 py-0.5 rounded-full bg-green-100 dark:bg-green-900 text-green-800 dark:text-green-200">
+              <CheckCircleIcon className="inline size-4 mr-1" />
+              확정
+            </span>
+          )}
+          {raidInfo && raidInfo.rankVisible && (
+            <span className="flex items-center px-2 py-0.5 rounded-full bg-neutral-100 dark:bg-neutral-700 text-neutral-800 dark:text-neutral-200">
+              <ChartBarIcon className="inline size-4 mr-1" />
+              순위 정보
+            </span>
+          )}
+        </div>
       </div>
 
       {/* 컨텐츠 이름 */}
-      {link ?
-        <Link to={link} className="font-bold text-lg md:text-xl cursor-pointer hover:underline tracking-tight">
-          <ContentTitles name={name} showLink={true} />
-          <RaidInfo />
-        </Link> :
-        <div className="font-bold text-lg md:text-xl">
-          <ContentTitles name={name} showLink={false} />
-          <RaidInfo />
-        </div>
-      }
+      <Link to={link} className="cursor-pointer hover:underline tracking-tight">
+        <ContentTitles name={name} showLink={true} />
+        <RaidInfo />
+      </Link> 
 
       {/* 픽업 정보 */}
       {pickups && (

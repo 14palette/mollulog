@@ -147,9 +147,7 @@ export default function Futures() {
             contentAttrs.contentType = content.eventType;
             contentAttrs.rerun = content.rerun;
             contentAttrs.pickups = content.pickups ?? undefined;
-            if (["event", "immortal_event", "main_story"].includes(content.eventType)) {
-              contentAttrs.link = `/events/${content.contentId}`;
-            }
+            contentAttrs.link = `/events/${content.contentId}`;
           } else if (content.__typename === "Raid") {
             contentAttrs.contentType = content.raidType;
             contentAttrs.rerun = false;
