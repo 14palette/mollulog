@@ -22,13 +22,6 @@ const raidDetailQuery = graphql(`
   }
 `);
 
-export const buttonColors = {
-  "light": "bg-linear-to-r from-red-500 to-orange-400",
-  "heavy": "bg-linear-to-r from-amber-500 to-yellow-400",
-  "special": "bg-linear-to-r from-blue-500 to-sky-400",
-  "elastic": "bg-linear-to-r from-purple-500 to-fuchsia-400",
-};
-
 export const loader = async ({ request, context, params }: LoaderFunctionArgs) => {
   const raidId = params.id;
   if (!raidId) {

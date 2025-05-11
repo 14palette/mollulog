@@ -1,15 +1,15 @@
-import { ChevronRightIcon } from "@heroicons/react/16/solid";
 import dayjs from "dayjs";
+import { useState } from "react";
 import { Link } from "react-router";
+import { ChevronRightIcon } from "@heroicons/react/16/solid";
 import { OptionBadge, StudentCard } from "~/components/atoms/student";
 import { KeyValueTable } from "~/components/atoms/typography";
+import { FilterButtons, TierCounts } from "~/components/molecules/student";
 import { defenseTypeLocale, difficultyLocale, terrainLocale } from "~/locales/ko";
 import { defenseTypeColor } from "~/locales/ko";
-import { TierCounts } from "~/components/molecules/student";
 import { raidTypeLocale } from "~/locales/ko";
 import { bossImageUrl } from "~/models/assets";
 import type { DefenseType, RaidType, Terrain } from "~/models/content.d";
-import { useState } from "react";
 
 type SlotCountInfoProps = {
   student?: { studentId: string; name: string };
@@ -102,23 +102,14 @@ export default function SlotCountInfo({ student, raid, slotsCount, assistsCount,
 
       <div className="p-4 xl:px-6">
         <div className="-mx-1 mb-2 flex gap-2">
-          <TierCountToggleButton text="편성 횟수" active={showSlots} onClick={() => setShowSlots(true)} />
-          <TierCountToggleButton text="조력 횟수" active={!showSlots} onClick={() => setShowSlots(false)} />
+          <FilterButtons buttonProps={[
+            { text: "편성 횟수", active: true, onToggle: () => setShowSlots(true) },
+            { text: "조력 횟수", onToggle: () => setShowSlots(false) },
+          ]} exclusive atLeastOne />
         </div>
         <TierCounts tierCounts={showSlots ? slotsByTierMap : assistsByTierMap} visibleTiers={[8, 7, 6, 5, 4, 3]} reducePaddings totalCount={20000} />
       </div>
     </div>
-  );
-}
-
-function TierCountToggleButton({ text, active, onClick }: { text: string, active: boolean, onClick: () => void }) {
-  return (
-    <button
-      className={`px-3 py-1 rounded-full text-sm font-medium transition-colors ${active ? "bg-neutral-900 dark:bg-white text-white dark:text-neutral-900" : "bg-neutral-200 dark:bg-neutral-800 text-neutral-700 dark:text-neutral-200"}`}
-      onClick={onClick}
-    >
-      {text}
-    </button>
   );
 }
 

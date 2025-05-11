@@ -49,11 +49,10 @@ export default function User() {
       <Title text={`@${username}`} />
       <Navigation links={[
         { to: `/@${username}/`, text: "프로필" },
-        { to: `/@${username}/students`, text: "학생부" },
-        { to: `/@${username}/pickups`, text: "모집" },
+        { to: `/@${username}/students`, text: "모집한 학생" },
+        { to: `/@${username}/pickups`, text: "모집 통계" },
         { to: `/@${username}/parties`, text: "편성" },
         { to: `/@${username}/futures`, text: "계획" },
-        { to: `/@${username}/friends`, text: "친구" },
       ]} />
       <Outlet key={`user-${params.username}`} />
     </>

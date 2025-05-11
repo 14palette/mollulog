@@ -1,26 +1,36 @@
 import { FunnelIcon } from "@heroicons/react/24/outline";
 import { useState } from "react";
+import { sanitizeClassName } from "~/prophandlers";
 
 // === FilterButton
 type FilterButtonProps = {
   text: string;
-  color?: string;
+  color?: "red" | "yellow" | "blue" | "purple";
   active?: boolean;
   onToggle: (activated: boolean) => void;
 };
 
-const defaultButtonColor = "bg-linear-to-br bg-blue-500 to-sky-400 dark:from-blue-600 dark:to-sky-500";
+const buttonColors = {
+  red: "bg-red-500",
+  yellow: "bg-yellow-500",
+  blue: "bg-blue-500",
+  purple: "bg-purple-500",
+};
 
 function FilterButton({ text, color, active, onToggle }: FilterButtonProps) {
   return (
     <div
-      className={`
-        inline-block w-fit flex items-center mr-1 px-2 py-1 border border-gray-300 dark:border-gray-700 rounded-lg shadow cursor-pointer
-        ${active ? `${color || defaultButtonColor} text-white` : ""}
-      `}
+      className={sanitizeClassName(`
+        px-3 py-1 flex items-center rounded-full cursor-pointer
+        ${active ?
+          "bg-neutral-900 dark:bg-white text-white dark:text-neutral-900 shadow-md dark:shadow-neutral-700" :
+          "bg-neutral-100 dark:bg-neutral-700 text-neutral-700 dark:text-neutral-200"
+        }
+      `)}
       onClick={() => { onToggle(!active); }}
     >
-      {text}
+      {color && <div className={`size-2.5 rounded-full mr-1.5 ` + buttonColors[color]} />}
+      <span className="tracking-tighter shrink-0">{text}</span>
     </div>
   );
 }
@@ -30,15 +40,16 @@ type FilterButtonsProps = {
   Icon?: typeof FunnelIcon,
   buttonProps: FilterButtonProps[],
   exclusive?: boolean;
+  atLeastOne?: boolean;
 }
 
-export default function FilterButtons({ Icon, buttonProps, exclusive }: FilterButtonsProps) {
+export default function FilterButtons({ Icon, buttonProps, exclusive, atLeastOne }: FilterButtonsProps) {
   const [actives, setActives] = useState(buttonProps.map((prop) => prop.active ?? false));
 
   const IconElem = Icon || FunnelIcon;
   return (
-    <div className="my-2 flex items-center">
-      <IconElem className="h-5 w-5 mr-2" strokeWidth={2} />
+    <div className="my-2 flex flex-wrap items-center gap-1">
+      <IconElem className="h-5 w-5 mr-1" strokeWidth={2} />
       {buttonProps.map((prop, index) => (
         <FilterButton
           key={`filter-${prop.text}`}
@@ -46,7 +57,9 @@ export default function FilterButtons({ Icon, buttonProps, exclusive }: FilterBu
           color={prop.color}
           active={actives[index]}
           onToggle={(activated) => {
-            if (exclusive) {
+            if (atLeastOne && !activated && actives.filter((active) => active).length <= 1) {
+              return;
+            } else if (exclusive) {
               const newActives = new Array(buttonProps.length).fill(false);
               newActives[index] = activated;
               setActives(newActives);

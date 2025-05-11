@@ -6,8 +6,8 @@ import { Callout } from "~/components/atoms/typography";
 import { FilterButtons } from "~/components/molecules/student";
 import { RaidRankFilter } from "~/components/organisms/raid";
 import RaidRanks, { type RaidRankFilters } from "~/components/organisms/raid/RaidRanks";
-import { defenseTypeLocale } from "~/locales/ko";
-import { buttonColors, type OutletContext } from "./raids.$id";
+import { defenseTypeColor, defenseTypeLocale } from "~/locales/ko";
+import { type OutletContext } from "./raids.$id";
 import { useSignIn } from "~/contexts/SignInProvider";
 
 export default function RaidDetailIndex() {
@@ -34,7 +34,7 @@ export default function RaidDetailIndex() {
             <FilterButtons exclusive={true} buttonProps={
               raid.defenseTypes.map(({ defenseType }, index) => ({
                 text: defenseTypeLocale[defenseType],
-                color: buttonColors[defenseType],
+                color: defenseTypeColor[defenseType],
                 active: index === 0,
                 onToggle: () => setFilters((prev) => ({ ...prev, defenseType, rankAfter: null, rankBefore: null })),
               }))
