@@ -1,7 +1,7 @@
 import type { LoaderFunctionArgs } from "react-router";
 import { graphql } from "~/graphql";
 import { runQuery } from "~/lib/baql";
-import type { Defense,RaidStatisticsQuery } from "~/graphql/graphql";
+import type { Defense, RaidStatisticsQuery } from "~/graphql/graphql";
 
 const raidStatisticsQuery = graphql(`
   query RaidStatistics($raidId: String!, $defenseType: Defense!) {
@@ -11,6 +11,7 @@ const raidStatisticsQuery = graphql(`
         slotsCount
         slotsByTier { tier count }
         assistsCount
+        assistsByTier { tier count }
       }
     }
   }
@@ -22,6 +23,7 @@ export type RaidStatisticsData = {
     slotsCount: number;
     slotsByTier: { tier: number; count: number }[];
     assistsCount: number;
+    assistsByTier: { tier: number; count: number }[];
   }[];
 };
 

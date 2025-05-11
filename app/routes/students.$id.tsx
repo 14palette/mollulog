@@ -1,5 +1,5 @@
 import type { MetaFunction, LoaderFunctionArgs } from "react-router";
-import { isRouteErrorResponse, Link, useLoaderData, useRouteError } from "react-router";
+import { isRouteErrorResponse, useLoaderData, useRouteError } from "react-router";
 import dayjs from "dayjs";
 import { useState } from "react";
 import { graphql } from "~/graphql";
@@ -7,25 +7,26 @@ import type { StudentDetailQuery } from "~/graphql/graphql";
 import { runQuery } from "~/lib/baql";
 import {
   attackTypeColor, attackTypeLocale, defenseTypeColor, defenseTypeLocale,
-  roleColor, roleLocale, raidTypeLocale, schoolNameLocale,
+  roleColor, roleLocale, schoolNameLocale,
 } from "~/locales/ko";
-import { bossImageUrl } from "~/models/assets";
 import { EmptyView, SubTitle, Title } from "~/components/atoms/typography";
-import { TierCounts } from "~/components/molecules/student";
-import { ArrowTopRightOnSquareIcon, ChevronDownIcon, ChevronRightIcon, ChevronUpIcon } from "@heroicons/react/16/solid";
+import { ArrowTopRightOnSquareIcon, ChevronDownIcon, ChevronUpIcon } from "@heroicons/react/16/solid";
 import { OptionBadge } from "~/components/atoms/student";
 import { ErrorPage } from "~/components/organisms/error";
+import { SlotCountInfo } from "~/components/organisms/raid";
 
 const studentDetailQuery = graphql(`
   query StudentDetail($uid: String!, $raidSince: ISO8601DateTime!) {
     student(studentId: $uid) {
       name studentId attackType defenseType role school schaleDbId
       raidStatistics(raidSince: $raidSince) {
-        raid { raidId name boss type since until }
+        raid { raidId name boss type since until terrain }
+        difficulty
         defenseType
         slotsCount
         slotsByTier { tier count }
         assistsCount
+        assistsByTier { tier count }
       }
     }
   }
@@ -119,41 +120,22 @@ export default function StudentDetail() {
         {statistics.length === 0 && (
           <EmptyView text="편성된 충력전/대결전 정보가 없어요" />
         )}
-        {statistics.slice(0, raidShowMore ? undefined : 5).map(({ raid, defenseType, slotsByTier, slotsCount }) => {
-          const slotsByTierMap = slotsByTier.reduce((acc, { tier, count }) => {
-            acc[tier] = count;
-            return acc;
-          }, {} as { [tier: number]: number });
-
+        {statistics.slice(0, raidShowMore ? undefined : 5).map(({ raid, defenseType, difficulty, slotsByTier, slotsCount, assistsCount, assistsByTier }) => {
           return (
-            <div key={`${raid.raidId}-${defenseType}`} className="my-4 pl-4 bg-neutral-100 dark:bg-neutral-900 rounded-lg">
-              <div className="relative flex">
-                <Link
-                  to={`/raids/${raid.raidId}`}
-                  className="xl:px-2 py-4 grow group z-10 relative bg-linear-to-r from-neutral-100 dark:from-neutral-900 to-transparent to-75%"
-                >
-                  <p className="text-xs text-neutral-500 dark:text-neutral-400">{raidTypeLocale[raid.type]}</p>
-                  <p className="text-lg font-bold group-hover:underline">
-                    {raid.name}
-                    <ChevronRightIcon className="size-4 inline-block" />
-                  </p>
-                  <p className="text-xs">{dayjs(raid.since).format("YYYY-MM-DD")} ~ {dayjs(raid.until).format("YYYY-MM-DD")}</p>
-                </Link>
-                <div 
-                  className="absolute top-0 right-0 w-2/3 md:w-1/2 h-full rounded-tr-lg bg-cover"
-                  style={{ backgroundImage: `url(${bossImageUrl(raid.boss)})` }}
-                />
-                <div className="absolute right-2 bottom-1 z-10">
-                  <OptionBadge text={defenseTypeLocale[defenseType]} color={defenseTypeColor[defenseType]} dark />
-                </div>
-              </div>
-              <div className="pr-4 xl:pl-2 xl:pr-6 py-4">
-                <p className="text-sm xl:text-base mb-2">
-                  상위 2만명 중 총 {slotsCount.toLocaleString()}회 ({formatPercentage(slotsCount / 20000)}) 편성
-                </p>
-                <TierCounts tierCounts={slotsByTierMap} visibleTiers={[8, 7, 6, 5, 4, 3]} totalCount={20000} />
-              </div>
-            </div>
+            <SlotCountInfo
+              key={`${raid.raidId}-${defenseType}`}
+              raid={{
+                ...raid,
+                defenseType,
+                difficulty,
+                since: new Date(raid.since),
+                until: new Date(raid.until),
+              }}
+              slotsCount={slotsCount}
+              slotsByTier={slotsByTier}
+              assistsCount={assistsCount}
+              assistsByTier={assistsByTier}
+            />
           );
         })}
         {statistics.length > 5 && (
