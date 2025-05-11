@@ -1,14 +1,14 @@
-import { Link, useFetcher, useOutletContext } from "react-router";
+import { useFetcher, useOutletContext } from "react-router";
 import type { RaidStatisticsData } from "./raids.data.$id.statistics";
 import { buttonColors, type OutletContext } from "./raids.$id";
 import { defenseTypeLocale } from "~/locales/ko";
-import { FilterButtons, TierCounts } from "~/components/molecules/student";
+import { FilterButtons } from "~/components/molecules/student";
 import { useEffect, useState } from "react";
 import type { DefenseType } from "~/models/content.d";
-import { StudentCard } from "~/components/atoms/student";
-import { EmptyView, KeyValueTable } from "~/components/atoms/typography";
-import { ChevronDownIcon, ChevronRightIcon, ChevronUpIcon } from "@heroicons/react/16/solid";
+import { EmptyView } from "~/components/atoms/typography";
+import { ChevronDownIcon, ChevronUpIcon } from "@heroicons/react/16/solid";
 import { TimelinePlaceholder } from "~/components/organisms/useractivity";
+import { SlotCountInfo } from "~/components/organisms/raid";
 
 export default function RaidStatistics() {
   const { raid } = useOutletContext<OutletContext>();
@@ -60,8 +60,15 @@ function SlotCountInfos({ statistics }: { statistics: Exclude<RaidStatisticsData
 
   return (
     <>
-      {statistics.slice(0, showMore ? undefined : 5).map(({ student, slotsCount, slotsByTier, assistsCount }) => (
-        <SlotCountInfo key={student.studentId} student={student} slotsCount={slotsCount} slotsByTier={slotsByTier} assistsCount={assistsCount} />
+      {statistics.slice(0, showMore ? undefined : 5).map(({ student, slotsCount, slotsByTier, assistsCount, assistsByTier }) => (
+        <SlotCountInfo
+          key={student.studentId}
+          student={student}
+          slotsCount={slotsCount}
+          slotsByTier={slotsByTier}
+          assistsCount={assistsCount}
+          assistsByTier={assistsByTier}
+        />
       ))}
       {statistics.length > 5 && (
         <div
@@ -74,48 +81,4 @@ function SlotCountInfos({ statistics }: { statistics: Exclude<RaidStatisticsData
       )}
     </>
   );
-}
-
-type SlotCountInfoProps = {
-  student: { studentId: string; name: string; role: string };
-  slotsCount: number;
-  slotsByTier: { tier: number; count: number }[];
-  assistsCount: number;
-}
-
-function SlotCountInfo({ student, slotsCount, slotsByTier, assistsCount }: SlotCountInfoProps) {
-  const slotsByTierMap = slotsByTier.reduce((acc, { tier, count }) => {
-    acc[tier] = count;
-    return acc;
-  }, {} as { [tier: number]: number });
-
-  return (
-    <div className="my-4 p-4 bg-neutral-100 dark:bg-neutral-900 rounded-lg">
-      <div className="flex items-center grow">
-        <div className="w-16 xl:mx-2">
-          <StudentCard studentId={student.studentId} />
-        </div>
-        <div className="mx-4 grow">
-          <Link to={`/students/${student.studentId}`}>
-            <p className="font-bold mb-1 hover:underline">
-              <span>{student.name}</span>
-              <ChevronRightIcon className="inline size-4" />
-            </p>
-          </Link>
-          <KeyValueTable keyPrefix={`${student.studentId}-slots-count`} items={[
-            { key: "편성 횟수", value: `${slotsCount} 회 (${formatPercentage(slotsCount / 20000)})` },
-            { key: "조력 횟수", value: `${assistsCount} 회 (${formatPercentage(assistsCount / 20000)})` },
-          ]} />
-        </div>
-      </div>
-
-      <div className="xl:mx-2 mt-4">
-        <TierCounts tierCounts={slotsByTierMap} visibleTiers={[8, 7, 6, 5, 4, 3]} reducePaddings totalCount={20000} />
-      </div>
-    </div>
-  );
-}
-
-function formatPercentage(ratio: number) {
-  return (ratio * 100).toFixed(1) + "%";
 }
