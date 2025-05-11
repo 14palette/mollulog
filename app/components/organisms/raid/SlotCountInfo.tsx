@@ -3,12 +3,12 @@ import dayjs from "dayjs";
 import { Link } from "react-router";
 import { OptionBadge, StudentCard } from "~/components/atoms/student";
 import { KeyValueTable } from "~/components/atoms/typography";
-import { defenseTypeLocale } from "~/locales/ko";
+import { defenseTypeLocale, difficultyLocale, terrainLocale } from "~/locales/ko";
 import { defenseTypeColor } from "~/locales/ko";
 import { TierCounts } from "~/components/molecules/student";
 import { raidTypeLocale } from "~/locales/ko";
 import { bossImageUrl } from "~/models/assets";
-import type { DefenseType, RaidType } from "~/models/content.d";
+import type { DefenseType, RaidType, Terrain } from "~/models/content.d";
 import { useState } from "react";
 
 type SlotCountInfoProps = {
@@ -19,8 +19,10 @@ type SlotCountInfoProps = {
     type: RaidType;
     boss: string;
     defenseType: DefenseType;
+    difficulty: string;
     since: Date;
     until: Date;
+    terrain: Terrain;
   };
   slotsCount: number;
   slotsByTier: { tier: number; count: number }[];
@@ -62,7 +64,9 @@ export default function SlotCountInfo({ student, raid, slotsCount, assistsCount,
             className="absolute top-0 right-0 w-3/5 md:w-1/2 h-full rounded-tr-lg bg-cover"
             style={{ backgroundImage: `url(${bossImageUrl(raid.boss)})` }}
           />
-          <div className="absolute right-2 bottom-1 z-10">
+          <div className="absolute right-2 bottom-1 z-10 flex gap-1">
+            <OptionBadge text={difficultyLocale[raid.difficulty]} dark />
+            <OptionBadge text={terrainLocale[raid.terrain]} dark />
             <OptionBadge text={defenseTypeLocale[raid.defenseType]} color={defenseTypeColor[raid.defenseType]} dark />
           </div>
         </div>
@@ -110,7 +114,7 @@ export default function SlotCountInfo({ student, raid, slotsCount, assistsCount,
 function TierCountToggleButton({ text, active, onClick }: { text: string, active: boolean, onClick: () => void }) {
   return (
     <button
-      className={`px-3 py-1 rounded-full text-sm font-medium transition-colors ${active ? 'bg-blue-500 text-white' : 'bg-neutral-200 dark:bg-neutral-800 text-neutral-700 dark:text-neutral-200'}`}
+      className={`px-3 py-1 rounded-full text-sm font-medium transition-colors ${active ? "bg-neutral-900 dark:bg-white text-white dark:text-neutral-900" : "bg-neutral-200 dark:bg-neutral-800 text-neutral-700 dark:text-neutral-200"}`}
       onClick={onClick}
     >
       {text}

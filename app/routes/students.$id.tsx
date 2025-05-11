@@ -20,7 +20,8 @@ const studentDetailQuery = graphql(`
     student(studentId: $uid) {
       name studentId attackType defenseType role school schaleDbId
       raidStatistics(raidSince: $raidSince) {
-        raid { raidId name boss type since until }
+        raid { raidId name boss type since until terrain }
+        difficulty
         defenseType
         slotsCount
         slotsByTier { tier count }
@@ -119,13 +120,14 @@ export default function StudentDetail() {
         {statistics.length === 0 && (
           <EmptyView text="편성된 충력전/대결전 정보가 없어요" />
         )}
-        {statistics.slice(0, raidShowMore ? undefined : 5).map(({ raid, defenseType, slotsByTier, slotsCount, assistsCount, assistsByTier }) => {
+        {statistics.slice(0, raidShowMore ? undefined : 5).map(({ raid, defenseType, difficulty, slotsByTier, slotsCount, assistsCount, assistsByTier }) => {
           return (
             <SlotCountInfo
               key={`${raid.raidId}-${defenseType}`}
               raid={{
                 ...raid,
                 defenseType,
+                difficulty,
                 since: new Date(raid.since),
                 until: new Date(raid.until),
               }}

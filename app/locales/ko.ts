@@ -44,6 +44,12 @@ export const terrainLocale: Record<Terrain, string> = {
   street: "시가지",
 };
 
+export const difficultyLocale: Record<string, string> = {
+  insane: "인세인",
+  torment: "토먼트",
+  lunatic: "루나틱",
+};
+
 export const eventTypeLocale: Record<EventType, string> = {
   event: "이벤트",
   immortal_event: "이벤트 상설화",
