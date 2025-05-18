@@ -18,7 +18,7 @@ export default function RaidStatistics() {
 
   const fetcher = useFetcher<RaidStatisticsData>();
   useEffect(() => {
-    fetcher.load(`/raids/data/${raid.raidId}/statistics?defenseType=${defenseType}`);
+    fetcher.load(`/raids/data/${raid.uid}/statistics?defenseType=${defenseType}`);
   }, [defenseType]);
 
   return (

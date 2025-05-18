@@ -14,7 +14,7 @@ import type { DefenseType, RaidType, Terrain } from "~/models/content.d";
 type SlotCountInfoProps = {
   student?: { studentId: string; name: string };
   raid?: {
-    raidId: string;
+    uid: string;
     name: string;
     type: RaidType;
     boss: string;
@@ -48,7 +48,7 @@ export default function SlotCountInfo({ student, raid, slotsCount, assistsCount,
       {raid && (
         <div className="pl-4 xl:pl-6 py-4 relative flex">
           <Link
-            to={`/raids/${raid.raidId}`}
+            to={`/raids/${raid.uid}`}
             className="grow group z-10 relative "
           >
             <p className="text-xs text-neutral-500 dark:text-neutral-400">
@@ -93,7 +93,7 @@ export default function SlotCountInfo({ student, raid, slotsCount, assistsCount,
 
       {!student && raid && (
         <div className="px-4 xl:px-6">
-          <KeyValueTable keyPrefix={`${raid.raidId}-slots-count`} items={[
+          <KeyValueTable keyPrefix={`${raid.uid}-slots-count`} items={[
             { key: "편성 횟수", value: `${slotsCount} 회 (${formatPercentage(slotsCount / 20000)})` },
             { key: "조력 횟수", value: `${assistsCount} 회 (${formatPercentage(assistsCount / 20000)})` },
           ]} />

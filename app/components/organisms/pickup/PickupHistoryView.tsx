@@ -10,7 +10,7 @@ import { Link } from "react-router";
 type PickupHistoryViewProps = {
   uid: string;
   event: {
-    eventId: string;
+    uid: string;
     name: string;
     type: EventTypeEnum;
     since: Date;
@@ -46,7 +46,7 @@ export default function PickupHistoryView({ uid, event, tier3Students, pickupStu
 
   return (
     <ActionCard actions={actions}>
-      <Link to={`/events/${event.eventId}`} className="-my-4 flex items-center hover:underline">
+      <Link to={`/events/${event.uid}`} className="-my-4 flex items-center hover:underline">
         <SubTitle text={event.name} />
         <ChevronRightIcon className="size-4" />
       </Link>
@@ -65,7 +65,7 @@ export default function PickupHistoryView({ uid, event, tier3Students, pickupStu
       />
 
       <div className="mt-4">
-        {keyValueItems.length > 0 && <KeyValueTable keyPrefix={`pickup-stats-${event.name}`} items={keyValueItems} />}
+        {keyValueItems.length > 0 && <KeyValueTable keyPrefix={`pickup-stats-${event.uid}`} items={keyValueItems} />}
       </div>
     </ActionCard>
   );

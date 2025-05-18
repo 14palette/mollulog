@@ -18,12 +18,12 @@ export type RaidRankFilters = {
 };
 
 type RaidRanksProps = {
-  raidId: string;
+  raidUid: string;
   filters: RaidRankFilters;
   setFilters: (filters: (prev: RaidRankFilters) => RaidRankFilters) => void;
 };
 
-export default function RaidRanks({ raidId, filters, setFilters }: RaidRanksProps) {
+export default function RaidRanks({ raidUid, filters, setFilters }: RaidRanksProps) {
   const rankFetcher = useFetcher<RaidRanksData>();
   useEffect(() => {
     const query = new URLSearchParams();
@@ -43,8 +43,8 @@ export default function RaidRanks({ raidId, filters, setFilters }: RaidRanksProp
     if (filters.defenseType) {
       query.set("defenseType", filters.defenseType);
     }
-    rankFetcher.load(`/raids/data/${raidId}/ranks?${query.toString()}`);
-  }, [raidId, filters]);
+    rankFetcher.load(`/raids/data/${raidUid}/ranks?${query.toString()}`);
+  }, [raidUid, filters]);
 
   if (rankFetcher.data && !rankFetcher.data.rankVisible) {
     return null;

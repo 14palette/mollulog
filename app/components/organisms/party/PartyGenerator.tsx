@@ -7,14 +7,14 @@ import { AddContentButton, ContentSelector, PartyUnitEditor } from "~/components
 import { StudentCards } from "~/components/molecules/student";
 import { raidTypeLocale, terrainLocale } from "~/locales/ko";
 import { bossImageUrl } from "~/models/assets";
-import type { RaidType, Terrain } from "~/models/content";
+import type { RaidType, Terrain } from "~/models/content.d";
 import type { Party } from "~/models/party";
 import type { StudentState } from "~/models/student-state";
 
 type PartyGeneratorProps = {
   party?: Party;
   raids: {
-    raidId: string;
+    uid: string;
     name: string;
     type: RaidType;
     boss: string;
@@ -31,20 +31,19 @@ export default function PartyGenerator({ party, raids, studentStates }: PartyGen
   const [showPartyEditor, setShowPartyEditor] = useState(false);
   const [units, setUnits] = useState<(string | null)[][]>(party?.studentIds ?? []);
 
-  const now = dayjs();
   return (
     <div className="my-8">
       <SubTitle text="편성 만들기" />
       <Input name="name" label="편성 이름" placeholder="예) 비나 인세인 고점팟" defaultValue={party?.name} />
 
       <ContentSelector
-        contents={raids.filter((raid) => dayjs(raid.until).isAfter(now)).map((raid) => ({
+        contents={raids.map((raid) => ({
           ...raid,
-          contentId: raid.raidId,
+          contentId: raid.uid,
           description: `${dayjs(raid.since).format("YYYY-MM-DD")} | ${raidTypeLocale[raid.type]} | ${terrainLocale[raid.terrain]}`,
           imageUrl: bossImageUrl(raid.boss),
         }))}
-        initialContentId={raidId}
+        initialContentUid={raidId}
         placeholder="편성을 사용할 컨텐츠를 선택하세요"
         onSelectContent={(contentId) => setRaidId(contentId)}
       />

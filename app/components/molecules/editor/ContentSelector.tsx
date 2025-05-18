@@ -5,7 +5,7 @@ import { SubTitle } from "~/components/atoms/typography";
 const { search } = hangul;
 
 type ContentProps = {
-  contentId: string;
+  uid: string;
   name: string;
   description: string | ReactNode;
   imageUrl: string | null;
@@ -14,10 +14,10 @@ type ContentProps = {
 
 type ContentSelectorProps = {
   contents: ContentProps[];
-  initialContentId?: string;
+  initialContentUid?: string;
   placeholder?: string;
   searchable?: boolean;
-  onSelectContent: (contentId: string) => void;
+  onSelectContent: (contentUid: string) => void;
 };
 
 function Content({ name, description, imageUrl }: ContentProps) {
@@ -37,10 +37,10 @@ function Content({ name, description, imageUrl }: ContentProps) {
   )
 }
 
-export default function ContentSelector({ contents, initialContentId, placeholder, searchable, onSelectContent }: ContentSelectorProps) {
+export default function ContentSelector({ contents, initialContentUid, placeholder, searchable, onSelectContent }: ContentSelectorProps) {
   const [open, setOpen] = useState(false);
   const [selectedContent, setSelected] = useState<ContentSelectorProps["contents"][number] | null>(
-    initialContentId ? contents.find((content) => content.contentId === initialContentId) ?? null : null,
+    initialContentUid ? contents.find((content) => content.uid === initialContentUid) ?? null : null,
   );
 
   const [filteredContents, setFilteredContents] = useState(contents);
@@ -80,10 +80,10 @@ export default function ContentSelector({ contents, initialContentId, placeholde
               )}
               {filteredContents.map((content) => (
                 <div
-                  key={content.contentId}
+                  key={content.uid}
                   className="h-24 border-t border-neutral-100 dark:border-neutral-700 hover:bg-neutral-100 dark:hover:bg-neutral-700 cursor-pointer transition"
                   onClick={() => {
-                    onSelectContent(content.contentId);
+                    onSelectContent(content.uid);
                     setSelected(content);
                     setOpen(false);
                   }}

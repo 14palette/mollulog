@@ -15,10 +15,10 @@ import dayjs from "dayjs";
 import { getRouteSensei } from "./$username";
 
 export const userPickupEventsQuery = graphql(`
-  query UserPickupEvents($eventIds: [String!]!) {
-    events(eventIds: $eventIds) {
+  query UserPickupEvents($eventUids: [String!]!) {
+    events(uids: $eventUids) {
       nodes {
-        eventId name type since
+        uid name type since
         pickups {
           student { studentId }
         }
@@ -41,8 +41,8 @@ export const loader = async ({ context, request, params }: LoaderFunctionArgs) =
   const sensei = await getRouteSensei(env, params);
 
   const pickupHistories = await getPickupHistories(env, sensei.id);
-  const eventIds = pickupHistories.map((history) => history.eventId);
-  const { data, error } = await runQuery<UserPickupEventsQuery, UserPickupEventsQueryVariables>(userPickupEventsQuery, { eventIds });
+  const eventUids = pickupHistories.map((history) => history.eventId);
+  const { data, error } = await runQuery<UserPickupEventsQuery, UserPickupEventsQueryVariables>(userPickupEventsQuery, { eventUids });
   if (!data) {
     console.error(error);
     throw "failed to load data";
@@ -51,7 +51,7 @@ export const loader = async ({ context, request, params }: LoaderFunctionArgs) =
   const allStudentsMap = await getAllStudentsMap(env);
   const aggregatedHistories = (await getPickupHistories(env, sensei.id)).map((history) => ({
     ...history,
-    event: data.events.nodes.find((event) => event.eventId === history.eventId)!,
+    event: data.events.nodes.find((event) => event.uid === history.eventId)!,
     students: history.result
       .flatMap((trial) => trial.tier3StudentIds.filter((studentId) => studentId).map((studentId) => allStudentsMap[studentId]))
       .map((student) => ({ studentId: student.id, name: student.name })),

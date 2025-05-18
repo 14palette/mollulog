@@ -30,9 +30,9 @@ import type { StudentState} from "~/models/student-state";
 import { getUserStudentStates } from "~/models/student-state";
 
 const eventDetailQuery = graphql(`
-  query EventDetail($eventId: String!) {
-    event(eventId: $eventId) {
-      eventId
+  query EventDetail($eventUid: String!) {
+    event(uid: $eventUid) {
+      uid
       name
       type
       since
@@ -54,8 +54,8 @@ const eventDetailQuery = graphql(`
 `);
 
 const eventStagesQuery = graphql(`
-  query EventStages($eventId: String!) {
-    event(eventId: $eventId) {
+  query EventStages($eventUid: String!) {
+    event(uid: $eventUid) {
       stages {
         difficulty
         index
@@ -77,8 +77,8 @@ const eventStagesQuery = graphql(`
   }
 `);
 
-async function getEventStages(eventId: string): Promise<Exclude<EventStagesQuery["event"], null>["stages"] | []> {
-  const { data, error } = await runQuery<EventStagesQuery>(eventStagesQuery, { eventId });
+async function getEventStages(eventUid: string): Promise<Exclude<EventStagesQuery["event"], null>["stages"] | []> {
+  const { data, error } = await runQuery<EventStagesQuery>(eventStagesQuery, { eventUid });
   if (error || !data?.event) {
     return [];
   }
@@ -86,7 +86,7 @@ async function getEventStages(eventId: string): Promise<Exclude<EventStagesQuery
 }
 
 export const loader = async ({ params, context, request }: LoaderFunctionArgs) => {
-  const { data, error } = await runQuery<EventDetailQuery>(eventDetailQuery, { eventId: params.id });
+  const { data, error } = await runQuery<EventDetailQuery>(eventDetailQuery, { eventUid: params.id });
   let errorMessage: string | null = null;
   if (error || !data) {
     errorMessage = error?.message ?? "이벤트 정보를 가져오는 중 오류가 발생했어요";
@@ -114,15 +114,15 @@ export const loader = async ({ params, context, request }: LoaderFunctionArgs) =
     studentStates = (await getUserStudentStates(env, sensei.username, true)) ?? [];
   }
 
-  const memos = await getContentMemos(env, content.eventId, sensei?.id);
+  const memos = await getContentMemos(env, content.uid, sensei?.id);
   const myMemo = memos.find((memo) => memo.sensei.username === sensei?.username);
 
   return {
     event: content,
     stages: getEventStages(params.id as string),
     studentStates,
-    favoritedStudents: sensei ? await getUserFavoritedStudents(env, sensei.id, content.eventId) : [],
-    favoritedCounts: (await getFavoritedCounts(env, pickupStudentIds)).filter((favorited) => favorited.contentId === content.eventId),
+    favoritedStudents: sensei ? await getUserFavoritedStudents(env, sensei.id, content.uid) : [],
+    favoritedCounts: (await getFavoritedCounts(env, pickupStudentIds)).filter((favorited) => favorited.contentId === content.uid),
     signedIn: sensei !== null,
     memos: memos.filter((memo) => memo.uid !== myMemo?.uid),
     myMemo,

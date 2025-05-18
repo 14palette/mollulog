@@ -22,8 +22,8 @@ export const loader = async ({ request, context }: LoaderFunctionArgs) => {
   }
 
   const pickupHistories = await getPickupHistories(env, sensei.id);
-  const eventIds = pickupHistories.map((history) => history.eventId);
-  const { data, error } = await runQuery<UserPickupEventsQuery, UserPickupEventsQueryVariables>(userPickupEventsQuery, { eventIds });
+  const eventUids = pickupHistories.map((history) => history.eventId);
+  const { data, error } = await runQuery<UserPickupEventsQuery, UserPickupEventsQueryVariables>(userPickupEventsQuery, { eventUids });
   if (!data) {
     console.error(error);
     throw "failed to load data";
@@ -32,7 +32,7 @@ export const loader = async ({ request, context }: LoaderFunctionArgs) => {
   const allStudentsMap = await getAllStudentsMap(env);
   const aggregatedHistories = (await getPickupHistories(env, sensei.id)).map((history) => ({
     uid: history.uid,
-    event: data.events.nodes.find((event) => event.eventId === history.eventId)!,
+    event: data.events.nodes.find((event) => event.uid === history.eventId)!,
     students: history.result
       .flatMap((trial) => trial.tier3StudentIds.filter((studentId) => studentId).map((studentId) => allStudentsMap[studentId]))
       .map((student) => ({ studentId: student.id, name: student.name })),

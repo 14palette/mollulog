@@ -16,7 +16,7 @@ const indexQuery = graphql(`
   query Index($now: ISO8601DateTime!) {
     events(untilAfter: $now, sinceBefore: $now) {
       nodes {
-        name since until eventId type rerun
+        name since until uid type rerun
         pickups {
           type rerun
           student { studentId name attackType defenseType role schaleDbId }
@@ -25,7 +25,7 @@ const indexQuery = graphql(`
     }
     raids(untilAfter: $now, types: [total_assault, elimination], first: 2) {
       nodes {
-        name since until raidId type boss attackType defenseType terrain
+        name since until uid type boss attackType defenseType terrain
       }
     }
   }
@@ -87,18 +87,18 @@ export default function Index() {
           return contentOrders.indexOf(a.type) - contentOrders.indexOf(b.type);
         }).map((event) => {
           const contentFavoritedCounts: Record<string, number> = {};
-          favoritedCounts.filter((each) => each.contentId === event.eventId)
+          favoritedCounts.filter((each) => each.contentId === event.uid)
             .forEach((each) => contentFavoritedCounts[each.studentId] = each.count);
 
           return (
             <ContentTimelineItem
-              key={event.eventId}
+              key={event.uid}
               name={event.name}
               contentType={event.type}
               rerun={event.rerun}
               since={new Date(event.since)}
               until={new Date(event.until)}
-              link={`/events/${event.eventId}`}
+              link={`/events/${event.uid}`}
               showMemo={false}
               pickups={event.pickups.map((pickup) => ({
                 type: pickup.type,
@@ -113,13 +113,13 @@ export default function Index() {
                 },
               }))}
               favoritedCounts={contentFavoritedCounts}
-              favoritedStudents={signedIn ? favoritedStudents.filter((each) => each.contentId === event.eventId).map((each) => each.studentId) : undefined}
+              favoritedStudents={signedIn ? favoritedStudents.filter((each) => each.contentId === event.uid).map((each) => each.studentId) : undefined}
               onFavorite={(studentId, favorited) => {
                 if (!signedIn) {
                   showSignIn();
                   return;
                 }
-                submit({ favorite: { contentId: event.eventId, studentId, favorited } });
+                submit({ favorite: { contentUid: event.uid, studentId, favorited } });
               }}
             />
           )
@@ -132,7 +132,7 @@ export default function Index() {
       <SubTitle text="총력전 / 대결전 정보" />
       <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
         {raids.map((raid) => (
-          <Link to={`/raids/${raid.raidId}`} key={raid.raidId} className="hover:opacity-50 transition-opacity">
+          <Link to={`/raids/${raid.uid}`} key={raid.uid} className="hover:opacity-50 transition-opacity">
             <RaidCard
               {...raid}
               since={new Date(raid.since)}

@@ -15,12 +15,9 @@ const userFuturesQuery = graphql(`
   query UserFutures($now: ISO8601DateTime!) {
     events(first: 999, untilAfter: $now) {
       nodes {
-        eventId
-        name
-        since
+        uid name since
         pickups {
-          type
-          rerun
+          type rerun
           student { studentId schaleDbId name school equipments }
         }
       }
@@ -52,7 +49,7 @@ export const loader = async ({ context, params }: LoaderFunctionArgs) => {
   const favoritedStudents = await getUserFavoritedStudents(env, sensei.id);
   const plannedContentIds = favoritedStudents.map(({ contentId }) => contentId);
 
-  const events = data.events.nodes.filter((event) => plannedContentIds.includes(event.eventId));
+  const events = data.events.nodes.filter((event) => plannedContentIds.includes(event.uid));
   const memos = (await getUserMemos(env, sensei.id)).filter((memo) => plannedContentIds.includes(memo.contentId));
 
   return {
@@ -81,12 +78,12 @@ export default function UserFutures() {
     <div className="my-8">
       <SubTitle text="학생 모집 계획" />
       <FuturePlan events={events.map((event) => {
-        const favoriteStudentIds = favoritedStudents.filter(({ contentId }) => contentId === event.eventId).map(({ studentId }) => studentId);
+        const favoriteStudentIds = favoritedStudents.filter(({ contentId }) => contentId === event.uid).map(({ studentId }) => studentId);
         return {
-          eventId: event.eventId,
+          uid: event.uid,
           name: event.name,
           since: new Date(event.since),
-          memo: memos.find((memo) => memo.contentId === event.eventId)?.body ?? null,
+          memo: memos.find((memo) => memo.contentId === event.uid)?.body ?? null,
           pickups: event.pickups.filter(({ student }) => favoriteStudentIds.includes(student?.studentId ?? "")).map((pickup) => ({
             type: pickup.type,
             rerun: pickup.rerun,

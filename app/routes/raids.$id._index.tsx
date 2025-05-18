@@ -53,7 +53,7 @@ export default function RaidDetailIndex() {
           </Callout>
         )}
         <RaidRanks
-          raidId={raid.raidId}
+          raidUid={raid.uid}
           filters={filters}
           setFilters={setFilters}
         />

@@ -1,7 +1,7 @@
 import dayjs from "dayjs";
 import { SubTitle } from "~/components/atoms/typography";
 import { raidTypeLocale, terrainLocale } from "~/locales/ko";
-import type { RaidType, Terrain } from "~/models/content";
+import type { RaidType, Terrain } from "~/models/content.d";
 import type { Party } from "~/models/party"
 import type { StudentState } from "~/models/student-state";
 import { useState } from "react";
@@ -26,7 +26,7 @@ type PartyViewProps = {
   studentStates: StudentState[];
   editable?: boolean;
   raids?: {
-    raidId: string;
+    uid: string;
     type: RaidType;
     name: string;
     boss: string;
@@ -38,7 +38,7 @@ type PartyViewProps = {
 export default function PartyView({ party, sensei, students, studentStates, editable, raids }: PartyViewProps) {
   const [memoOpened, setMemoOpened] = useState(false);
 
-  const raid = (raids && party.raidId) ? raids.find(({ raidId }) => party.raidId === raidId) : null;
+  const raid = (raids && party.raidId) ? raids.find(({ uid }) => party.raidId === uid) : null;
   let raidText;
   if (raid) {
     raidText = [
@@ -80,7 +80,7 @@ export default function PartyView({ party, sensei, students, studentStates, edit
       )}
 
       {raid && (
-        <Link className="group flex items-center my-4 md:my-8 -mx-4 md:-mx-6" to={`/raids/${raid.raidId}`}>
+        <Link className="group flex items-center my-4 md:my-8 -mx-4 md:-mx-6" to={`/raids/${raid.uid}`}>
           <img
             className="h-12 md:h-24 w-36 md:w-fit object-cover object-left bg-linear-to-l from-white dark:from-neutral-800 rounded-r-lg"
             src={bossImageUrl(raid.boss)}

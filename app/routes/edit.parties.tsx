@@ -4,19 +4,11 @@ import { useLoaderData } from "react-router";
 import { getAuthenticator } from "~/auth/authenticator.server";
 import { AddContentButton } from "~/components/molecules/editor";
 import { PartyView } from "~/components/organisms/party";
-import { graphql } from "~/graphql";
 import type { RaidForPartyEditQuery } from "~/graphql/graphql";
 import { runQuery } from "~/lib/baql";
 import { getUserParties, removePartyByUid } from "~/models/party";
 import { getUserStudentStates } from "~/models/student-state";
-
-export const raidForPartyEditQuery = graphql(`
-  query RaidForPartyEdit {
-    raids {
-      nodes { raidId name type boss terrain since until }
-    }
-  }
-`);
+import { raidForPartyEditQuery } from "./edit.parties_.$id";
 
 export const loader = async ({ context, request }: LoaderFunctionArgs) => {
   const env = context.cloudflare.env;

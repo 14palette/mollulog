@@ -14,7 +14,7 @@ import { getRouteSensei } from "./$username";
 export const raidForPartyQuery = graphql(`
   query RaidForParty {
     raids {
-      nodes { raidId name type boss terrain since }
+      nodes { uid name type boss terrain since }
     }
   }
 `);
@@ -74,7 +74,7 @@ export default function UserPartyPage() {
           key={`party-${party.uid}`}
           party={party}
           studentStates={states}
-          raids={raids.map((raid) => ({ ...raid, since: new Date(raid.since) }))}
+          raids={raids.map((raid) => ({ ...raid, raidId: raid.uid, since: new Date(raid.since) }))}
           editable={me}
         />
       ))}

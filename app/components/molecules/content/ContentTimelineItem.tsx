@@ -39,7 +39,7 @@ export type ContentTimelineItemProps = {
     studentName: string;
   }[];
   raidInfo?: {
-    raidId: string;
+    uid: string;
     boss: string;
     terrain: Terrain;
     attackType: AttackType;

@@ -23,8 +23,8 @@ export const futureContentsQuery = graphql(`
         since
         until
         confirmed
+        uid
         ... on Event {
-          contentId: eventId
           eventType: type
           rerun
           pickups {
@@ -35,7 +35,6 @@ export const futureContentsQuery = graphql(`
           }
         }
         ... on Raid {
-          contentId: raidId
           raidType: type
           rankVisible
           boss terrain attackType defenseType
@@ -86,8 +85,8 @@ export const loader = async ({ request, context }: LoaderFunctionArgs) => {
   };
 };
 
-function equalFavorites(a: { contentId: string, studentId: string }, b: { contentId: string, studentId: string }): boolean {
-  return a.contentId === b.contentId && a.studentId === b.studentId;
+function equalFavorites(a: { contentUid: string, studentId: string }, b: { contentUid: string, studentId: string }): boolean {
+  return a.contentUid === b.contentUid && a.studentId === b.studentId;
 }
 
 export default function Futures() {
@@ -100,31 +99,31 @@ export default function Futures() {
   const fetcher = useFetcher();
   const submit = (data: ActionData) => fetcher.submit(data, { action: "/api/contents", method: "post", encType: "application/json" });
 
-  const [favoritedStudents, setFavoritedStudents] = useState<{ contentId: string, studentId: string }[] | undefined>(loaderData.favoritedStudents ?? undefined);
-  const [favoritedCounts, setFavoritedCounts] = useState(loaderData.favoritedCounts);
-  const toggleFavorite = (contentId: string, studentId: string, favorited: boolean) => {
-    submit({ favorite: { contentId, studentId, favorited } });
+  const [favoritedStudents, setFavoritedStudents] = useState<{ contentUid: string, studentId: string }[] | undefined>(loaderData.favoritedStudents?.map(f => ({ contentUid: f.contentId, studentId: f.studentId })) ?? undefined);
+  const [favoritedCounts, setFavoritedCounts] = useState(loaderData.favoritedCounts.map(f => ({ contentUid: f.contentId, studentId: f.studentId, count: f.count })));
+  const toggleFavorite = (contentUid: string, studentId: string, favorited: boolean) => {
+    submit({ favorite: { contentUid, studentId, favorited } });
 
     setFavoritedStudents((prev) => {
-      const alreadyFavorited = prev && prev.some((favorite) => equalFavorites(favorite, { contentId, studentId }));
+      const alreadyFavorited = prev && prev.some((favorite) => equalFavorites(favorite, { contentUid, studentId }));
       if (favorited && !alreadyFavorited) {
-        return prev && [...prev, { contentId, studentId }];
+        return prev && [...prev, { contentUid, studentId }];
       } else if (!favorited && alreadyFavorited) {
-        return prev && prev.filter((fav) => !equalFavorites(fav, { contentId, studentId }));
+        return prev && prev.filter((fav) => !equalFavorites(fav, { contentUid, studentId }));
       }
     });
 
     setFavoritedCounts((prev) => {
       let found = false;
       const newCounts = prev.map((favorite) => {
-        if (equalFavorites(favorite, { contentId, studentId })) {
+        if (equalFavorites(favorite, { contentUid, studentId })) {
           found = true;
           return { ...favorite, count: favorite.count + (favorited ? 1 : -1) };
         }
         return favorite;
       });
       if (!found && favorited) {
-        newCounts.push({ contentId, studentId, count: 1 });
+        newCounts.push({ contentUid, studentId, count: 1 });
       }
       return newCounts.filter((favorite) => favorite.count > 0);
     });
@@ -147,13 +146,13 @@ export default function Futures() {
             contentAttrs.contentType = content.eventType;
             contentAttrs.rerun = content.rerun;
             contentAttrs.pickups = content.pickups ?? undefined;
-            contentAttrs.link = `/events/${content.contentId}`;
+            contentAttrs.link = `/events/${content.uid}`;
           } else if (content.__typename === "Raid") {
             contentAttrs.contentType = content.raidType;
             contentAttrs.rerun = false;
-            contentAttrs.link = `/raids/${content.contentId}`;
+            contentAttrs.link = `/raids/${content.uid}`;
             contentAttrs.raidInfo = {
-              raidId: content.contentId,
+              uid: content.uid,
               boss: content.boss,
               terrain: content.terrain,
               attackType: content.attackType,
@@ -167,16 +166,16 @@ export default function Futures() {
 
         favoritedStudents={favoritedStudents}
         favoritedCounts={favoritedCounts}
-        onFavorite={(contentId, studentId, favorited) => {
+        onFavorite={(contentUid, studentId, favorited) => {
           if (!signedIn) {
             showSignIn();
             return;
           }
-          toggleFavorite(contentId, studentId, favorited);
+          toggleFavorite(contentUid, studentId, favorited);
         }}
 
-        memos={memos}
-        onMemoUpdate={signedIn ? (eventId, memo) => submit({ memo: { contentId: eventId, body: memo } }) : undefined}
+        memos={memos.map((memo) => ({ contentUid: memo.contentId, body: memo.body }))}
+        onMemoUpdate={signedIn ? (contentUid, memo) => submit({ memo: { contentUid, body: memo } }) : undefined}
       />
 
       {signedIn && (

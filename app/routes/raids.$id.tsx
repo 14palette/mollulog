@@ -14,17 +14,17 @@ import { getAllStudents } from "~/models/student";
 import { ErrorPage } from "~/components/organisms/error";
 
 const raidDetailQuery = graphql(`
-  query RaidDetail($raidId: String!) {
-    raid(raidId: $raidId) {
+  query RaidDetail($uid: String!) {
+    raid(uid: $uid) {
       defenseTypes { defenseType difficulty }
-      raidId type name boss since until terrain attackType rankVisible
+      uid type name boss since until terrain attackType rankVisible
     }
   }
 `);
 
 export const loader = async ({ request, context, params }: LoaderFunctionArgs) => {
-  const raidId = params.id;
-  if (!raidId) {
+  const uid = params.id;
+  if (!uid) {
     throw new Response(
       JSON.stringify({ error: { message: "이벤트 정보를 찾을 수 없어요" } }),
       {
@@ -35,7 +35,7 @@ export const loader = async ({ request, context, params }: LoaderFunctionArgs) =
   }
 
   const env = context.cloudflare.env;
-  const { data, error } = await runQuery<RaidDetailQuery>(raidDetailQuery, { raidId });
+  const { data, error } = await runQuery<RaidDetailQuery>(raidDetailQuery, { uid });
   let errorMessage: string | null = null;
   if (error || !data) {
     errorMessage = error?.message ?? "이벤트 정보를 가져오는 중 오류가 발생했어요";
@@ -130,8 +130,8 @@ export default function RaidDetail() {
           <p className="mt-2 mb-4 text-sm text-neutral-500">상위 2만명의 편성 정보를 제공해요.</p>
 
           <Navigation links={[
-            { to: `/raids/${raid.raidId}/`, text: "순위" },
-            { to: `/raids/${raid.raidId}/statistics`, text: "통계" },
+            { to: `/raids/${raid.uid}/`, text: "순위" },
+            { to: `/raids/${raid.uid}/statistics`, text: "통계" },
           ]} />
 
           <Outlet context={{ raid, signedIn, allStudents }} />
