@@ -19,7 +19,7 @@ const indexQuery = graphql(`
         name since until uid type rerun
         pickups {
           type rerun
-          student { studentId name attackType defenseType role schaleDbId }
+          student { uid name attackType defenseType role schaleDbId }
         }
       }
     }
@@ -50,10 +50,10 @@ export const loader = async ({ context, request }: LoaderFunctionArgs) => {
   const { env } = context.cloudflare;
   const pickupStudentIds = data.events.nodes.flatMap((event) => {
     if (event.__typename === "Event") {
-      return event.pickups?.map((pickup) => pickup.student?.studentId ?? null) ?? [];
+      return event.pickups?.map((pickup) => pickup.student?.uid ?? null) ?? [];
     }
     return [];
-  }).filter((studentId) => studentId !== null);
+  }).filter((studentUid) => studentUid !== null);
 
   const currentUser = await getAuthenticator(env).isAuthenticated(request);
   const signedIn = currentUser !== null;
@@ -105,7 +105,7 @@ export default function Index() {
                 rerun: pickup.rerun,
                 studentName: pickup.student?.name ?? "",
                 student: {
-                  studentId: pickup.student?.studentId ?? "",
+                  uid: pickup.student?.uid ?? "",
                   attackType: pickup.student?.attackType,
                   defenseType: pickup.student?.defenseType,
                   role: pickup.student?.role,

@@ -39,7 +39,7 @@ export const loader = async ({ context, request, params }: LoaderFunctionArgs) =
     throw "failed to load data";
   }
 
-  const states = await getUserStudentStates(env, sensei.username);
+  const states = await getUserStudentStates(env, sensei.username, true);
   return {
     states: states!,
     raids: data.raids.nodes,

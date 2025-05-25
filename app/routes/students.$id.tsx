@@ -17,8 +17,8 @@ import { SlotCountInfo } from "~/components/organisms/raid";
 
 const studentDetailQuery = graphql(`
   query StudentDetail($uid: String!, $raidSince: ISO8601DateTime!) {
-    student(studentId: $uid) {
-      name studentId attackType defenseType role school schaleDbId
+    student(uid: $uid) {
+      name uid attackType defenseType role school schaleDbId
       raidStatistics(raidSince: $raidSince) {
         raid { uid name boss type since until terrain }
         difficulty
@@ -106,7 +106,7 @@ export default function StudentDetail() {
         </div>
         <div className="relative w-1/3 h-full overflow-hidden rounded-r-xl">
           <img
-            src={`https://assets.mollulog.net/images/students/standing/${student.studentId}`}
+            src={`https://assets.mollulog.net/images/students/standing/${student.uid}`}
             alt={student.name}
             className="absolute w-full h-full object-cover object-top scale-125 translate-y-1/20 transform-gpu origin-top"
           />

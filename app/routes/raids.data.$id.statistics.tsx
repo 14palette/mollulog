@@ -7,7 +7,7 @@ const raidStatisticsQuery = graphql(`
   query RaidStatistics($uid: String!, $defenseType: Defense!) {
     raid(uid: $uid) {
       statistics(defenseType: $defenseType) {
-        student { studentId name role }
+        student { uid name role }
         slotsCount
         slotsByTier { tier count }
         assistsCount
@@ -19,7 +19,7 @@ const raidStatisticsQuery = graphql(`
 
 export type RaidStatisticsData = {
   statistics?: {
-    student: { studentId: string; name: string; role: string };
+    student: { uid: string; name: string; role: string };
     slotsCount: number;
     slotsByTier: { tier: number; count: number }[];
     assistsCount: number;

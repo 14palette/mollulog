@@ -15,9 +15,9 @@ type FuturePlanProps = {
       type: string;
       rerun: boolean;
       student: {
+        uid: string;
         name: string;
         school: string;
-        studentId: string;
         schaleDbId: string;
         equipments: string[];
       };
@@ -98,7 +98,7 @@ export default function FuturePlan({ events }: FuturePlanProps) {
                         <StudentCards
                           mobileGrid={4}
                           students={event.pickups.map(({ student, type, rerun }) => ({
-                            studentId: student.studentId,
+                            studentId: student.uid,
                             name: student.name,
                             label: (
                               <span className={rerun ? "text-white" : "text-yellow-500"}>

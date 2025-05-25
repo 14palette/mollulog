@@ -19,12 +19,12 @@ export type ContentTimelineProps = {
     raidInfo?: ContentTimelineItemProps["raidInfo"];
   }[];
 
-  favoritedStudents?: { contentUid: string, studentId: string }[];
-  favoritedCounts: { contentUid: string, studentId: string, count: number }[];
+  favoritedStudents?: { contentUid: string, studentUid: string }[];
+  favoritedCounts: { contentUid: string, studentUid: string, count: number }[];
   memos: { contentUid: string, body: string }[];
 
   onMemoUpdate?: (contentUid: string, memo: string) => void;
-  onFavorite?: (contentUid: string, studentId: string, favorited: boolean) => void;
+  onFavorite?: (contentUid: string, studentUid: string, favorited: boolean) => void;
 };
 
 type ContentGroup = {
@@ -93,11 +93,11 @@ export default function ContentTimeline({ contents, favoritedStudents, favorited
   };
 
   const favoriteStudentIdsByContents: Record<string, Record<string, number>> = {};
-  favoritedCounts.forEach(({ contentUid, studentId, count }) => {
+  favoritedCounts.forEach(({ contentUid, studentUid, count }) => {
     if (!favoriteStudentIdsByContents[contentUid]) {
       favoriteStudentIdsByContents[contentUid] = {};
     }
-    favoriteStudentIdsByContents[contentUid][studentId] = count;
+    favoriteStudentIdsByContents[contentUid][studentUid] = count;
   });
 
   const today = dayjs();
@@ -155,9 +155,9 @@ export default function ContentTimeline({ contents, favoritedStudents, favorited
                       initialMemo={showMemo ? memo : undefined}
                       onUpdateMemo={showMemo ? (newMemo) => onMemoUpdate(content.uid, newMemo) : undefined}
 
-                      favoritedStudents={favoritedStudents?.filter(({ contentUid }) => contentUid === content.uid).map(({ studentId }) => studentId)}
+                      favoritedStudents={favoritedStudents?.filter(({ contentUid }) => contentUid === content.uid).map(({ studentUid }) => studentUid)}
                       favoritedCounts={favoriteStudentIdsByContents[content.uid]}
-                      onFavorite={(studentId, favorited) => onFavorite?.(content.uid, studentId, favorited)}
+                      onFavorite={(studentUid, favorited) => onFavorite?.(content.uid, studentUid, favorited)}
                     />
                   );
                 })}

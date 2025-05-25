@@ -67,16 +67,17 @@ export default function EditPickups() {
       <AddContentButton text="새로운 모집 이력 추가하기" link="/edit/pickups/new" />
 
       {pickupHistories.map(({ uid, event, students }) => {
-        const pickupStudentIds = event.pickups
-          .map((pickup) => pickup.student?.studentId)
+        const pickupStudentUids = event.pickups
+          .map((pickup) => pickup.student?.uid)
           .filter((id) => id !== undefined);
 
         return (
           <PickupHistoryView
-            key={uid} uid={uid}
+            key={uid}
+            uid={uid}
             event={{ ...event, since: new Date(event.since) }}
-            tier3Students={students}
-            pickupStudentIds={pickupStudentIds}
+            tier3Students={students.map((student) => ({ uid: student.studentId, name: student.name }))}
+            pickupStudentUids={pickupStudentUids}
             editable={true}
           />
         );

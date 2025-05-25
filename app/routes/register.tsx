@@ -5,9 +5,7 @@ import { Title } from "~/components/atoms/typography";
 import { updateSensei } from "~/models/sensei";
 import { getAuthenticator, redirectTo, sessionStorage } from "~/auth/authenticator.server";
 import { ProfileEditor } from "~/components/organisms/profile";
-import type { ProfileStudentsQuery } from "~/graphql/graphql";
-import { runQuery } from "~/lib/baql";
-import { profileStudentsQuery } from "./edit.profile";
+import { getAllStudents } from "~/models/student";
 
 export const meta: MetaFunction = () => [
   { title: "선생님 등록 | 몰루로그" },
@@ -21,12 +19,11 @@ export const loader = async ({ request, context }: LoaderFunctionArgs) => {
     return redirect(redirectTo(request) ?? `/@${sensei.username}`);
   }
 
-  const { data } = await runQuery<ProfileStudentsQuery>(profileStudentsQuery, {});
-  if (!data?.students) {
-    throw new Error("failed to load students");
-  }
-
-  return { students: data.students };
+  const env = context.cloudflare.env;
+  return { allStudents: (await getAllStudents(env)).map((student) => ({
+    uid: student.id,
+    name: student.name,
+  })) };
 }
 
 type ActionData = {
@@ -63,12 +60,12 @@ export const action: ActionFunction = async ({ request, context }) => {
 }
 
 export default function Register() {
-  const { students } = useLoaderData<typeof loader>();
+  const { allStudents } = useLoaderData<typeof loader>();
   return (
     <>
       <Title text="기본 정보 설정" />
       <Form method="post">
-        <ProfileEditor students={students} error={useActionData<ActionData>()?.error} />
+        <ProfileEditor students={allStudents} error={useActionData<ActionData>()?.error} />
       </Form>
     </>
   );

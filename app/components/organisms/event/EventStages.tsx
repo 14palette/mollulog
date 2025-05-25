@@ -19,7 +19,7 @@ type EventStagesProps = {
         imageId: string;
         eventBonuses: {
           student: {
-            studentId: string;
+            uid: string;
             role: Role;
           };
           ratio: number;
@@ -28,10 +28,10 @@ type EventStagesProps = {
     }[];
   }[];
   signedIn: boolean;
-  ownedStudentIds: string[];
+  ownedStudentUids: string[];
 }
 
-export default function EventStages({ stages, signedIn, ownedStudentIds }: EventStagesProps) {
+export default function EventStages({ stages, signedIn, ownedStudentUids }: EventStagesProps) {
   const { showSignIn } = useSignIn();
 
   const itemBonuses: {
@@ -50,7 +50,7 @@ export default function EventStages({ stages, signedIn, ownedStudentIds }: Event
     let appliedRatio = 0, maxApplieRatio = 0;
     let appliedStriker = 0, appliedSpecial = 0, maxAppliedStriker = 0, maxAppliedSpecial = 0;
     for (const { student, ratio } of reward.item.eventBonuses.sort((a, b) => b.ratio - a.ratio)) {
-      const owned = ownedStudentIds.includes(student.studentId);
+      const owned = ownedStudentUids.includes(student.uid);
       if (student.role === "striker") {
         if (maxAppliedStriker < 4) {
           maxAppliedStriker += 1;
@@ -91,7 +91,7 @@ export default function EventStages({ stages, signedIn, ownedStudentIds }: Event
           </p>
         </Callout>
       )}
-      {signedIn && ownedStudentIds.length === 0 && (
+      {signedIn && ownedStudentUids.length === 0 && (
         <Callout className="my-4" emoji="✨">
           <span>
             <Link to="/edit/students" className="underline">보유 학생 정보를 등록</Link>하면 내 학생 보너스를 계산할 수 있어요.
@@ -174,16 +174,16 @@ export default function EventStages({ stages, signedIn, ownedStudentIds }: Event
                   <div className="w-full md:w-1/2 p-2">
                     <p className="mb-2 font-bold">스트라이커</p>
                     <StudentCards mobileGrid={8} pcGrid={6} students={item.eventBonuses.filter(({ student }) => student.role === "striker").map(({ student, ratio }) => ({
-                      studentId: student.studentId,
-                      grayscale: signedIn && !ownedStudentIds.includes(student.studentId),
+                      studentId: student.uid,
+                      grayscale: signedIn && !ownedStudentUids.includes(student.uid),
                       label: (<span className="text-white font-normal">{Math.floor(ratio * 100)}%</span>),
                     }))} />
                   </div>
                   <div className="w-full md:w-1/2 p-2">
                     <p className="mb-2 font-bold">스페셜</p>
                     <StudentCards mobileGrid={8} pcGrid={6} students={item.eventBonuses.filter(({ student }) => student.role === "special").map(({ student, ratio }) => ({
-                      studentId: student.studentId,
-                      grayscale: signedIn && !ownedStudentIds.includes(student.studentId),
+                      studentId: student.uid,
+                      grayscale: signedIn && !ownedStudentUids.includes(student.uid),
                       label: (<span className="text-white font-normal">{Math.floor(ratio * 100)}%</span>),
                     }))} />
                   </div>

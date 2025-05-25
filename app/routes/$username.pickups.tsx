@@ -20,7 +20,7 @@ export const userPickupEventsQuery = graphql(`
       nodes {
         uid name type since
         pickups {
-          student { studentId }
+          student { uid }
         }
       }
     }
@@ -62,8 +62,8 @@ export const loader = async ({ context, request, params }: LoaderFunctionArgs) =
   aggregatedHistories.forEach((history) => {
     const currentTier3Count = history.result.map((trial) => trial.tier3Count).reduce((a, b) => a + b);
 
-    const pickupStudentIds = history.event.pickups.map((pickup) => pickup.student?.studentId).filter((id) => id !== undefined);
-    const currentPickupCount = history.result.flatMap((trial) => trial.tier3StudentIds).filter((studentId) => pickupStudentIds.includes(studentId)).length;
+    const pickupStudentUids = history.event.pickups.map((pickup) => pickup.student?.uid).filter((id) => id !== undefined);
+    const currentPickupCount = history.result.flatMap((trial) => trial.tier3StudentIds).filter((uid) => pickupStudentUids.includes(uid)).length;
 
     tier3Count += currentTier3Count;
     pickupCount += currentPickupCount;
@@ -135,14 +135,14 @@ export default function UserPickups() {
       <SubTitle text="모집 이력" />
       {me && <AddContentButton text="새로운 모집 이력 추가하기" link="/edit/pickups/new" />}
       {pickupHistories.map(({ uid, event, tier3Students, trial }) => {
-        const pickupStudentIds = event.pickups.map((pickup) => pickup.student?.studentId).filter((id) => id !== undefined);
+        const pickupStudentUids = event.pickups.map((pickup) => pickup.student?.uid).filter((id) => id !== undefined);
         return (
           <PickupHistoryView
             key={uid}
             uid={uid}
             event={{ ...event, since: new Date(event.since) }}
-            tier3Students={tier3Students}
-            pickupStudentIds={pickupStudentIds}
+            tier3Students={tier3Students.map((student) => ({ uid: student.studentId, name: student.name }))}
+            pickupStudentUids={pickupStudentUids}
             trial={trial}
           />
         );

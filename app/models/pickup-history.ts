@@ -71,9 +71,9 @@ export async function deletePickupHistory(env: Env, userId: number, uid: string)
     .where(and(eq(pickupHistoriesTable.uid, uid), eq(pickupHistoriesTable.userId, userId)));
 }
 
-export function parsePickupHistory(raw: string, students: { studentId: string, name: string }[]): PickupHistory["result"] {
+export function parsePickupHistory(raw: string, students: { uid: string, name: string }[]): PickupHistory["result"] {
   const studentNames = students.map((student) => student.name);
-  const studentMap = new Map(students.map((student) => [student.name, student.studentId]));
+  const studentMap = new Map(students.map((student) => [student.name, student.uid]));
 
   const result: PickupHistory["result"] = [];
   let trial = 0;

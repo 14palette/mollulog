@@ -1,10 +1,11 @@
+import { useState } from "react";
 import type { LoaderFunctionArgs, MetaFunction } from "react-router";
 import { isRouteErrorResponse, Link, Outlet, useLoaderData, useRouteError } from "react-router";
+import { Bars3Icon } from "@heroicons/react/24/outline";
 import dayjs from "dayjs";
 import { getAuthenticator } from "~/auth/authenticator.server";
 import { EmptyView, SubTitle } from "~/components/atoms/typography";
 import { ContentHeader } from "~/components/organisms/content";
-import { Navigation } from "~/components/organisms/navigation";
 import { graphql } from "~/graphql";
 import type { RaidDetailQuery } from "~/graphql/graphql";
 import { runQuery } from "~/lib/baql";
@@ -12,6 +13,8 @@ import { raidTypeLocale } from "~/locales/ko";
 import { bossBannerUrl } from "~/models/assets";
 import { getAllStudents } from "~/models/student";
 import { ErrorPage } from "~/components/organisms/error";
+import { FilterButtons } from "~/components/molecules/student";
+import { RaidRanksPage, RaidStatisticsPage } from "~/components/templates/raids";
 
 const raidDetailQuery = graphql(`
   query RaidDetail($uid: String!) {
@@ -59,7 +62,7 @@ export const loader = async ({ request, context, params }: LoaderFunctionArgs) =
     raid: data!.raid!,
     signedIn: sensei !== null,
     allStudents: allStudents.map((student) => ({
-      studentId: student.id,
+      uid: student.id,
       name: student.name,
     })),
   };
@@ -82,15 +85,6 @@ export const meta: MetaFunction<typeof loader> = ({ data }) => {
     { name: "twitter:title", content: title },
     { name: "twitter:description", content: description },
   ];
-}
-
-export type OutletContext = {
-  raid: NonNullable<RaidDetailQuery["raid"]>;
-  signedIn: boolean;
-  allStudents: {
-    studentId: string;
-    name: string;
-  }[];
 };
 
 export const ErrorBoundary = () => {
@@ -104,6 +98,8 @@ export const ErrorBoundary = () => {
 
 export default function RaidDetail() {
   const { raid, signedIn, allStudents } = useLoaderData<typeof loader>();
+
+  const [screen, setScreen] = useState<"ranks" | "statistics">("ranks");
 
   return (
     <>
@@ -129,12 +125,17 @@ export default function RaidDetail() {
           </div>
           <p className="mt-2 mb-4 text-sm text-neutral-500">상위 2만명의 편성 정보를 제공해요.</p>
 
-          <Navigation links={[
-            { to: `/raids/${raid.uid}/`, text: "순위" },
-            { to: `/raids/${raid.uid}/statistics`, text: "통계" },
-          ]} />
+          <FilterButtons
+            Icon={Bars3Icon}
+            buttonProps={[
+              { text: "순위", active: screen === "ranks", onToggle: () => setScreen("ranks") },
+              { text: "통계", active: screen === "statistics", onToggle: () => setScreen("statistics") },
+            ]}
+            exclusive atLeastOne
+          />
 
-          <Outlet context={{ raid, signedIn, allStudents }} />
+          {screen === "ranks" && <RaidRanksPage raid={raid} signedIn={signedIn} allStudents={allStudents} />}
+          {screen === "statistics" && <RaidStatisticsPage raid={raid} />}
         </> :
         <EmptyView text="순위 정보를 준비중이에요" />
       }

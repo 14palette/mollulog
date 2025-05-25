@@ -5,14 +5,13 @@ import { favoriteStudent, unfavoriteStudent } from "~/models/favorite-students";
 
 export type ActionData = {
   memo?: {
-    contentId?: string;  // [DEPRECATED v1] replaced by `contentUid`
-    contentUid?: string;
+    contentUid: string;
     body: string;
   };
   favorite?: {
-    contentId?: string;  // [DEPRECATED v1] replaced by `contentUid`
-    contentUid?: string;
-    studentId: string;
+    contentUid: string;
+    studentId?: string;  // [DEPRECATED 2025-05-25] replaced by `studentUid`
+    studentUid?: string;
     favorited: boolean;
   };
 };
@@ -26,13 +25,13 @@ export const action = async ({ request, context }: ActionFunctionArgs) => {
 
   const actionData = await request.json<ActionData>();
   if (actionData.memo) {
-    await setMemo(env, currentUser.id, (actionData.memo.contentUid ?? actionData.memo.contentId)!, actionData.memo.body);
+    await setMemo(env, currentUser.id, actionData.memo.contentUid, actionData.memo.body);
   }
   if (actionData.favorite) {
     if (actionData.favorite.favorited) {
-      await favoriteStudent(env, currentUser.id, actionData.favorite.studentId, (actionData.favorite.contentUid ?? actionData.favorite.contentId)!);
+      await favoriteStudent(env, currentUser.id, (actionData.favorite.studentUid ?? actionData.favorite.studentId)!, actionData.favorite.contentUid);
     } else {
-      await unfavoriteStudent(env, currentUser.id, actionData.favorite.studentId, (actionData.favorite.contentUid ?? actionData.favorite.contentId)!);
+      await unfavoriteStudent(env, currentUser.id, (actionData.favorite.studentUid ?? actionData.favorite.studentId)!, actionData.favorite.contentUid);
     }
   }
 

@@ -30,7 +30,7 @@ export const futureContentsQuery = graphql(`
           pickups {
             type
             rerun
-            student { studentId attackType defenseType role schaleDbId }
+            student { uid attackType defenseType role schaleDbId }
             studentName
           }
         }
@@ -66,12 +66,12 @@ export const loader = async ({ request, context }: LoaderFunctionArgs) => {
     throw error ?? "failed to fetch events";
   }
 
-  const allStudentIds = data.contents.nodes.flatMap((content) => {
+  const allStudentUids = data.contents.nodes.flatMap((content) => {
     if (content.__typename === "Event") {
-      return content.pickups?.map((pickup) => pickup.student?.studentId ?? null) ?? [];
+      return content.pickups?.map((pickup) => pickup.student?.uid ?? null) ?? [];
     }
     return [];
-  }).filter((studentId) => studentId !== null);
+  }).filter((studentUid) => studentUid !== null);
 
   const env = context.cloudflare.env;
   const currentUser = await getAuthenticator(env).isAuthenticated(request);
@@ -80,13 +80,13 @@ export const loader = async ({ request, context }: LoaderFunctionArgs) => {
     signedIn,
     contents: data.contents.nodes,
     favoritedStudents: signedIn ? await getUserFavoritedStudents(env, currentUser.id) : null,
-    favoritedCounts: await getFavoritedCounts(env, allStudentIds),
+    favoritedCounts: await getFavoritedCounts(env, allStudentUids),
     memos: signedIn ? await getUserMemos(env, currentUser.id) : [],
   };
 };
 
-function equalFavorites(a: { contentUid: string, studentId: string }, b: { contentUid: string, studentId: string }): boolean {
-  return a.contentUid === b.contentUid && a.studentId === b.studentId;
+function equalFavorites(a: { contentUid: string, studentUid: string }, b: { contentUid: string, studentUid: string }): boolean {
+  return a.contentUid === b.contentUid && a.studentUid === b.studentUid;
 }
 
 export default function Futures() {
@@ -99,31 +99,31 @@ export default function Futures() {
   const fetcher = useFetcher();
   const submit = (data: ActionData) => fetcher.submit(data, { action: "/api/contents", method: "post", encType: "application/json" });
 
-  const [favoritedStudents, setFavoritedStudents] = useState<{ contentUid: string, studentId: string }[] | undefined>(loaderData.favoritedStudents?.map(f => ({ contentUid: f.contentId, studentId: f.studentId })) ?? undefined);
-  const [favoritedCounts, setFavoritedCounts] = useState(loaderData.favoritedCounts.map(f => ({ contentUid: f.contentId, studentId: f.studentId, count: f.count })));
-  const toggleFavorite = (contentUid: string, studentId: string, favorited: boolean) => {
-    submit({ favorite: { contentUid, studentId, favorited } });
+  const [favoritedStudents, setFavoritedStudents] = useState<{ contentUid: string, studentUid: string }[] | undefined>(loaderData.favoritedStudents?.map(f => ({ contentUid: f.contentId, studentUid: f.studentId })) ?? undefined);
+  const [favoritedCounts, setFavoritedCounts] = useState(loaderData.favoritedCounts.map(f => ({ contentUid: f.contentId, studentUid: f.studentId, count: f.count })));
+  const toggleFavorite = (contentUid: string, studentUid: string, favorited: boolean) => {
+    submit({ favorite: { contentUid, studentUid, favorited } });
 
     setFavoritedStudents((prev) => {
-      const alreadyFavorited = prev && prev.some((favorite) => equalFavorites(favorite, { contentUid, studentId }));
+      const alreadyFavorited = prev && prev.some((favorite) => equalFavorites(favorite, { contentUid, studentUid }));
       if (favorited && !alreadyFavorited) {
-        return prev && [...prev, { contentUid, studentId }];
+        return prev && [...prev, { contentUid, studentUid }];
       } else if (!favorited && alreadyFavorited) {
-        return prev && prev.filter((fav) => !equalFavorites(fav, { contentUid, studentId }));
+        return prev && prev.filter((fav) => !equalFavorites(fav, { contentUid, studentUid }));
       }
     });
 
     setFavoritedCounts((prev) => {
       let found = false;
       const newCounts = prev.map((favorite) => {
-        if (equalFavorites(favorite, { contentUid, studentId })) {
+        if (equalFavorites(favorite, { contentUid, studentUid })) {
           found = true;
           return { ...favorite, count: favorite.count + (favorited ? 1 : -1) };
         }
         return favorite;
       });
       if (!found && favorited) {
-        newCounts.push({ contentUid, studentId, count: 1 });
+        newCounts.push({ contentUid, studentUid, count: 1 });
       }
       return newCounts.filter((favorite) => favorite.count > 0);
     });
@@ -166,12 +166,12 @@ export default function Futures() {
 
         favoritedStudents={favoritedStudents}
         favoritedCounts={favoritedCounts}
-        onFavorite={(contentUid, studentId, favorited) => {
+        onFavorite={(contentUid, studentUid, favorited) => {
           if (!signedIn) {
             showSignIn();
             return;
           }
-          toggleFavorite(contentUid, studentId, favorited);
+          toggleFavorite(contentUid, studentUid, favorited);
         }}
 
         memos={memos.map((memo) => ({ contentUid: memo.contentId, body: memo.body }))}

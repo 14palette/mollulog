@@ -24,13 +24,13 @@ export type ContentTimelineItemProps = {
 
   favoritedStudents?: string[];
   favoritedCounts?: Record<string, number>;
-  onFavorite?: (studentId: string, favorited: boolean) => void;
+  onFavorite?: (studentUid: string, favorited: boolean) => void;
 
   pickups?: {
     type: PickupType;
     rerun: boolean;
     student: {
-      studentId: string;
+      uid: string;
       attackType?: AttackType;
       defenseType?: DefenseType;
       role?: Role;
@@ -154,12 +154,12 @@ export default function ContentTimelineItem(
               const colorClass = pickup.rerun ? "text-white" : "text-yellow-500";
               return {
                 ...student,
-                studentId: student?.studentId ?? null,
+                studentId: student?.uid ?? null,
                 name: pickup.studentName,
                 label: <span className={`${colorClass}`}>{pickupLabelLocale(pickup)}</span>,
-                state: student?.studentId ? {
-                  favorited: favoritedStudents?.includes(student.studentId),
-                  favoritedCount: favoritedCounts?.[student.studentId],
+                state: student?.uid ? {
+                  favorited: favoritedStudents?.includes(student.uid),
+                  favoritedCount: favoritedCounts?.[student.uid],
                 } : undefined,
               };
             })}

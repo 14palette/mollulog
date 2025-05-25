@@ -72,7 +72,7 @@ export default function PartyGenerator({ party, raids, studentStates }: PartyGen
               };
             })}
             mobileGrid={6}
-            pcGrid={12}
+            pcGrid={10}
           />
           <div className="flex justify-end">
             <button

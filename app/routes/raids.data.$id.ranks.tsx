@@ -15,7 +15,7 @@ const raidRanksQuery = graphql(`
           partyIndex
           slots {
             slotIndex tier
-            student { studentId name }
+            student { uid name }
           }
         }
       }
@@ -36,8 +36,8 @@ export const loader = async ({ request, context, params }: LoaderFunctionArgs) =
   }
 
   const url = new URL(request.url);
-  const includeStudentIds: string[] = url.searchParams.get("includeStudentIds")?.split(",") ?? [];
-  let excludeStudentIds: string[] = url.searchParams.get("excludeStudentIds")?.split(",") ?? [];
+  const includeStudentUids: string[] = url.searchParams.get("includeStudentIds")?.split(",") ?? [];
+  let excludeStudentUids: string[] = url.searchParams.get("excludeStudentIds")?.split(",") ?? [];
 
   const filterNotOwned = url.searchParams.get("filterNotOwned") === "true";
   if (filterNotOwned) {
@@ -47,12 +47,12 @@ export const loader = async ({ request, context, params }: LoaderFunctionArgs) =
         .filter((state) => !state.owned)
         .map((state) => state.student.id);
 
-      excludeStudentIds = excludeStudentIds.concat(ownedStudentIds);
+      excludeStudentUids = excludeStudentUids.concat(ownedStudentIds);
     }
   }
 
-  const includeStudents = includeStudentIds.map((studentId) => ({ studentId, tier: 3 }));
-  const excludeStudents = excludeStudentIds.map((studentId) => ({ studentId, tier: 8 }));
+  const includeStudents = includeStudentUids.map((studentUid) => ({ uid: studentUid, tier: 3 }));
+  const excludeStudents = excludeStudentUids.map((studentUid) => ({ uid: studentUid, tier: 8 }));
 
   const { data, error } = await runQuery<RaidRanksQuery>(raidRanksQuery, {
     raidUid,

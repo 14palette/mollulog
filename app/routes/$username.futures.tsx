@@ -18,7 +18,7 @@ const userFuturesQuery = graphql(`
         uid name since
         pickups {
           type rerun
-          student { studentId schaleDbId name school equipments }
+          student { uid schaleDbId name school equipments }
         }
       }
     }
@@ -78,13 +78,13 @@ export default function UserFutures() {
     <div className="my-8">
       <SubTitle text="학생 모집 계획" />
       <FuturePlan events={events.map((event) => {
-        const favoriteStudentIds = favoritedStudents.filter(({ contentId }) => contentId === event.uid).map(({ studentId }) => studentId);
+        const favoriteStudentUids = favoritedStudents.filter(({ contentId }) => contentId === event.uid).map(({ studentId }) => studentId);
         return {
           uid: event.uid,
           name: event.name,
           since: new Date(event.since),
           memo: memos.find((memo) => memo.contentId === event.uid)?.body ?? null,
-          pickups: event.pickups.filter(({ student }) => favoriteStudentIds.includes(student?.studentId ?? "")).map((pickup) => ({
+          pickups: event.pickups.filter(({ student }) => favoriteStudentUids.includes(student?.uid ?? "")).map((pickup) => ({
             type: pickup.type,
             rerun: pickup.rerun,
             student: pickup.student!,

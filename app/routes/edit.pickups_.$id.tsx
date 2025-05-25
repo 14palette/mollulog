@@ -20,7 +20,7 @@ const pickupEventsQuery = graphql(`
       nodes {
         uid name since until type rerun
         pickups {
-          student { studentId }
+          student { uid }
           studentName
         }
       }
@@ -55,14 +55,13 @@ export const loader = async ({ context, request, params }: LoaderFunctionArgs) =
     events: data.events.nodes.filter((event) => event.pickups.length > 0 && dayjs(event.since).isBefore(now)).reverse(),
     tier3Students: (await getAllStudents(env))
       .filter((student) => student.initialTier === 3)
-      .map((student) => ({ studentId: student.id, name: student.name })),
+      .map((student) => ({ uid: student.id, name: student.name })),
     currentPickupHistory,
   };
 };
 
 type ActionData = {
-  eventId?: string;  // [DEPRECATED v1] replaced by `eventUid`
-  eventUid?: string;
+  eventUid: string;
   result: PickupHistory["result"];
   rawResult?: string;
 };
@@ -77,9 +76,9 @@ export const action = async ({ context, request, params }: ActionFunctionArgs) =
   }
 
   if (params.id && params.id !== "new") {
-    await updatePickupHistory(env, sensei.id, params.id, (data.eventUid ?? data.eventId)!, data.result, data.rawResult);
+    await updatePickupHistory(env, sensei.id, params.id, data.eventUid, data.result, data.rawResult);
   } else {
-    await createPickupHistory(env, sensei.id, (data.eventUid ?? data.eventId)!, data.result, data.rawResult ?? null);
+    await createPickupHistory(env, sensei.id, data.eventUid, data.result, data.rawResult ?? null);
   }
   return redirect("/edit/pickups");
 }
@@ -100,12 +99,12 @@ export default function EditPickup() {
 
   let initialTotalCount: number | undefined = undefined;
   let initialTier3Count: number | undefined = undefined;
-  let initialTier3StudentIds: string[] | undefined = undefined;
+  let initialTier3StudentUids: string[] | undefined = undefined;
   if (currentPickupHistory?.result) {
     initialTotalCount = Math.max(...currentPickupHistory.result.map((trial) => trial.trial));
     currentPickupHistory.result.forEach((trial) => {
       initialTier3Count = (initialTier3Count ?? 0) + trial.tier3Count;
-      initialTier3StudentIds = (initialTier3StudentIds ?? []).concat(trial.tier3StudentIds);
+      initialTier3StudentUids = (initialTier3StudentUids ?? []).concat(trial.tier3StudentIds);
     });
   }
 
@@ -128,7 +127,7 @@ export default function EditPickup() {
             <div className="flex gap-x-2">
               {event.pickups.map((pickup) => (
                 <div className="w-8" key={pickup.studentName}>
-                  <StudentCard studentId={pickup.student?.studentId ?? null} />
+                  <StudentCard studentId={pickup.student?.uid ?? null} />
                 </div>
               ))}
             </div>
@@ -155,7 +154,7 @@ export default function EditPickup() {
               tier3Students={tier3Students}
               initialTotalCount={initialTotalCount}
               initialTier3Count={initialTier3Count}
-              initialTier3StudentIds={initialTier3StudentIds}
+              initialTier3StudentIds={initialTier3StudentUids}
               onComplete={(result) => submit({
                 eventUid,
                 result: [{ trial: result.totalCount, tier3Count: result.tier3Count, tier3StudentIds: result.tier3StudentIds }],

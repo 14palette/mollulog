@@ -11,8 +11,8 @@ import type { DefenseType } from "~/models/content.d";
 export type RaidRankFilters = {
   defenseType: DefenseType | null;
   filterNotOwned: boolean;
-  includeStudents: { studentId: string; tier: number }[];
-  excludeStudents: { studentId: string; tier: number }[];
+  includeStudents: { uid: string; tier: number }[];
+  excludeStudents: { uid: string; tier: number }[];
   rankAfter: number | null;
   rankBefore: number | null;
 };
@@ -29,10 +29,10 @@ export default function RaidRanks({ raidUid, filters, setFilters }: RaidRanksPro
     const query = new URLSearchParams();
     query.set("filterNotOwned", filters.filterNotOwned.toString());
     if (filters.includeStudents.length > 0) {
-      query.set("includeStudentIds", filters.includeStudents.map(({ studentId }) => studentId).join(","));
+      query.set("includeStudentIds", filters.includeStudents.map(({ uid }) => uid).join(","));
     }
     if (filters.excludeStudents.length > 0) {
-      query.set("excludeStudentIds", filters.excludeStudents.map(({ studentId }) => studentId).join(","));
+      query.set("excludeStudentIds", filters.excludeStudents.map(({ uid }) => uid).join(","));
     }
     if (filters.rankAfter) {
       query.set("rankAfter", filters.rankAfter.toString());
@@ -69,7 +69,7 @@ export default function RaidRanks({ raidUid, filters, setFilters }: RaidRanksPro
                     <StudentCards
                       key={`party-${party.partyIndex}`}
                       students={party.slots.map((slot) => ({
-                        studentId: slot.student?.studentId ?? null,
+                        studentId: slot.student?.uid ?? null,
                         name: slot.student?.name,
                         tier: slot.tier,
                       }))}

@@ -7,16 +7,16 @@ import { Input } from "~/components/atoms/form";
 import { sanitizeClassName } from "~/prophandlers";
 
 type PickupStudentSelectCardProps = {
-  studentId: string | null;
+  uid: string | null;
   name?: string | null;
   tier3Students: {
-    studentId: string;
+    uid: string;
     name: string;
   }[];
   onChange: (studentId: string) => void;
 };
 
-export default function PickupStudentSelectCard({ studentId, name, tier3Students, onChange }: PickupStudentSelectCardProps) {
+export default function PickupStudentSelectCard({ uid, name, tier3Students, onChange }: PickupStudentSelectCardProps) {
   const [open, setOpen] = useState(false);
   const [search, setSearch] = useState("");
 
@@ -25,7 +25,7 @@ export default function PickupStudentSelectCard({ studentId, name, tier3Students
   return (
     <div className="w-16 mr-2 inline-block align-top md:relative">
       <div className="relative w-full group">
-        <StudentCard studentId={studentId} name={name} />
+        <StudentCard studentId={uid} name={name} />
         <div
           className={sanitizeClassName(`
             absolute w-full h-full rounded-lg top-0 left-0 flex justify-center bg-white dark:bg-neutral-800
@@ -48,9 +48,10 @@ export default function PickupStudentSelectCard({ studentId, name, tier3Students
           {searchResult.length > 0 && (
             <div className="-mt-4 p-2 flex gap-x-2 rounded-lg">
               <StudentCards
-                mobileGrid={6} pcGrid={6} students={searchResult}
-                onSelect={(studentId) => {
-                  onChange(studentId);
+                mobileGrid={6} pcGrid={6}
+                students={searchResult.map((student) => ({ studentId: student.uid, name: student.name }))}
+                onSelect={(studentUid) => {
+                  onChange(studentUid);
                   setOpen(false);
                 }}
               />

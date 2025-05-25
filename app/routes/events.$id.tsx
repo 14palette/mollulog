@@ -32,21 +32,12 @@ import { getUserStudentStates } from "~/models/student-state";
 const eventDetailQuery = graphql(`
   query EventDetail($eventUid: String!) {
     event(uid: $eventUid) {
-      uid
-      name
-      type
-      since
-      until
-      imageUrl
-      videos {
-        title
-        youtube
-        start
-      }
+      uid name type since until imageUrl
+      videos { title youtube start }
       pickups {
         type
         rerun
-        student { studentId attackType defenseType role }
+        student { uid attackType defenseType role }
         studentName
       }
     }
@@ -57,16 +48,12 @@ const eventStagesQuery = graphql(`
   query EventStages($eventUid: String!) {
     event(uid: $eventUid) {
       stages {
-        difficulty
-        index
-        entryAp
+        difficulty index entryAp
         rewards {
           item {
-            itemId
-            name
-            imageId
+            itemId name imageId
             eventBonuses {
-              student { studentId role }
+              student { uid role }
               ratio
             }
           }
@@ -105,7 +92,7 @@ export const loader = async ({ params, context, request }: LoaderFunctionArgs) =
   }
 
   const content = data!.event!;
-  const pickupStudentIds = content.pickups.map((pickup) => pickup.student?.studentId).filter((id) => id !== undefined);
+  const pickupStudentUids = content.pickups.map((pickup) => pickup.student?.uid).filter((id) => id !== undefined);
 
   const env = context.cloudflare.env;
   const sensei = await getAuthenticator(env).isAuthenticated(request);
@@ -122,7 +109,7 @@ export const loader = async ({ params, context, request }: LoaderFunctionArgs) =
     stages: getEventStages(params.id as string),
     studentStates,
     favoritedStudents: sensei ? await getUserFavoritedStudents(env, sensei.id, content.uid) : [],
-    favoritedCounts: (await getFavoritedCounts(env, pickupStudentIds)).filter((favorited) => favorited.contentId === content.uid),
+    favoritedCounts: (await getFavoritedCounts(env, pickupStudentUids)).filter((favorited) => favorited.contentId === content.uid),
     signedIn: sensei !== null,
     memos: memos.filter((memo) => memo.uid !== myMemo?.uid),
     myMemo,
@@ -135,7 +122,8 @@ type ActionData = {
     visibility?: "private" | "public";
   };
   favorite?: {
-    studentId: string;
+    studentId?: string;  // [DEPRECATED 2025-05-25] replaced by `studentUid`
+    studentUid?: string;
     favorited: boolean;
   };
 };
@@ -150,9 +138,9 @@ export const action = async ({ params, request, context }: ActionFunctionArgs) =
   const contentId = params.id!;
   const actionData = await request.json() as ActionData;
   if (actionData.favorite) {
-    const { studentId, favorited } = actionData.favorite;
+    const { studentId, studentUid, favorited } = actionData.favorite;
     const run = favorited ? favoriteStudent : unfavoriteStudent;
-    await run(env, currentUser.id, studentId, contentId);
+    await run(env, currentUser.id, (studentId ?? studentUid)!, contentId);
   }
 
   if (actionData.memo?.body !== undefined) {
@@ -240,21 +228,21 @@ export default function EventDetail() {
         <div className="my-8">
           <SubTitle text="모집 학생" />
           {event.pickups.map((pickup) => {
-            const studentId = pickup.student?.studentId ?? null;
+            const studentUid = pickup.student?.uid ?? null;
             const { attackType, defenseType, role } = pickup.student ?? {};
 
-            const favorited = favoritedStudents.some((favorited) => favorited.studentId === studentId);
+            const favorited = favoritedStudents.some((favorited) => favorited.studentId === studentUid);
             return (
-              <div key={`pickup-${studentId}`} className="my-4 p-2 flex flex-col md:flex-row bg-neutral-100 dark:bg-neutral-900 rounded-lg">
+              <div key={`pickup-${studentUid}`} className="my-4 p-2 flex flex-col md:flex-row bg-neutral-100 dark:bg-neutral-900 rounded-lg">
                 <div className="flex items-center grow">
                   <div className="w-16 mx-2">
-                    <StudentCard studentId={studentId} />
+                    <StudentCard studentId={studentUid} />
                   </div>
                   <div className="px-2 md:px-4 grow">
                     <p className="text-xs text-neutral-500">{pickupLabelLocale(pickup)}</p>
-                    <Link to={`/students/${studentId}`} className="hover:underline">
+                    <Link to={`/students/${studentUid}`} className="hover:underline">
                       <span className="font-bold">{pickup.studentName}</span>
-                      {studentId && <ChevronRightIcon className="ml-1 size-4 inline" />}
+                      {studentUid && <ChevronRightIcon className="ml-1 size-4 inline" />}
                     </Link>
                     {attackType && defenseType && role && (
                       <div className="py-1 flex text-sm gap-x-1 tracking-tighter md:tracking-normal">
@@ -274,14 +262,14 @@ export default function EventDetail() {
                     )}
                   </div>
                 </div>
-                {studentId && (
+                {studentUid && (
                   <div className="py-2 flex items-center justify-end">
                     <div
                       className={`mx-2 px-2 flex items-center rounded-full text-white hover:opacity-50 transition cursor-pointer ${(!signedIn || favorited) ? "bg-red-500" : "bg-neutral-500"}`}
-                      onClick={() => signedIn ? submit({ favorite: { studentId: studentId!, favorited: !favorited } }) : showSignIn()}
+                      onClick={() => signedIn ? submit({ favorite: { studentUid, favorited: !favorited } }) : showSignIn()}
                     >
                       <HeartIcon className="size-4" strokeWidth={2} />
-                      <span className="ml-1 font-bold">{favoritedCounts.find((favorited) => favorited.studentId === studentId)?.count ?? 0}</span>
+                      <span className="ml-1 font-bold">{favoritedCounts.find((favorited) => favorited.studentId === studentUid)?.count ?? 0}</span>
                     </div>
                   </div>
                 )}
@@ -323,7 +311,7 @@ export default function EventDetail() {
             <EventStages
               stages={stages}
               signedIn={signedIn}
-              ownedStudentIds={studentStates.filter(({ owned }) => owned).map(({ student }) => student.id)}
+              ownedStudentUids={studentStates.filter(({ owned }) => owned).map(({ student }) => student.id)}
             />
           )}
         </Await>
