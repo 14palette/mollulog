@@ -15,12 +15,12 @@ import dayjs from "dayjs";
 import { getRouteSensei } from "./$username";
 
 export const userPickupEventsQuery = graphql(`
-  query UserPickupEvents($eventIds: [String!]!) {
-    events(eventIds: $eventIds) {
+  query UserPickupEvents($eventUids: [String!]!) {
+    events(uids: $eventUids) {
       nodes {
-        eventId name type since
+        uid name type since
         pickups {
-          student { studentId }
+          student { uid }
         }
       }
     }
@@ -41,8 +41,8 @@ export const loader = async ({ context, request, params }: LoaderFunctionArgs) =
   const sensei = await getRouteSensei(env, params);
 
   const pickupHistories = await getPickupHistories(env, sensei.id);
-  const eventIds = pickupHistories.map((history) => history.eventId);
-  const { data, error } = await runQuery<UserPickupEventsQuery, UserPickupEventsQueryVariables>(userPickupEventsQuery, { eventIds });
+  const eventUids = pickupHistories.map((history) => history.eventId);
+  const { data, error } = await runQuery<UserPickupEventsQuery, UserPickupEventsQueryVariables>(userPickupEventsQuery, { eventUids });
   if (!data) {
     console.error(error);
     throw "failed to load data";
@@ -51,10 +51,10 @@ export const loader = async ({ context, request, params }: LoaderFunctionArgs) =
   const allStudentsMap = await getAllStudentsMap(env);
   const aggregatedHistories = (await getPickupHistories(env, sensei.id)).map((history) => ({
     ...history,
-    event: data.events.nodes.find((event) => event.eventId === history.eventId)!,
+    event: data.events.nodes.find((event) => event.uid === history.eventId)!,
     students: history.result
-      .flatMap((trial) => trial.tier3StudentIds.filter((studentId) => studentId).map((studentId) => allStudentsMap[studentId]))
-      .map((student) => ({ studentId: student.id, name: student.name })),
+      .flatMap((trial) => trial.tier3StudentIds.filter((studentUid) => studentUid).map((studentUid) => allStudentsMap[studentUid]))
+      .map((student) => ({ studentId: student.uid, name: student.name })),
   })).sort((a, b) => dayjs(b.event.since).diff(dayjs(a.event.since)));
 
   let tier3Count = 0, tier3RateCount = 0;
@@ -62,8 +62,8 @@ export const loader = async ({ context, request, params }: LoaderFunctionArgs) =
   aggregatedHistories.forEach((history) => {
     const currentTier3Count = history.result.map((trial) => trial.tier3Count).reduce((a, b) => a + b);
 
-    const pickupStudentIds = history.event.pickups.map((pickup) => pickup.student?.studentId).filter((id) => id !== undefined);
-    const currentPickupCount = history.result.flatMap((trial) => trial.tier3StudentIds).filter((studentId) => pickupStudentIds.includes(studentId)).length;
+    const pickupStudentUids = history.event.pickups.map((pickup) => pickup.student?.uid).filter((id) => id !== undefined);
+    const currentPickupCount = history.result.flatMap((trial) => trial.tier3StudentIds).filter((uid) => pickupStudentUids.includes(uid)).length;
 
     tier3Count += currentTier3Count;
     pickupCount += currentPickupCount;
@@ -135,14 +135,14 @@ export default function UserPickups() {
       <SubTitle text="모집 이력" />
       {me && <AddContentButton text="새로운 모집 이력 추가하기" link="/edit/pickups/new" />}
       {pickupHistories.map(({ uid, event, tier3Students, trial }) => {
-        const pickupStudentIds = event.pickups.map((pickup) => pickup.student?.studentId).filter((id) => id !== undefined);
+        const pickupStudentUids = event.pickups.map((pickup) => pickup.student?.uid).filter((id) => id !== undefined);
         return (
           <PickupHistoryView
             key={uid}
             uid={uid}
             event={{ ...event, since: new Date(event.since) }}
-            tier3Students={tier3Students}
-            pickupStudentIds={pickupStudentIds}
+            tier3Students={tier3Students.map((student) => ({ uid: student.studentId, name: student.name }))}
+            pickupStudentUids={pickupStudentUids}
             trial={trial}
           />
         );

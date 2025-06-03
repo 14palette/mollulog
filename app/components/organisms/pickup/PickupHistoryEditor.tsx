@@ -5,7 +5,7 @@ import { StudentSearch } from "~/components/molecules/student";
 
 type PickupHistoryEditorProps = {
   tier3Students: {
-    studentId: string;
+    uid: string;
     name: string;
   }[];
 
@@ -27,15 +27,15 @@ export default function PickupHistoryEditor(
   const [tier3Count, setTier3Count] = useState(initialTier3Count);
   const [tier3StudentIds, setTier3StudentIds] = useState(initialTier3StudentIds ?? []);
 
-  const [studentCards, setStudentCards] = useState<{ studentId: string | null; name: string | null }[]>([]);
+  const [studentCards, setStudentCards] = useState<{ uid: string | null; name: string | null }[]>([]);
   useEffect(() => {
-    const newStudentCards = tier3StudentIds.map((studentId) => ({
-      studentId,
-      name: tier3Students.find((student) => student.studentId === studentId)?.name ?? null,
+    const newStudentCards = tier3StudentIds.map((uid) => ({
+      uid,
+      name: tier3Students.find((student) => student.uid === uid)?.name ?? null,
     }));
 
     if (tier3Count && tier3Count > newStudentCards.length) {
-      newStudentCards.push(...Array(tier3Count - newStudentCards.length).fill({ studentId: null }));
+      newStudentCards.push(...Array(tier3Count - newStudentCards.length).fill({ uid: null }));
     }
 
     setStudentCards(newStudentCards);
@@ -67,14 +67,14 @@ export default function PickupHistoryEditor(
             return (
               <PickupStudentSelectCard
                 key={`student-${index}`}
-                studentId={student.studentId}
+                uid={student.uid}
                 name={student.name}
                 tier3Students={tier3Students}
-                onChange={(newStudentId) => {
+                onChange={(newStudentUid) => {
                   setTier3StudentIds((prev) => {
-                    const newStudentIds = [...prev];
-                    newStudentIds[index] = newStudentId;
-                    return newStudentIds;
+                    const newStudentUids = [...prev];
+                    newStudentUids[index] = newStudentUid;
+                    return newStudentUids;
                   });
                 }}
               />
@@ -84,7 +84,7 @@ export default function PickupHistoryEditor(
             <StudentSearch
               placeholder="이름으로 찾기..."
               students={tier3Students}
-              onSelect={(studentId) => setTier3StudentIds((prev) => [...prev, studentId])}
+              onSelect={(studentUid) => setTier3StudentIds((prev) => [...prev, studentUid])}
             />
           )}
         </div>

@@ -6,8 +6,8 @@ import { runQuery } from "~/lib/baql";
 import { getUserStudentStates } from "~/models/student-state";
 
 const raidRanksQuery = graphql(`
-  query RaidRanks($defenseType: Defense, $raidId: String!, $includeStudents: [RaidRankFilter!], $excludeStudents: [RaidRankFilter!], $rankAfter: Int, $rankBefore: Int) {
-    raid(raidId: $raidId) {
+  query RaidRanks($defenseType: Defense, $raidUid: String!, $includeStudents: [RaidRankFilter!], $excludeStudents: [RaidRankFilter!], $rankAfter: Int, $rankBefore: Int) {
+    raid(uid: $raidUid) {
       rankVisible
       ranks(defenseType: $defenseType, first: 11, rankAfter: $rankAfter, rankBefore: $rankBefore, includeStudents: $includeStudents, excludeStudents: $excludeStudents) {
         rank score
@@ -15,7 +15,7 @@ const raidRanksQuery = graphql(`
           partyIndex
           slots {
             slotIndex tier
-            student { studentId name }
+            student { uid name }
           }
         }
       }
@@ -30,14 +30,14 @@ export type RaidRanksData = {
 };
 
 export const loader = async ({ request, context, params }: LoaderFunctionArgs) => {
-  const raidId = params.id;
-  if (!raidId) {
+  const raidUid = params.id;
+  if (!raidUid) {
     throw new Response("Raid ID is required", { status: 400 });
   }
 
   const url = new URL(request.url);
-  const includeStudentIds: string[] = url.searchParams.get("includeStudentIds")?.split(",") ?? [];
-  let excludeStudentIds: string[] = url.searchParams.get("excludeStudentIds")?.split(",") ?? [];
+  const includeStudentUids: string[] = url.searchParams.get("includeStudentIds")?.split(",") ?? [];
+  let excludeStudentUids: string[] = url.searchParams.get("excludeStudentIds")?.split(",") ?? [];
 
   const filterNotOwned = url.searchParams.get("filterNotOwned") === "true";
   if (filterNotOwned) {
@@ -45,17 +45,17 @@ export const loader = async ({ request, context, params }: LoaderFunctionArgs) =
     if (sensei) {
       const ownedStudentIds = ((await getUserStudentStates(context.cloudflare.env, sensei.username)) ?? [])
         .filter((state) => !state.owned)
-        .map((state) => state.student.id);
+        .map((state) => state.student.uid);
 
-      excludeStudentIds = excludeStudentIds.concat(ownedStudentIds);
+      excludeStudentUids = excludeStudentUids.concat(ownedStudentIds);
     }
   }
 
-  const includeStudents = includeStudentIds.map((studentId) => ({ studentId, tier: 3 }));
-  const excludeStudents = excludeStudentIds.map((studentId) => ({ studentId, tier: 8 }));
+  const includeStudents = includeStudentUids.map((studentUid) => ({ uid: studentUid, tier: 3 }));
+  const excludeStudents = excludeStudentUids.map((studentUid) => ({ uid: studentUid, tier: 8 }));
 
   const { data, error } = await runQuery<RaidRanksQuery>(raidRanksQuery, {
-    raidId,
+    raidUid,
     defenseType: url.searchParams.get("defenseType") ? (url.searchParams.get("defenseType") as Defense) : undefined,
     includeStudents: includeStudents.length > 0 ? includeStudents : undefined,
     excludeStudents: excludeStudents.length > 0 ? excludeStudents : undefined,

@@ -11,7 +11,7 @@ type RaidRankFilterProps = {
   setRaidFilters: (filters: (prev: RaidRankFilters) => RaidRankFilters) => void;
 
   students: {
-    studentId: string;
+    uid: string;
     name: string;
   }[];
   signedIn: boolean;
@@ -43,18 +43,18 @@ export default function RaidRankFilter({ filters, setRaidFilters, signedIn, stud
         <StudentFilter
           selectedStudents={filters.includeStudents}
           students={students}
-          onSelect={(studentId) => {
+          onSelect={(studentUid) => {
             setRaidFilterAndResetPage((prev) => {
-              if (prev.includeStudents.some(student => student.studentId === studentId)) {
+              if (prev.includeStudents.some(student => student.uid === studentUid)) {
                 return prev;
               }
-              return { ...prev, includeStudents: [...prev.includeStudents, { studentId, tier: 3 }] };
+              return { ...prev, includeStudents: [...prev.includeStudents, { uid: studentUid, tier: 3 }] };
             });
           }}
-          onRemove={(studentId) => {
+          onRemove={(studentUid) => {
             setRaidFilterAndResetPage((prev) => ({
               ...prev,
-              includeStudents: prev.includeStudents.filter(student => student.studentId !== studentId)
+              includeStudents: prev.includeStudents.filter(student => student.uid !== studentUid)
             }));
           }}
         />
@@ -71,16 +71,16 @@ export default function RaidRankFilter({ filters, setRaidFilters, signedIn, stud
         <StudentFilter
           selectedStudents={filters.excludeStudents}
           students={students}
-          onSelect={(studentId) => {
+          onSelect={(studentUid) => {
             setRaidFilterAndResetPage((prev) => ({
               ...prev,
-              excludeStudents: [...prev.excludeStudents, { studentId, tier: 8 }]
+              excludeStudents: [...prev.excludeStudents, { uid: studentUid, tier: 8 }]
             }));
           }}
-          onRemove={(studentId) => {
+          onRemove={(studentUid) => {
             setRaidFilterAndResetPage((prev) => ({
               ...prev,
-              excludeStudents: prev.excludeStudents.filter((student) => student.studentId !== studentId)
+              excludeStudents: prev.excludeStudents.filter((student) => student.uid !== studentUid)
             }));
           }}
         />
@@ -91,15 +91,15 @@ export default function RaidRankFilter({ filters, setRaidFilters, signedIn, stud
 
 type StudentFilterProps = {
   selectedStudents: {
-    studentId: string;
+    uid: string;
     tier: number;
   }[];
   students: {
-    studentId: string;
+    uid: string;
     name: string;
   }[];
-  onSelect: (studentId: string) => void;
-  onRemove: (studentId: string) => void;
+  onSelect: (studentUid: string) => void;
+  onRemove: (studentUid: string) => void;
 };
 
 function StudentFilter({ selectedStudents, students, onSelect, onRemove }: StudentFilterProps) {
@@ -111,17 +111,17 @@ function StudentFilter({ selectedStudents, students, onSelect, onRemove }: Stude
         grid={4}
       />
       <div className="mb-4 flex flex-wrap gap-2">
-        {selectedStudents.map(({ studentId }) => (
+        {selectedStudents.map(({ uid }) => (
           <div
-            key={`future-student-${studentId}`}
+            key={`future-student-${uid}`}
             className="flex items-center shrink-0 rounded-md bg-neutral-100 dark:bg-neutral-900 pl-2 pr-1 py-1"
           >
             <span>
-              {students.find(student => student.studentId === studentId)?.name}
+              {students.find(student => student.uid === uid)?.name}
             </span>
             <XMarkIcon
               className="size-4 mx-0.5 inline-block cursor-pointer"
-              onClick={() => onRemove(studentId)}
+              onClick={() => onRemove(uid)}
             />
           </div>
         ))}

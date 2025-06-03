@@ -5,7 +5,7 @@ import { parsePickupHistory, type PickupHistory } from "~/models/pickup-history"
 
 type PickupHistoryImporterProps = {
   tier3Students: {
-    studentId: string;
+    uid: string;
     name: string;
   }[];
   initialResult?: PickupHistory["result"];
@@ -48,9 +48,9 @@ export default function PickupHistoryImporter(
             <tbody>
               {parsedResult.map((eachResult) => {
                 const resultTier3Students = new Array(eachResult.tier3Count).fill(null);
-                eachResult.tier3StudentIds.forEach((studentId, index) => {
+                eachResult.tier3StudentIds.forEach((studentUid, index) => {
                   if (index < resultTier3Students.length) {
-                    resultTier3Students[index] = studentId;
+                    resultTier3Students[index] = studentUid;
                   }
                 });
 
@@ -60,15 +60,15 @@ export default function PickupHistoryImporter(
                     <td className="rounded-r-lg">
                       <div className="flex gap-x-2">
                         {resultTier3Students.length === 0 && <span className="text-neutral-300">(★3 학생 없음)</span>}
-                        {resultTier3Students.map((studentId, index) => (
+                        {resultTier3Students.map((studentUid, index) => (
                           <PickupStudentSelectCard
-                            key={`student-${studentId ?? "unselected"}-${index}`}
-                            studentId={studentId}
+                            key={`student-${studentUid ?? "unselected"}-${index}`}
+                            uid={studentUid}
                             tier3Students={tier3Students}
-                            onChange={(newStudentId) => {
+                            onChange={(newStudentUid) => {
                               setParsedResult((prev) => {
                                 const newResult = [...prev];
-                                newResult.find((result) => result.trial === eachResult.trial)!.tier3StudentIds[index] = newStudentId;
+                                newResult.find((result) => result.trial === eachResult.trial)!.tier3StudentIds[index] = newStudentUid;
                                 return newResult;
                               });
                             }}

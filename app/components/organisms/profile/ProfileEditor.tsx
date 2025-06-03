@@ -4,7 +4,7 @@ import { StudentSearch } from "~/components/molecules/student";
 import { studentImageUrl } from "~/models/assets";
 
 type ProfileStudent = {
-  studentId: string;
+  uid: string;
   name: string;
 };
 
@@ -25,7 +25,7 @@ type ProfileEditorProps = {
 
 export default function ProfileEditor({ students, initialData, error }: ProfileEditorProps) {
   const [profileStudent, setProfileStudent] = useState<ProfileStudent | null>(
-    initialData?.profileStudentId ? students.find(({ studentId }) => initialData.profileStudentId === studentId) ?? null : null
+    initialData?.profileStudentId ? students.find(({ uid }) => initialData.profileStudentId === uid) ?? null : null
   );
 
   return (
@@ -47,19 +47,19 @@ export default function ProfileEditor({ students, initialData, error }: ProfileE
         placeholder="이름으로 찾기..."
         description="프로필 이미지로 학생을 설정할 수 있어요."
         students={students}
-        onSelect={(id) => setProfileStudent(students.find((student) => student.studentId === id)!)}
+        onSelect={(uid) => setProfileStudent(students.find((student) => student.uid === uid)!)}
       />
       {profileStudent && (
         <>
           <div className="mt-4 mb-12 flex items-center px-4 py-2 bg-neutral-100 dark:bg-neutral-900 rounded-lg">
             <img
               className="h-12 w-12 mr-4 rounded-full object-cover"
-              src={studentImageUrl(profileStudent.studentId)}
+              src={studentImageUrl(profileStudent.uid)}
               alt={profileStudent.name}
             />
             <p><span className="font-bold">{profileStudent.name}</span> 학생을 선택했어요.</p>
           </div>
-          <input type="hidden" name="profileStudentId" value={profileStudent.studentId} />
+          <input type="hidden" name="profileStudentId" value={profileStudent.uid} />
         </>
       )}
 

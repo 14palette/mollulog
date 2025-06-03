@@ -22,8 +22,8 @@ export const loader = async ({ request, context }: LoaderFunctionArgs) => {
   }
 
   const pickupHistories = await getPickupHistories(env, sensei.id);
-  const eventIds = pickupHistories.map((history) => history.eventId);
-  const { data, error } = await runQuery<UserPickupEventsQuery, UserPickupEventsQueryVariables>(userPickupEventsQuery, { eventIds });
+  const eventUids = pickupHistories.map((history) => history.eventId);
+  const { data, error } = await runQuery<UserPickupEventsQuery, UserPickupEventsQueryVariables>(userPickupEventsQuery, { eventUids });
   if (!data) {
     console.error(error);
     throw "failed to load data";
@@ -32,10 +32,10 @@ export const loader = async ({ request, context }: LoaderFunctionArgs) => {
   const allStudentsMap = await getAllStudentsMap(env);
   const aggregatedHistories = (await getPickupHistories(env, sensei.id)).map((history) => ({
     uid: history.uid,
-    event: data.events.nodes.find((event) => event.eventId === history.eventId)!,
+    event: data.events.nodes.find((event) => event.uid === history.eventId)!,
     students: history.result
       .flatMap((trial) => trial.tier3StudentIds.filter((studentId) => studentId).map((studentId) => allStudentsMap[studentId]))
-      .map((student) => ({ studentId: student.id, name: student.name })),
+      .map((student) => ({ studentId: student.uid, name: student.name })),
   })).sort((a, b) => dayjs(b.event.since).diff(dayjs(a.event.since)));
 
   return { pickupHistories: aggregatedHistories };
@@ -67,16 +67,17 @@ export default function EditPickups() {
       <AddContentButton text="새로운 모집 이력 추가하기" link="/edit/pickups/new" />
 
       {pickupHistories.map(({ uid, event, students }) => {
-        const pickupStudentIds = event.pickups
-          .map((pickup) => pickup.student?.studentId)
+        const pickupStudentUids = event.pickups
+          .map((pickup) => pickup.student?.uid)
           .filter((id) => id !== undefined);
 
         return (
           <PickupHistoryView
-            key={uid} uid={uid}
+            key={uid}
+            uid={uid}
             event={{ ...event, since: new Date(event.since) }}
-            tier3Students={students}
-            pickupStudentIds={pickupStudentIds}
+            tier3Students={students.map((student) => ({ uid: student.studentId, name: student.name }))}
+            pickupStudentUids={pickupStudentUids}
             editable={true}
           />
         );

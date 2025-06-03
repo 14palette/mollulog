@@ -2,18 +2,18 @@ import { describe, expect, it } from "@jest/globals";
 import { parsePickupHistory, type PickupHistory } from "../../../app/models/pickup-history";
 
 const students = [
-  { name: "코코나", studentId: "10050" },
-  { name: "하루나(새해)", studentId: "10057" },
-  { name: "하루나(체육복)", studentId: "20030" },
-  { name: "코하루", studentId: "10020" },
-  { name: "온구레", studentId: "10055" },
-  { name: "카즈사(밴드)", studentId: "10091" },
-  { name: "아루(드레스)", studentId: "10089" },
-  { name: "마키", studentId: "10007" },
-  { name: "아츠코", studentId: "10032" },
-  { name: "체리노", studentId: "10017" },
-  { name: "미유", studentId: "10039" },
-  { name: "호시노(무장)", studentId: "10098" },
+  { name: "코코나", uid: "10050" },
+  { name: "하루나(새해)", uid: "10057" },
+  { name: "하루나(체육복)", uid: "20030" },
+  { name: "코하루", uid: "10020" },
+  { name: "온구레", uid: "10055" },
+  { name: "카즈사(밴드)", uid: "10091" },
+  { name: "아루(드레스)", uid: "10089" },
+  { name: "마키", uid: "10007" },
+  { name: "아츠코", uid: "10032" },
+  { name: "체리노", uid: "10017" },
+  { name: "미유", uid: "10039" },
+  { name: "호시노(무장)", uid: "10098" },
 ];
 
 const cases: [string, PickupHistory["result"]][] = [

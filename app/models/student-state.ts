@@ -9,6 +9,12 @@ export type StudentState = {
   tier?: number | null;
 };
 
+type StudentStateRaw = {
+  student: Omit<Student, "uid"> & { id: string };
+  owned: boolean;
+  tier?: number | null;
+};
+
 export function userStateKeyById(id: number) {
   return `student-states:id:${id}`;
 }
@@ -21,9 +27,9 @@ export async function getUserStudentStates(env: Env, username: string, includeUn
 
   const rawStates = await env.KV_USERDATA.get(userStateKeyById(sensei.id));
   const allStudents = await getAllStudentsMap(env, includeUnreleased);
-  const states = (rawStates ? JSON.parse(rawStates) : []) as StudentState[];
-  return Object.entries(allStudents).map(([studentId, student]) => {
-    const state = states.find((state) => state.student.id === studentId);
+  const states = (rawStates ? JSON.parse(rawStates) : []) as StudentStateRaw[];
+  return Object.entries(allStudents).map(([studentUid, student]) => {
+    const state = states.find((state) => state.student.id === studentUid);
     if (state) {
       return { ...state, student };
     } else {
@@ -32,27 +38,14 @@ export async function getUserStudentStates(env: Env, username: string, includeUn
   });
 }
 
-export async function filterSenseisByStudent(
-  env: Env, studentId: string, minTier: number
-): Promise<{ senseiId: number, tier: number }[]> {
-  const list = await env.KV_USERDATA.list({ prefix: "student-states:id:" });
-
-  const result: { senseiId: number, tier: number }[] = [];
-  await Promise.all(list.keys.map(async (key) => {
-    const rawStates = await env.KV_USERDATA.get(key.name);
-    if (!rawStates) {
-      return;
-    }
-
-    const states = (rawStates ? JSON.parse(rawStates) : []) as StudentState[];
-    const state = states.find((state) => state.student.id === studentId);
-    if (state && state.owned && state.tier && state.tier >= minTier) {
-      result.push({ senseiId: Number.parseInt(key.name.split(":")[2]), tier: state.tier });
-    }
-  }));
-  return result;
-}
-
 export async function updateStudentStates(env: Env, sensei: Sensei, states: StudentState[]) {
-  await env.KV_USERDATA.put(userStateKeyById(sensei.id), JSON.stringify(states));
+  const rawStates: StudentStateRaw[] = states.map((state) => ({
+    student: {
+      ...state.student,
+      id: state.student.uid,
+    },
+    owned: state.owned,
+    tier: state.tier,
+  }));
+  await env.KV_USERDATA.put(userStateKeyById(sensei.id), JSON.stringify(rawStates));
 }

@@ -1,5 +1,4 @@
 import { MagnifyingGlassIcon, ShieldCheckIcon } from "@heroicons/react/24/outline";
-import { useOutletContext } from "react-router";
 import { useState } from "react";
 import { FloatingButton } from "~/components/atoms/button";
 import { Callout } from "~/components/atoms/typography";
@@ -7,12 +6,19 @@ import { FilterButtons } from "~/components/molecules/student";
 import { RaidRankFilter } from "~/components/organisms/raid";
 import RaidRanks, { type RaidRankFilters } from "~/components/organisms/raid/RaidRanks";
 import { defenseTypeColor, defenseTypeLocale } from "~/locales/ko";
-import { type OutletContext } from "./raids.$id";
 import { useSignIn } from "~/contexts/SignInProvider";
+import { RaidDetailQuery } from "~/graphql/graphql";
 
-export default function RaidDetailIndex() {
-  const { raid, signedIn, allStudents } = useOutletContext<OutletContext>();
+export type RaidRanksProps = {
+  raid: NonNullable<RaidDetailQuery["raid"]>;
+  signedIn: boolean;
+  allStudents: {
+    uid: string;
+    name: string;
+  }[];
+};
 
+export default function RaidRanksPage({ raid, signedIn, allStudents }: RaidRanksProps) {
   const { showSignIn } = useSignIn();
 
   const [filters, setFilters] = useState<RaidRankFilters>({
@@ -53,7 +59,7 @@ export default function RaidDetailIndex() {
           </Callout>
         )}
         <RaidRanks
-          raidId={raid.raidId}
+          raidUid={raid.uid}
           filters={filters}
           setFilters={setFilters}
         />

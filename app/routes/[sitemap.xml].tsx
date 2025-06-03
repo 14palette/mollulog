@@ -8,15 +8,7 @@ const sitemapQuery = graphql(`
   query Sitemap {
     contents {
       nodes {
-        __typename
-        ... on Event {
-          id: eventId
-          until
-        }
-        ... on Raid {
-          id: raidId
-          until
-        }
+        __typename uid until
       }
     }
   }
@@ -46,7 +38,7 @@ export const loader = async () => {
     const until = dayjs(content.until);
     const isOutdated = until.isBefore(now);
     items.push({
-      link: `${HOST}/${content.__typename.toLowerCase()}s/${content.id}`,
+      link: `${HOST}/${content.__typename.toLowerCase()}s/${content.uid}`,
       lastmod: isOutdated ? until : now,
       changefreq: isOutdated ? "yearly" : "daily",
       priority: isOutdated ? 0.3 : 1.0,

@@ -43,10 +43,10 @@ export default function Students() {
       {StateFilter}
       <StudentCards
         students={filteredStates.map(({ student }) => ({
-          studentId: student.id,
+          uid: student.uid,
           name: student.name,
         }))}
-        onSelect={(id) => navigate(`/students/${id}`)}
+        onSelect={(uid) => navigate(`/students/${uid}`)}
       />
     </>
   );

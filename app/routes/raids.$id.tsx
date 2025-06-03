@@ -1,10 +1,11 @@
+import { useState } from "react";
 import type { LoaderFunctionArgs, MetaFunction } from "react-router";
 import { isRouteErrorResponse, Link, Outlet, useLoaderData, useRouteError } from "react-router";
+import { Bars3Icon } from "@heroicons/react/24/outline";
 import dayjs from "dayjs";
 import { getAuthenticator } from "~/auth/authenticator.server";
 import { EmptyView, SubTitle } from "~/components/atoms/typography";
 import { ContentHeader } from "~/components/organisms/content";
-import { Navigation } from "~/components/organisms/navigation";
 import { graphql } from "~/graphql";
 import type { RaidDetailQuery } from "~/graphql/graphql";
 import { runQuery } from "~/lib/baql";
@@ -12,19 +13,21 @@ import { raidTypeLocale } from "~/locales/ko";
 import { bossBannerUrl } from "~/models/assets";
 import { getAllStudents } from "~/models/student";
 import { ErrorPage } from "~/components/organisms/error";
+import { FilterButtons } from "~/components/molecules/student";
+import { RaidRanksPage, RaidStatisticsPage } from "~/components/templates/raids";
 
 const raidDetailQuery = graphql(`
-  query RaidDetail($raidId: String!) {
-    raid(raidId: $raidId) {
+  query RaidDetail($uid: String!) {
+    raid(uid: $uid) {
       defenseTypes { defenseType difficulty }
-      raidId type name boss since until terrain attackType rankVisible
+      uid type name boss since until terrain attackType rankVisible
     }
   }
 `);
 
 export const loader = async ({ request, context, params }: LoaderFunctionArgs) => {
-  const raidId = params.id;
-  if (!raidId) {
+  const uid = params.id;
+  if (!uid) {
     throw new Response(
       JSON.stringify({ error: { message: "이벤트 정보를 찾을 수 없어요" } }),
       {
@@ -35,7 +38,7 @@ export const loader = async ({ request, context, params }: LoaderFunctionArgs) =
   }
 
   const env = context.cloudflare.env;
-  const { data, error } = await runQuery<RaidDetailQuery>(raidDetailQuery, { raidId });
+  const { data, error } = await runQuery<RaidDetailQuery>(raidDetailQuery, { uid });
   let errorMessage: string | null = null;
   if (error || !data) {
     errorMessage = error?.message ?? "이벤트 정보를 가져오는 중 오류가 발생했어요";
@@ -59,7 +62,7 @@ export const loader = async ({ request, context, params }: LoaderFunctionArgs) =
     raid: data!.raid!,
     signedIn: sensei !== null,
     allStudents: allStudents.map((student) => ({
-      studentId: student.id,
+      uid: student.uid,
       name: student.name,
     })),
   };
@@ -82,15 +85,6 @@ export const meta: MetaFunction<typeof loader> = ({ data }) => {
     { name: "twitter:title", content: title },
     { name: "twitter:description", content: description },
   ];
-}
-
-export type OutletContext = {
-  raid: NonNullable<RaidDetailQuery["raid"]>;
-  signedIn: boolean;
-  allStudents: {
-    studentId: string;
-    name: string;
-  }[];
 };
 
 export const ErrorBoundary = () => {
@@ -104,6 +98,8 @@ export const ErrorBoundary = () => {
 
 export default function RaidDetail() {
   const { raid, signedIn, allStudents } = useLoaderData<typeof loader>();
+
+  const [screen, setScreen] = useState<"ranks" | "statistics">("ranks");
 
   return (
     <>
@@ -129,12 +125,17 @@ export default function RaidDetail() {
           </div>
           <p className="mt-2 mb-4 text-sm text-neutral-500">상위 2만명의 편성 정보를 제공해요.</p>
 
-          <Navigation links={[
-            { to: `/raids/${raid.raidId}/`, text: "순위" },
-            { to: `/raids/${raid.raidId}/statistics`, text: "통계" },
-          ]} />
+          <FilterButtons
+            Icon={Bars3Icon}
+            buttonProps={[
+              { text: "순위", active: screen === "ranks", onToggle: () => setScreen("ranks") },
+              { text: "통계", active: screen === "statistics", onToggle: () => setScreen("statistics") },
+            ]}
+            exclusive atLeastOne
+          />
 
-          <Outlet context={{ raid, signedIn, allStudents }} />
+          {screen === "ranks" && <RaidRanksPage raid={raid} signedIn={signedIn} allStudents={allStudents} />}
+          {screen === "statistics" && <RaidStatisticsPage raid={raid} />}
         </> :
         <EmptyView text="순위 정보를 준비중이에요" />
       }

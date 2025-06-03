@@ -12,19 +12,19 @@ export type ContentTimelineProps = {
     since: Date;
     until: Date;
     rerun: boolean;
-    contentId: string;
+    uid: string;
     link: string;
     contentType: EventType | RaidType;
     pickups?: ContentTimelineItemProps["pickups"];
     raidInfo?: ContentTimelineItemProps["raidInfo"];
   }[];
 
-  favoritedStudents?: { contentId: string, studentId: string }[];
-  favoritedCounts: { contentId: string, studentId: string, count: number }[];
-  memos: { contentId: string, body: string }[];
+  favoritedStudents?: { contentUid: string, studentUid: string }[];
+  favoritedCounts: { contentUid: string, studentUid: string, count: number }[];
+  memos: { contentUid: string, body: string }[];
 
-  onMemoUpdate?: (eventId: string, memo: string) => void;
-  onFavorite?: (eventId: string, studentId: string, favorited: boolean) => void;
+  onMemoUpdate?: (contentUid: string, memo: string) => void;
+  onFavorite?: (contentUid: string, studentUid: string, favorited: boolean) => void;
 };
 
 type ContentGroup = {
@@ -93,11 +93,11 @@ export default function ContentTimeline({ contents, favoritedStudents, favorited
   };
 
   const favoriteStudentIdsByContents: Record<string, Record<string, number>> = {};
-  favoritedCounts.forEach(({ contentId, studentId, count }) => {
-    if (!favoriteStudentIdsByContents[contentId]) {
-      favoriteStudentIdsByContents[contentId] = {};
+  favoritedCounts.forEach(({ contentUid, studentUid, count }) => {
+    if (!favoriteStudentIdsByContents[contentUid]) {
+      favoriteStudentIdsByContents[contentUid] = {};
     }
-    favoriteStudentIdsByContents[contentId][studentId] = count;
+    favoriteStudentIdsByContents[contentUid][studentUid] = count;
   });
 
   const today = dayjs();
@@ -144,20 +144,20 @@ export default function ContentTimeline({ contents, favoritedStudents, favorited
               </div>
               <div className="pl-3 md:pl-5 pb-4 md:pb-8">
                 {group.contents.map((content) => {
-                  const memo = memos.find(({ contentId }) => contentId === content.contentId)?.body;
+                  const memo = memos.find(({ contentUid }) => contentUid === content.uid)?.body;
                   const showMemo = !!onMemoUpdate && !!content.pickups && content.pickups.length > 0;
                   return (
                     <ContentTimelineItem
-                      key={content.contentId}
+                      key={content.uid}
                       {...content}
 
                       showMemo={showMemo}
                       initialMemo={showMemo ? memo : undefined}
-                      onUpdateMemo={showMemo ? (newMemo) => onMemoUpdate(content.contentId, newMemo) : undefined}
+                      onUpdateMemo={showMemo ? (newMemo) => onMemoUpdate(content.uid, newMemo) : undefined}
 
-                      favoritedStudents={favoritedStudents?.filter(({ contentId }) => contentId === content.contentId).map(({ studentId }) => studentId)}
-                      favoritedCounts={favoriteStudentIdsByContents[content.contentId]}
-                      onFavorite={(studentId, favorited) => onFavorite?.(content.contentId, studentId, favorited)}
+                      favoritedStudents={favoritedStudents?.filter(({ contentUid }) => contentUid === content.uid).map(({ studentUid }) => studentUid)}
+                      favoritedCounts={favoriteStudentIdsByContents[content.uid]}
+                      onFavorite={(studentUid, favorited) => onFavorite?.(content.uid, studentUid, favorited)}
                     />
                   );
                 })}

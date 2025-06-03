@@ -10,10 +10,10 @@ import { runQuery } from "~/lib/baql";
 import { updateParty, getUserParties, createParty } from "~/models/party";
 import { getUserStudentStates } from "~/models/student-state";
 
-const raidForPartyEditQuery = graphql(`
+export const raidForPartyEditQuery = graphql(`
   query RaidForPartyEdit {
     raids {
-      nodes { raidId name type boss terrain since until }
+      nodes { uid name type boss terrain since until }
     }
   }
 `);
@@ -39,7 +39,7 @@ export const loader = async ({ context, request, params }: LoaderFunctionArgs) =
     throw "failed to load data";
   }
 
-  const states = await getUserStudentStates(env, sensei.username);
+  const states = await getUserStudentStates(env, sensei.username, true);
   return {
     states: states!,
     raids: data.raids.nodes,

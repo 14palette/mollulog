@@ -7,7 +7,7 @@ import { pickupLabelLocale } from "~/locales/ko";
 
 type FuturePlanProps = {
   events: {
-    eventId: string;
+    uid: string;
     name: string;
     since: Date;
     memo: string | null;
@@ -15,9 +15,9 @@ type FuturePlanProps = {
       type: string;
       rerun: boolean;
       student: {
+        uid: string;
         name: string;
         school: string;
-        studentId: string;
         schaleDbId: string;
         equipments: string[];
       };
@@ -89,8 +89,8 @@ export default function FuturePlan({ events }: FuturePlanProps) {
                 {(events.length > 0) ? 
                   events.map((event) => {
                     return (
-                      <div key={event.eventId} className="my-1.5">
-                        <Link to={`/events/${event.eventId}`} className="hover:underline">
+                      <div key={event.uid} className="my-1.5">
+                        <Link to={`/events/${event.uid}`} className="hover:underline">
                           <MultilineText className="text-lg font-bold" texts={event.name.split("\n")} />
                           {/* <p className="font-bold text-lg">{event.name}</p> */}
                         </Link>
@@ -98,7 +98,7 @@ export default function FuturePlan({ events }: FuturePlanProps) {
                         <StudentCards
                           mobileGrid={4}
                           students={event.pickups.map(({ student, type, rerun }) => ({
-                            studentId: student.studentId,
+                            uid: student.uid,
                             name: student.name,
                             label: (
                               <span className={rerun ? "text-white" : "text-yellow-500"}>

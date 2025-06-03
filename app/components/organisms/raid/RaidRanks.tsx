@@ -11,28 +11,28 @@ import type { DefenseType } from "~/models/content.d";
 export type RaidRankFilters = {
   defenseType: DefenseType | null;
   filterNotOwned: boolean;
-  includeStudents: { studentId: string; tier: number }[];
-  excludeStudents: { studentId: string; tier: number }[];
+  includeStudents: { uid: string; tier: number }[];
+  excludeStudents: { uid: string; tier: number }[];
   rankAfter: number | null;
   rankBefore: number | null;
 };
 
 type RaidRanksProps = {
-  raidId: string;
+  raidUid: string;
   filters: RaidRankFilters;
   setFilters: (filters: (prev: RaidRankFilters) => RaidRankFilters) => void;
 };
 
-export default function RaidRanks({ raidId, filters, setFilters }: RaidRanksProps) {
+export default function RaidRanks({ raidUid, filters, setFilters }: RaidRanksProps) {
   const rankFetcher = useFetcher<RaidRanksData>();
   useEffect(() => {
     const query = new URLSearchParams();
     query.set("filterNotOwned", filters.filterNotOwned.toString());
     if (filters.includeStudents.length > 0) {
-      query.set("includeStudentIds", filters.includeStudents.map(({ studentId }) => studentId).join(","));
+      query.set("includeStudentIds", filters.includeStudents.map(({ uid }) => uid).join(","));
     }
     if (filters.excludeStudents.length > 0) {
-      query.set("excludeStudentIds", filters.excludeStudents.map(({ studentId }) => studentId).join(","));
+      query.set("excludeStudentIds", filters.excludeStudents.map(({ uid }) => uid).join(","));
     }
     if (filters.rankAfter) {
       query.set("rankAfter", filters.rankAfter.toString());
@@ -43,8 +43,8 @@ export default function RaidRanks({ raidId, filters, setFilters }: RaidRanksProp
     if (filters.defenseType) {
       query.set("defenseType", filters.defenseType);
     }
-    rankFetcher.load(`/raids/data/${raidId}/ranks?${query.toString()}`);
-  }, [raidId, filters]);
+    rankFetcher.load(`/raids/data/${raidUid}/ranks?${query.toString()}`);
+  }, [raidUid, filters]);
 
   if (rankFetcher.data && !rankFetcher.data.rankVisible) {
     return null;
@@ -69,7 +69,7 @@ export default function RaidRanks({ raidId, filters, setFilters }: RaidRanksProp
                     <StudentCards
                       key={`party-${party.partyIndex}`}
                       students={party.slots.map((slot) => ({
-                        studentId: slot.student?.studentId ?? null,
+                        uid: slot.student?.uid ?? null,
                         name: slot.student?.name,
                         tier: slot.tier,
                       }))}

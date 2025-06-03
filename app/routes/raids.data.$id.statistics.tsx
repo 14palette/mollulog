@@ -4,10 +4,10 @@ import { runQuery } from "~/lib/baql";
 import type { Defense, RaidStatisticsQuery } from "~/graphql/graphql";
 
 const raidStatisticsQuery = graphql(`
-  query RaidStatistics($raidId: String!, $defenseType: Defense!) {
-    raid(raidId: $raidId) {
+  query RaidStatistics($uid: String!, $defenseType: Defense!) {
+    raid(uid: $uid) {
       statistics(defenseType: $defenseType) {
-        student { studentId name role }
+        student { uid name role }
         slotsCount
         slotsByTier { tier count }
         assistsCount
@@ -19,7 +19,7 @@ const raidStatisticsQuery = graphql(`
 
 export type RaidStatisticsData = {
   statistics?: {
-    student: { studentId: string; name: string; role: string };
+    student: { uid: string; name: string; role: string };
     slotsCount: number;
     slotsByTier: { tier: number; count: number }[];
     assistsCount: number;
@@ -28,14 +28,14 @@ export type RaidStatisticsData = {
 };
 
 export const loader = async ({ request, params }: LoaderFunctionArgs) => {
-  const raidId = params.id;
-  if (!raidId) {
+  const uid = params.id;
+  if (!uid) {
     throw new Response("Raid ID is required", { status: 400 });
   }
 
   const url = new URL(request.url);
   const defenseType = url.searchParams.get("defenseType") as Defense;
-  const { data, error } = await runQuery<RaidStatisticsQuery>(raidStatisticsQuery, { raidId, defenseType });
+  const { data, error } = await runQuery<RaidStatisticsQuery>(raidStatisticsQuery, { uid, defenseType });
   if (error || !data) {
     throw new Response("Error fetching raid statistics", { status: 500 });
   }

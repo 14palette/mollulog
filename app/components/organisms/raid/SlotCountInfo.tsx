@@ -12,9 +12,9 @@ import { bossImageUrl } from "~/models/assets";
 import type { DefenseType, RaidType, Terrain } from "~/models/content.d";
 
 type SlotCountInfoProps = {
-  student?: { studentId: string; name: string };
+  student?: { uid: string; name: string };
   raid?: {
-    raidId: string;
+    uid: string;
     name: string;
     type: RaidType;
     boss: string;
@@ -48,7 +48,7 @@ export default function SlotCountInfo({ student, raid, slotsCount, assistsCount,
       {raid && (
         <div className="pl-4 xl:pl-6 py-4 relative flex">
           <Link
-            to={`/raids/${raid.raidId}`}
+            to={`/raids/${raid.uid}`}
             className="grow group z-10 relative "
           >
             <p className="text-xs text-neutral-500 dark:text-neutral-400">
@@ -74,16 +74,16 @@ export default function SlotCountInfo({ student, raid, slotsCount, assistsCount,
       {student && (
         <div className="pt-4 px-4 xl:px-6 flex items-center grow">
           <div className="w-16">
-            <StudentCard studentId={student.studentId} />
+            <StudentCard uid={student.uid} />
           </div>
           <div className="mx-4 grow">
-            <Link to={`/students/${student.studentId}`}>
+            <Link to={`/students/${student.uid}`}>
               <p className="font-bold mb-1 hover:underline">
                 <span>{student.name}</span>
                 <ChevronRightIcon className="inline size-4" />
               </p>
             </Link>
-            <KeyValueTable keyPrefix={`${student.studentId}-slots-count`} items={[
+            <KeyValueTable keyPrefix={`${student.uid}-slots-count`} items={[
               { key: "편성 횟수", value: `${slotsCount} 회 (${formatPercentage(slotsCount / 20000)})` },
               { key: "조력 횟수", value: `${assistsCount} 회 (${formatPercentage(assistsCount / 20000)})` },
             ]} />
@@ -93,7 +93,7 @@ export default function SlotCountInfo({ student, raid, slotsCount, assistsCount,
 
       {!student && raid && (
         <div className="px-4 xl:px-6">
-          <KeyValueTable keyPrefix={`${raid.raidId}-slots-count`} items={[
+          <KeyValueTable keyPrefix={`${raid.uid}-slots-count`} items={[
             { key: "편성 횟수", value: `${slotsCount} 회 (${formatPercentage(slotsCount / 20000)})` },
             { key: "조력 횟수", value: `${assistsCount} 회 (${formatPercentage(assistsCount / 20000)})` },
           ]} />

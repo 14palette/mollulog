@@ -6,7 +6,7 @@ import type { AttackType, DefenseType, Role } from "~/models/content.d";
 
 type StudentInfoProps = {
   student: {
-    id: string;
+    uid: string;
     name: string;
     attackType: AttackType;
     defenseType: DefenseType;
@@ -67,7 +67,7 @@ export default function StudentInfo({ student, favorited, onRemoveFavorite, onAd
           </div>
         )}
 
-        <Link to={`/students/${student.id}`}>
+        <Link to={`/students/${student.uid}`}>
           <div className="px-4 py-2 flex items-center hover:bg-neutral-700 transition cursor-pointer border-t border-neutral-700 rounded-b-lg">
             <IdentificationIcon className="size-4" />
             <span className="ml-1.5">학생부 보기</span>

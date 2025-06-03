@@ -59,7 +59,7 @@ export default function UserPage() {
           </div> :
           <StudentCards
             students={filteredStates.filter(({ owned }) => owned).map(({ student, tier }) => ({
-              studentId: student.id,
+              uid: student.uid,
               name: student.name,
               tier: tier ?? student.initialTier,
             }))}
@@ -71,7 +71,7 @@ export default function UserPage() {
         <p className="font-bold text-xl my-4">미모집 학생</p>
         <StudentCards
           students={filteredStates.filter(({ owned }) => !owned).map(({ student }) => ({
-            studentId: student.id,
+            uid: student.uid,
             name: student.name,
             grayscale: true,
           }))}

@@ -18,9 +18,9 @@ const pickupEventsQuery = graphql(`
   query PickupEvents {
     events(first: 9999) {
       nodes {
-        eventId name since until type rerun
+        uid name since until type rerun
         pickups {
-          student { studentId }
+          student { uid }
           studentName
         }
       }
@@ -55,13 +55,13 @@ export const loader = async ({ context, request, params }: LoaderFunctionArgs) =
     events: data.events.nodes.filter((event) => event.pickups.length > 0 && dayjs(event.since).isBefore(now)).reverse(),
     tier3Students: (await getAllStudents(env))
       .filter((student) => student.initialTier === 3)
-      .map((student) => ({ studentId: student.id, name: student.name })),
+      .map((student) => ({ uid: student.uid, name: student.name })),
     currentPickupHistory,
   };
 };
 
 type ActionData = {
-  eventId: string;
+  eventUid: string;
   result: PickupHistory["result"];
   rawResult?: string;
 };
@@ -76,9 +76,9 @@ export const action = async ({ context, request, params }: ActionFunctionArgs) =
   }
 
   if (params.id && params.id !== "new") {
-    await updatePickupHistory(env, sensei.id, params.id, data.eventId, data.result, data.rawResult);
+    await updatePickupHistory(env, sensei.id, params.id, data.eventUid, data.result, data.rawResult);
   } else {
-    await createPickupHistory(env, sensei.id, data.eventId, data.result, data.rawResult ?? null);
+    await createPickupHistory(env, sensei.id, data.eventUid, data.result, data.rawResult ?? null);
   }
   return redirect("/edit/pickups");
 }
@@ -86,30 +86,30 @@ export const action = async ({ context, request, params }: ActionFunctionArgs) =
 export default function EditPickup() {
   const { events, tier3Students, currentPickupHistory } = useLoaderData<typeof loader>();
 
-  let initialEventId = null;
+  let initialEventUid = null;
   if (currentPickupHistory) {
-    initialEventId = currentPickupHistory.eventId;
+    initialEventUid = currentPickupHistory.eventId;
   } else {
     const [searchParams] = useSearchParams();
     const eventId = searchParams.get("eventId");
     if (eventId) {
-      initialEventId = eventId;
+      initialEventUid = eventId;
     }
   }
 
   let initialTotalCount: number | undefined = undefined;
   let initialTier3Count: number | undefined = undefined;
-  let initialTier3StudentIds: string[] | undefined = undefined;
+  let initialTier3StudentUids: string[] | undefined = undefined;
   if (currentPickupHistory?.result) {
     initialTotalCount = Math.max(...currentPickupHistory.result.map((trial) => trial.trial));
     currentPickupHistory.result.forEach((trial) => {
       initialTier3Count = (initialTier3Count ?? 0) + trial.tier3Count;
-      initialTier3StudentIds = (initialTier3StudentIds ?? []).concat(trial.tier3StudentIds);
+      initialTier3StudentUids = (initialTier3StudentUids ?? []).concat(trial.tier3StudentIds);
     });
   }
 
-  const initialEvent = initialEventId ? events.find((event) => event.eventId === initialEventId) : null;
-  const [eventId, setEventId] = useState<string | null>(initialEvent?.eventId ?? null);
+  const initialEvent = initialEventUid ? events.find((event) => event.uid === initialEventUid) : null;
+  const [eventUid, setEventUid] = useState<string | null>(initialEvent?.uid ?? null);
 
   const [editorMode, setEditorMode] = useState<"edit" | "import">(currentPickupHistory?.rawResult ? "import" : "edit");
 
@@ -120,14 +120,14 @@ export default function EditPickup() {
     <div className="min-h-screen max-w-4xl pb-96">
       <ContentSelector
         contents={events.map((event) => ({
-          contentId: event.eventId,
+          uid: event.uid,
           name: event.name,
           imageUrl: null,
           description: (
             <div className="flex gap-x-2">
               {event.pickups.map((pickup) => (
                 <div className="w-8" key={pickup.studentName}>
-                  <StudentCard studentId={pickup.student?.studentId ?? null} />
+                  <StudentCard uid={pickup.student?.uid ?? null} />
                 </div>
               ))}
             </div>
@@ -135,12 +135,12 @@ export default function EditPickup() {
           searchKeyword: `${event.name} ${event.pickups.map((pickup) => pickup.studentName).join(" ")}`,
         }))}
         placeholder="모집 이력을 기록할 이벤트를 선택하세요"
-        initialContentId={eventId ?? undefined}
-        onSelectContent={setEventId}
+        initialContentUid={eventUid ?? undefined}
+        onSelectContent={setEventUid}
         searchable
       />
 
-      {eventId && (
+      {eventUid && (
         <>
           <SubTitle text="모집 내용" />
           {!currentPickupHistory && (
@@ -154,9 +154,9 @@ export default function EditPickup() {
               tier3Students={tier3Students}
               initialTotalCount={initialTotalCount}
               initialTier3Count={initialTier3Count}
-              initialTier3StudentIds={initialTier3StudentIds}
+              initialTier3StudentIds={initialTier3StudentUids}
               onComplete={(result) => submit({
-                eventId,
+                eventUid,
                 result: [{ trial: result.totalCount, tier3Count: result.tier3Count, tier3StudentIds: result.tier3StudentIds }],
               })}
             />
@@ -166,7 +166,7 @@ export default function EditPickup() {
               tier3Students={tier3Students}
               initialResult={currentPickupHistory?.result ?? undefined}
               initialRawResult={currentPickupHistory?.rawResult ?? undefined}
-              onComplete={({ result, rawResult }) => submit({ eventId, result, rawResult })}
+              onComplete={({ result, rawResult }) => submit({ eventUid, result, rawResult })}
             />
           )}
         </>
