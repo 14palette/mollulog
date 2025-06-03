@@ -7,10 +7,9 @@ import { runQuery } from "~/lib/baql";
 const sitemapQuery = graphql(`
   query Sitemap {
     contents {
-      nodes {
-        __typename uid until
-      }
+      nodes { __typename uid until }
     }
+    students { uid }
   }
 `);
 
@@ -25,7 +24,8 @@ const HOST = "https://mollulog.net";
 
 export const loader = async () => {
   const items: SitemapItem[] = [
-    { link: `${HOST}/events`, lastmod: dayjs(), changefreq: "daily", priority: 1.0 },
+    { link: `${HOST}/futures`, lastmod: dayjs(), changefreq: "daily", priority: 1.0 },
+    { link: `${HOST}/students`, lastmod: dayjs(), changefreq: "monthly", priority: 0.5 },
   ];
 
   const { data, error } = await runQuery<SitemapQuery>(sitemapQuery, {});
@@ -42,6 +42,16 @@ export const loader = async () => {
       lastmod: isOutdated ? until : now,
       changefreq: isOutdated ? "yearly" : "daily",
       priority: isOutdated ? 0.3 : 1.0,
+    });
+  });
+
+  const beginningOfMonth = now.startOf("month");
+  data.students.forEach((student) => {
+    items.push({
+      link: `${HOST}/students/${student.uid}`,
+      lastmod: beginningOfMonth,
+      changefreq: "monthly",
+      priority: 0.5,
     });
   });
 
