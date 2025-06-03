@@ -98,7 +98,7 @@ export default function FuturePlan({ events }: FuturePlanProps) {
                         <StudentCards
                           mobileGrid={4}
                           students={event.pickups.map(({ student, type, rerun }) => ({
-                            studentId: student.uid,
+                            uid: student.uid,
                             name: student.name,
                             label: (
                               <span className={rerun ? "text-white" : "text-yellow-500"}>

@@ -4,10 +4,10 @@ import { Label, Toggle } from "~/components/atoms/form";
 import { StudentCard } from "~/components/atoms/student";
 import { StudentCards } from "~/components/molecules/student";
 import { filterStudentByName } from "~/filters/student";
-import type { Role } from "~/models/content";
+import type { Role } from "~/models/content.d";
 
 type EditorStudent = {
-  studentId: string;
+  uid: string;
   name: string;
   tier?: number;
   role: Role;
@@ -16,7 +16,7 @@ type EditorStudent = {
 type PartyUnitEditorProps = {
   index: number;
   students: EditorStudent[];
-  onComplete(studentIds: (string | null)[]): void;
+  onComplete(studentUids: (string | null)[]): void;
   onCancel(): void;
 };
 
@@ -59,13 +59,13 @@ export default function PartyUnitEditor(
   };
 
   const addPartyStudent = (newStudentId: string) => {
-    const student = students.find((each) => each.studentId === newStudentId);
+    const student = students.find((each) => each.uid === newStudentId);
     if (!student) {
       return;
     }
 
     // 학생은 최대 6명까지 편성 가능하며, 중복 편성 불가능
-    if (unitStudents.find((each) => each?.studentId === newStudentId)) {
+    if (unitStudents.find((each) => each?.uid === newStudentId)) {
       return setError("학생은 중복해서 편성할 수 없어요.");
     }
     if (unitStudents.filter((each) => each !== null).length >= partySize) {
@@ -126,7 +126,7 @@ export default function PartyUnitEditor(
         {filteredStudents.length > 0 ?
           <StudentCards
             students={filteredStudents}
-            onSelect={(studentId) => addPartyStudent(studentId)}
+            onSelect={(uid) => addPartyStudent(uid)}
             mobileGrid={6}
             pcGrid={10}
           /> :
@@ -152,7 +152,7 @@ export default function PartyUnitEditor(
         {unitStudents.find((student) => student !== null) ?
           <div className="grid grid-cols-6 md:grid-cols-10 gap-1 gap-2">
             {unitStudents.map((student, index) => (
-              <div key={`partyGen-${student?.studentId ?? index}`} className="rounded-lg">
+              <div key={`partyGen-${student?.uid ?? index}`} className="rounded-lg">
                 {student ?
                   <StudentCard {...student} nameSize="small" /> :
                   <div className="w-full h-full bg-neutral-200 dark:bg-neutral-800 rounded-lg flex items-center justify-center">
@@ -189,7 +189,7 @@ export default function PartyUnitEditor(
                         ${completable ? "text-blue-500" : "text-neutral-300"}`}
             onClick={() => {
               if (completable) {
-                onComplete(unitStudents.map((student) => student?.studentId ?? null));
+                onComplete(unitStudents.map((student) => student?.uid ?? null));
               }
             }}
           >

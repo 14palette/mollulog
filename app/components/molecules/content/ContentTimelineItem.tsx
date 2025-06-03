@@ -154,7 +154,7 @@ export default function ContentTimelineItem(
               const colorClass = pickup.rerun ? "text-white" : "text-yellow-500";
               return {
                 ...student,
-                studentId: student?.uid ?? null,
+                uid: student?.uid ?? null,
                 name: pickup.studentName,
                 label: <span className={`${colorClass}`}>{pickupLabelLocale(pickup)}</span>,
                 state: student?.uid ? {

@@ -55,7 +55,7 @@ export const loader = async ({ context, request, params }: LoaderFunctionArgs) =
     events: data.events.nodes.filter((event) => event.pickups.length > 0 && dayjs(event.since).isBefore(now)).reverse(),
     tier3Students: (await getAllStudents(env))
       .filter((student) => student.initialTier === 3)
-      .map((student) => ({ uid: student.id, name: student.name })),
+      .map((student) => ({ uid: student.uid, name: student.name })),
     currentPickupHistory,
   };
 };
@@ -127,7 +127,7 @@ export default function EditPickup() {
             <div className="flex gap-x-2">
               {event.pickups.map((pickup) => (
                 <div className="w-8" key={pickup.studentName}>
-                  <StudentCard studentId={pickup.student?.uid ?? null} />
+                  <StudentCard uid={pickup.student?.uid ?? null} />
                 </div>
               ))}
             </div>

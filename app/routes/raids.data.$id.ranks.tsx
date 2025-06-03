@@ -45,7 +45,7 @@ export const loader = async ({ request, context, params }: LoaderFunctionArgs) =
     if (sensei) {
       const ownedStudentIds = ((await getUserStudentStates(context.cloudflare.env, sensei.username)) ?? [])
         .filter((state) => !state.owned)
-        .map((state) => state.student.id);
+        .map((state) => state.student.uid);
 
       excludeStudentUids = excludeStudentUids.concat(ownedStudentIds);
     }

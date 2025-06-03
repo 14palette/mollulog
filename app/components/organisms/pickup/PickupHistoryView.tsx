@@ -58,7 +58,7 @@ export default function PickupHistoryView({ uid, event, tier3Students, pickupStu
       <StudentCards
         pcGrid={10}
         students={tier3Students.map(({ uid, name }) => ({
-          studentId: uid,
+          uid,
           name,
           label: pickupStudentUids.includes(uid) ? <span className="text-yellow-500">픽업</span> : undefined,
         }))}

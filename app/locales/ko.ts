@@ -1,4 +1,4 @@
-import type { AttackType, DefenseType, EventType, PickupType, RaidType, Role, Terrain } from "~/models/content";
+import type { AttackType, DefenseType, EventType, PickupType, RaidType, Role, Terrain } from "~/models/content.d";
 
 export const attackTypeLocale: Record<AttackType, string> = {
   explosive: "폭발",

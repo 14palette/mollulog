@@ -4,8 +4,7 @@ import StudentCards from "./StudentCards";
 import { filterStudentByName } from "~/filters/student";
 
 type SearchableStudent = {
-  studentId?: string;  // [DEPRECATED 2025-05-25] replace studentId with uid
-  uid?: string;
+  uid: string;
   name: string;
 };
 
@@ -41,8 +40,7 @@ export default function StudentSearch(
       {(searched && searched.length > 0) && (
         <StudentCards
           pcGrid={grid}
-          // [DEPRECATED 2025-05-25] replace studentId with uid
-          students={searched.map((student) => ({ ...student, studentId: (student.uid ?? student.studentId)! }))}
+          students={searched}
           onSelect={(studentUid) => {
             if (studentUid) {
               onSelect(studentUid);

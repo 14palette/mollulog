@@ -70,7 +70,7 @@ export default function EditStudents() {
 
   const updateState = (studentId: string, newState: Partial<typeof states[0]>) => {
     setStates((prev) => {
-      const index = prev.findIndex((state) => state.student.id === studentId);
+      const index = prev.findIndex((state) => state.student.uid === studentId);
       if (index === -1) {
         return prev;
       }
@@ -92,26 +92,26 @@ export default function EditStudents() {
         {filteredStates.map(({ student, owned, tier }) => {
           return (
             <div
-              key={student.id}
+              key={student.uid}
               className="p-4 bg-neutral-100 hover:bg-neutral-200 dark:bg-neutral-900 dark:hover:bg-neutral-700 transition rounded-lg"
             >
               <div className="flex items-center gap-x-3">
                 <img
                   className={`size-10 object-cover rounded-full ${owned ? "" : "grayscale opacity-75"}`}
-                  src={studentImageUrl(student.id)}
+                  src={studentImageUrl(student.uid)}
                   alt={student.name}
                 />
                 <p className="grow">{student.name}</p>
                 <Toggle
                   initialState={owned}
-                  onChange={(toggle) => updateState(student.id, { owned: toggle })}
+                  onChange={(toggle) => updateState(student.uid, { owned: toggle })}
                 />
               </div>
               {owned && (
                 <EditTier
                   initialTier={student.initialTier}
                   currentTier={tier ?? student.initialTier}
-                  onUpdate={(newTier) => updateState(student.id, { tier: newTier })}
+                  onUpdate={(newTier) => updateState(student.uid, { tier: newTier })}
                 />
               )}
             </div>

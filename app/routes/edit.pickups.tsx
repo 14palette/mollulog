@@ -35,7 +35,7 @@ export const loader = async ({ request, context }: LoaderFunctionArgs) => {
     event: data.events.nodes.find((event) => event.uid === history.eventId)!,
     students: history.result
       .flatMap((trial) => trial.tier3StudentIds.filter((studentId) => studentId).map((studentId) => allStudentsMap[studentId]))
-      .map((student) => ({ studentId: student.id, name: student.name })),
+      .map((student) => ({ studentId: student.uid, name: student.name })),
   })).sort((a, b) => dayjs(b.event.since).diff(dayjs(a.event.since)));
 
   return { pickupHistories: aggregatedHistories };

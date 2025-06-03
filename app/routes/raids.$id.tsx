@@ -62,7 +62,7 @@ export const loader = async ({ request, context, params }: LoaderFunctionArgs) =
     raid: data!.raid!,
     signedIn: sensei !== null,
     allStudents: allStudents.map((student) => ({
-      uid: student.id,
+      uid: student.uid,
       name: student.name,
     })),
   };

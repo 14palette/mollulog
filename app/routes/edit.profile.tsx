@@ -33,7 +33,7 @@ export const loader = async ({ context, request }: LoaderFunctionArgs) => {
       friendCode: senseiData.friendCode,
     },
     allStudents: (await getAllStudents(env)).map((student) => ({
-      uid: student.id,
+      uid: student.uid,
       name: student.name,
     })),
   };

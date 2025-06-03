@@ -43,18 +43,18 @@ export default function RaidRankFilter({ filters, setRaidFilters, signedIn, stud
         <StudentFilter
           selectedStudents={filters.includeStudents}
           students={students}
-          onSelect={(studentId) => {
+          onSelect={(studentUid) => {
             setRaidFilterAndResetPage((prev) => {
-              if (prev.includeStudents.some(student => student.uid === studentId)) {
+              if (prev.includeStudents.some(student => student.uid === studentUid)) {
                 return prev;
               }
-              return { ...prev, includeStudents: [...prev.includeStudents, { uid: studentId, tier: 3 }] };
+              return { ...prev, includeStudents: [...prev.includeStudents, { uid: studentUid, tier: 3 }] };
             });
           }}
-          onRemove={(studentId) => {
+          onRemove={(studentUid) => {
             setRaidFilterAndResetPage((prev) => ({
               ...prev,
-              includeStudents: prev.includeStudents.filter(student => student.uid !== studentId)
+              includeStudents: prev.includeStudents.filter(student => student.uid !== studentUid)
             }));
           }}
         />
@@ -71,16 +71,16 @@ export default function RaidRankFilter({ filters, setRaidFilters, signedIn, stud
         <StudentFilter
           selectedStudents={filters.excludeStudents}
           students={students}
-          onSelect={(studentId) => {
+          onSelect={(studentUid) => {
             setRaidFilterAndResetPage((prev) => ({
               ...prev,
-              excludeStudents: [...prev.excludeStudents, { uid: studentId, tier: 8 }]
+              excludeStudents: [...prev.excludeStudents, { uid: studentUid, tier: 8 }]
             }));
           }}
-          onRemove={(studentId) => {
+          onRemove={(studentUid) => {
             setRaidFilterAndResetPage((prev) => ({
               ...prev,
-              excludeStudents: prev.excludeStudents.filter((student) => student.uid !== studentId)
+              excludeStudents: prev.excludeStudents.filter((student) => student.uid !== studentUid)
             }));
           }}
         />

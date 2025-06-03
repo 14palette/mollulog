@@ -24,7 +24,7 @@ export default function TimelineItem({ activity, showProfile, showTime }: Timeli
             {showProfile && (
               <Link to={`/@${activity.user.username}`}>
                 <div className="flex items-center hover:underline cursor-pointer mr-2">
-                  <ProfileImage studentId={activity.user.profileStudentId} imageSize={8} />
+                  <ProfileImage studentUid={activity.user.profileStudentId} imageSize={8} />
                   <span className="ml-2 font-semibold">{activity.user.username}</span>
                 </div>
               </Link>
@@ -36,7 +36,7 @@ export default function TimelineItem({ activity, showProfile, showTime }: Timeli
         )}
         <div className="my-2 p-4 bg-neutral-100 dark:bg-neutral-900 rounded-lg">
           <div className="flex items-center">
-            <ProfileImage studentId={followee.profileStudentId} />
+            <ProfileImage studentUid={followee.profileStudentId} />
             <p className="ml-2">
               <Link to={`/@${followee.username}`} className="font-semibold hover:underline">
                 <span>@{followee.username}</span>

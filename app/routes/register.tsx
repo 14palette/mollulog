@@ -21,7 +21,7 @@ export const loader = async ({ request, context }: LoaderFunctionArgs) => {
 
   const env = context.cloudflare.env;
   return { allStudents: (await getAllStudents(env)).map((student) => ({
-    uid: student.id,
+    uid: student.uid,
     name: student.name,
   })) };
 }

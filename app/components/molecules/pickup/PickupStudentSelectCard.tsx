@@ -13,7 +13,7 @@ type PickupStudentSelectCardProps = {
     uid: string;
     name: string;
   }[];
-  onChange: (studentId: string) => void;
+  onChange: (studentUid: string) => void;
 };
 
 export default function PickupStudentSelectCard({ uid, name, tier3Students, onChange }: PickupStudentSelectCardProps) {
@@ -25,7 +25,7 @@ export default function PickupStudentSelectCard({ uid, name, tier3Students, onCh
   return (
     <div className="w-16 mr-2 inline-block align-top md:relative">
       <div className="relative w-full group">
-        <StudentCard studentId={uid} name={name} />
+        <StudentCard uid={uid} name={name} />
         <div
           className={sanitizeClassName(`
             absolute w-full h-full rounded-lg top-0 left-0 flex justify-center bg-white dark:bg-neutral-800
@@ -49,7 +49,7 @@ export default function PickupStudentSelectCard({ uid, name, tier3Students, onCh
             <div className="-mt-4 p-2 flex gap-x-2 rounded-lg">
               <StudentCards
                 mobileGrid={6} pcGrid={6}
-                students={searchResult.map((student) => ({ studentId: student.uid, name: student.name }))}
+                students={searchResult}
                 onSelect={(studentUid) => {
                   onChange(studentUid);
                   setOpen(false);

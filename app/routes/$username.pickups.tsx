@@ -53,8 +53,8 @@ export const loader = async ({ context, request, params }: LoaderFunctionArgs) =
     ...history,
     event: data.events.nodes.find((event) => event.uid === history.eventId)!,
     students: history.result
-      .flatMap((trial) => trial.tier3StudentIds.filter((studentId) => studentId).map((studentId) => allStudentsMap[studentId]))
-      .map((student) => ({ studentId: student.id, name: student.name })),
+      .flatMap((trial) => trial.tier3StudentIds.filter((studentUid) => studentUid).map((studentUid) => allStudentsMap[studentUid]))
+      .map((student) => ({ studentId: student.uid, name: student.name })),
   })).sort((a, b) => dayjs(b.event.since).diff(dayjs(a.event.since)));
 
   let tier3Count = 0, tier3RateCount = 0;

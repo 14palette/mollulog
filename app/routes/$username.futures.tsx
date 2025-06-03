@@ -61,7 +61,6 @@ export const loader = async ({ context, params }: LoaderFunctionArgs) => {
 
 export default function UserFutures() {
   const { events, favoritedStudents, memos } = useLoaderData<typeof loader>();
-  
 
   if (events.length === 0) {
     return (

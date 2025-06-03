@@ -114,12 +114,12 @@ export default function Index() {
               }))}
               favoritedCounts={contentFavoritedCounts}
               favoritedStudents={signedIn ? favoritedStudents.filter((each) => each.contentId === event.uid).map((each) => each.studentId) : undefined}
-              onFavorite={(studentId, favorited) => {
+              onFavorite={(studentUid, favorited) => {
                 if (!signedIn) {
                   showSignIn();
                   return;
                 }
-                submit({ favorite: { contentUid: event.uid, studentId, favorited } });
+                submit({ favorite: { contentUid: event.uid, studentUid, favorited } });
               }}
             />
           )

@@ -63,10 +63,10 @@ export default function PartyGenerator({ party, raids, studentStates }: PartyGen
         <div className="my-4 px-4 py-2 md:px-6 md:py-4 bg-neutral-100 dark:bg-neutral-900 rounded-xl" key={`party-unit-${index}`}>
           <Label text={`${index + 1}번째 파티`} />
           <StudentCards
-            students={unit.map((studentId) => {
-              const state = studentId ? studentStates.find(({ student }) => student.id === studentId) : null;
+            students={unit.map((uid) => {
+              const state = uid ? studentStates.find(({ student }) => student.uid === uid) : null;
               return {
-                studentId: state?.student?.id ?? null,
+                uid: state?.student?.uid ?? null,
                 name: state?.student?.name ?? undefined,
                 tier: state?.owned ? (state.tier ?? state.student.initialTier) : undefined,
               };
@@ -89,13 +89,13 @@ export default function PartyGenerator({ party, raids, studentStates }: PartyGen
         <PartyUnitEditor
           index={units.length}
           students={studentStates.map(({ student, owned, tier }) => ({
-            studentId: student.id,
+            uid: student.uid,
             name: student.name,
             role: student.role,
             tier: owned ? (tier ?? student.initialTier) : undefined,
           }))}
-          onComplete={(studentIds) => {
-            setUnits((prev) => [...prev, studentIds]);
+          onComplete={(studentUids) => {
+            setUnits((prev) => [...prev, studentUids]);
             setShowPartyEditor(false);
           }}
           onCancel={() => setShowPartyEditor(false)}

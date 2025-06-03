@@ -174,7 +174,7 @@ export default function EventStages({ stages, signedIn, ownedStudentUids }: Even
                   <div className="w-full md:w-1/2 p-2">
                     <p className="mb-2 font-bold">스트라이커</p>
                     <StudentCards mobileGrid={8} pcGrid={6} students={item.eventBonuses.filter(({ student }) => student.role === "striker").map(({ student, ratio }) => ({
-                      studentId: student.uid,
+                      uid: student.uid,
                       grayscale: signedIn && !ownedStudentUids.includes(student.uid),
                       label: (<span className="text-white font-normal">{Math.floor(ratio * 100)}%</span>),
                     }))} />
@@ -182,7 +182,7 @@ export default function EventStages({ stages, signedIn, ownedStudentUids }: Even
                   <div className="w-full md:w-1/2 p-2">
                     <p className="mb-2 font-bold">스페셜</p>
                     <StudentCards mobileGrid={8} pcGrid={6} students={item.eventBonuses.filter(({ student }) => student.role === "special").map(({ student, ratio }) => ({
-                      studentId: student.uid,
+                      uid: student.uid,
                       grayscale: signedIn && !ownedStudentUids.includes(student.uid),
                       label: (<span className="text-white font-normal">{Math.floor(ratio * 100)}%</span>),
                     }))} />

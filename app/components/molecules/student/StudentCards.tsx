@@ -6,7 +6,7 @@ import type { AttackType, DefenseType, Role } from "~/models/content.d";
 
 type StudentCardsProps = {
   students?: {
-    studentId: string | null;
+    uid: string | null;
     name?: string | null;
     attackType?: AttackType;
     defenseType?: DefenseType;
@@ -54,29 +54,29 @@ export default function StudentCards({ students, mobileGrid, pcGrid, onSelect, o
   return (
     <div className={`relative grid ${gridClass} ${pcGridClass} gap-1 sm:gap-2`}>
       {students && students.map((student, index) => {
-        const { studentId, name } = student;
-        const showInfo = studentId && name && student.attackType && student.defenseType && student.role && student.schaleDbId;
+        const { uid, name } = student;
+        const showInfo = uid && name && student.attackType && student.defenseType && student.role && student.schaleDbId;
 
         return (
-          <div key={`student-card-${name ?? studentId}-${index}`}>
+          <div key={`student-card-${name ?? uid}-${index}`}>
             <div
-              className={((onSelect || onFavorite) && studentId) ? "hover:scale-105 cursor-pointer transition" : ""}
-              onClick={studentId ? () => {
-                onSelect?.(studentId);
-                setSelectedStudentId(studentId);
+              className={((onSelect || onFavorite) && uid) ? "hover:scale-105 cursor-pointer transition" : ""}
+              onClick={uid ? () => {
+                onSelect?.(uid);
+                setSelectedStudentId(uid);
               } : undefined}
             >
               <StudentCard
                 {...student}
-                favorited={student?.state?.favorited}
-                favoritedCount={student?.state?.favoritedCount}
+                favorited={student.state?.favorited}
+                favoritedCount={student.state?.favoritedCount}
               />
             </div>
 
-            {(showInfo && selectedStudentId === studentId) && (
+            {(showInfo && selectedStudentId === uid) && (
               <StudentInfo
                 student={{
-                  id: studentId!,
+                  uid,
                   name,
                   attackType: student.attackType!,
                   defenseType: student.defenseType!,
@@ -84,8 +84,8 @@ export default function StudentCards({ students, mobileGrid, pcGrid, onSelect, o
                   schaleDbId: student.schaleDbId!,
                 }}
                 favorited={student?.state?.favorited ?? false}
-                onRemoveFavorite={() => { onFavorite?.(studentId!, false); }}
-                onAddFavorite={() => { onFavorite?.(studentId!, true); }}
+                onRemoveFavorite={() => { onFavorite?.(uid, false); }}
+                onAddFavorite={() => { onFavorite?.(uid, true); }}
                 onClose={() => { setSelectedStudentId(null); }}
               />
             )}

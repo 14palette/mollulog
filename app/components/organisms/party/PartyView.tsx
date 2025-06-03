@@ -19,7 +19,7 @@ type PartyViewProps = {
     username: string;
   };
   students?: {
-    studentId: string;
+    uid: string;
     name: string;
     initialTier: number;
   }[];
@@ -51,14 +51,14 @@ export default function PartyView({ party, sensei, students, studentStates, edit
   const studentsMap: Map<string, Exclude<PartyViewProps["students"], undefined>[number]> = new Map();
   if (students) {
     for (const student of students) {
-      studentsMap.set(student.studentId, student);
+      studentsMap.set(student.uid, student);
     }
   }
 
   const studentStatesMap: Map<string, StudentState> = new Map();
   for (const state of studentStates) {
-    studentStatesMap.set(state.student.id, state);
-    studentsMap.set(state.student.id, { studentId: state.student.id, name: state.student.name, initialTier: state.student.initialTier });
+    studentStatesMap.set(state.student.uid, state);
+    studentsMap.set(state.student.uid, { uid: state.student.uid, name: state.student.name, initialTier: state.student.initialTier });
   }
 
   return (
@@ -74,7 +74,7 @@ export default function PartyView({ party, sensei, students, studentStates, edit
 
       {sensei && (
         <Link className="flex items-center -mt-2 mb-4 hover:underline font-bold" to={`/@${sensei.username}`}>
-          <ProfileImage imageSize={6} studentId={sensei.profileStudentId} />
+          <ProfileImage imageSize={6} studentUid={sensei.profileStudentId} />
           <span className="ml-2 text-sm">@{sensei.username}</span>
         </Link>
       )}
@@ -106,15 +106,15 @@ export default function PartyView({ party, sensei, students, studentStates, edit
       {party.studentIds.map((squad, index) => (
         <div key={`squad-${squad.join(":")}`} className={index > 0 ? "mt-2 pt-2 md:pt-0 border-t border-neutral-200 md:border-0" : undefined}>
           <StudentCards
-            students={squad.map((studentId) => {
-              if (!studentId) {
-                return { studentId: null };
+            students={squad.map((uid) => {
+              if (!uid) {
+                return { uid: null };
               }
 
-              const student = studentsMap.get(studentId)!;
-              const state = studentStatesMap.get(studentId);
+              const student = studentsMap.get(uid)!;
+              const state = studentStatesMap.get(uid);
               return {
-                studentId,
+                uid,
                 name: student.name,
                 tier: state?.owned ? (state.tier ?? student.initialTier) : undefined,
               };

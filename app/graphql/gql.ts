@@ -14,11 +14,11 @@ import type { TypedDocumentNode as DocumentNode } from '@graphql-typed-document-
  * Learn more about it here: https://the-guild.dev/graphql/codegen/plugins/presets/preset-client#reducing-bundle-size
  */
 type Documents = {
-    "\n  query AllStudents {\n    students {\n      id: studentId\n      name\n      school\n      initialTier\n      order\n      attackType\n      defenseType\n      role\n      equipments\n      released\n    }\n  }\n": typeof types.AllStudentsDocument,
+    "\n  query AllStudents {\n    students {\n      uid\n      name\n      school\n      initialTier\n      order\n      attackType\n      defenseType\n      role\n      equipments\n      released\n    }\n  }\n": typeof types.AllStudentsDocument,
     "\n  query UserFutures($now: ISO8601DateTime!) {\n    events(first: 999, untilAfter: $now) {\n      nodes {\n        uid name since\n        pickups {\n          type rerun\n          student { uid schaleDbId name school equipments }\n        }\n      }\n    }\n  }\n": typeof types.UserFuturesDocument,
     "\n  query RaidForParty {\n    raids {\n      nodes { uid name type boss terrain since }\n    }\n  }\n": typeof types.RaidForPartyDocument,
     "\n  query UserPickupEvents($eventUids: [String!]!) {\n    events(uids: $eventUids) {\n      nodes {\n        uid name type since\n        pickups {\n          student { uid }\n        }\n      }\n    }\n  }\n": typeof types.UserPickupEventsDocument,
-    "\n  query Sitemap {\n    contents {\n      nodes {\n        __typename\n        ... on Event {\n          id: eventId\n          until\n        }\n        ... on Raid {\n          id: raidId\n          until\n        }\n      }\n    }\n  }\n": typeof types.SitemapDocument,
+    "\n  query Sitemap {\n    contents {\n      nodes {\n        __typename uid until\n      }\n    }\n  }\n": typeof types.SitemapDocument,
     "\n  query Index($now: ISO8601DateTime!) {\n    events(untilAfter: $now, sinceBefore: $now) {\n      nodes {\n        name since until uid type rerun\n        pickups {\n          type rerun\n          student { uid name attackType defenseType role schaleDbId }\n        }\n      }\n    }\n    raids(untilAfter: $now, types: [total_assault, elimination], first: 2) {\n      nodes {\n        name since until uid type boss attackType defenseType terrain\n      }\n    }\n  }\n": typeof types.IndexDocument,
     "\n  query RaidForPartyEdit {\n    raids {\n      nodes { uid name type boss terrain since until }\n    }\n  }\n": typeof types.RaidForPartyEditDocument,
     "\n  query PickupEvents {\n    events(first: 9999) {\n      nodes {\n        uid name since until type rerun\n        pickups {\n          student { uid }\n          studentName\n        }\n      }\n    }\n  }\n": typeof types.PickupEventsDocument,
@@ -31,11 +31,11 @@ type Documents = {
     "\n  query StudentDetail($uid: String!, $raidSince: ISO8601DateTime!) {\n    student(uid: $uid) {\n      name uid attackType defenseType role school schaleDbId\n      raidStatistics(raidSince: $raidSince) {\n        raid { uid name boss type since until terrain }\n        difficulty\n        defenseType\n        slotsCount\n        slotsByTier { tier count }\n        assistsCount\n        assistsByTier { tier count }\n      }\n    }\n  }\n": typeof types.StudentDetailDocument,
 };
 const documents: Documents = {
-    "\n  query AllStudents {\n    students {\n      id: studentId\n      name\n      school\n      initialTier\n      order\n      attackType\n      defenseType\n      role\n      equipments\n      released\n    }\n  }\n": types.AllStudentsDocument,
+    "\n  query AllStudents {\n    students {\n      uid\n      name\n      school\n      initialTier\n      order\n      attackType\n      defenseType\n      role\n      equipments\n      released\n    }\n  }\n": types.AllStudentsDocument,
     "\n  query UserFutures($now: ISO8601DateTime!) {\n    events(first: 999, untilAfter: $now) {\n      nodes {\n        uid name since\n        pickups {\n          type rerun\n          student { uid schaleDbId name school equipments }\n        }\n      }\n    }\n  }\n": types.UserFuturesDocument,
     "\n  query RaidForParty {\n    raids {\n      nodes { uid name type boss terrain since }\n    }\n  }\n": types.RaidForPartyDocument,
     "\n  query UserPickupEvents($eventUids: [String!]!) {\n    events(uids: $eventUids) {\n      nodes {\n        uid name type since\n        pickups {\n          student { uid }\n        }\n      }\n    }\n  }\n": types.UserPickupEventsDocument,
-    "\n  query Sitemap {\n    contents {\n      nodes {\n        __typename\n        ... on Event {\n          id: eventId\n          until\n        }\n        ... on Raid {\n          id: raidId\n          until\n        }\n      }\n    }\n  }\n": types.SitemapDocument,
+    "\n  query Sitemap {\n    contents {\n      nodes {\n        __typename uid until\n      }\n    }\n  }\n": types.SitemapDocument,
     "\n  query Index($now: ISO8601DateTime!) {\n    events(untilAfter: $now, sinceBefore: $now) {\n      nodes {\n        name since until uid type rerun\n        pickups {\n          type rerun\n          student { uid name attackType defenseType role schaleDbId }\n        }\n      }\n    }\n    raids(untilAfter: $now, types: [total_assault, elimination], first: 2) {\n      nodes {\n        name since until uid type boss attackType defenseType terrain\n      }\n    }\n  }\n": types.IndexDocument,
     "\n  query RaidForPartyEdit {\n    raids {\n      nodes { uid name type boss terrain since until }\n    }\n  }\n": types.RaidForPartyEditDocument,
     "\n  query PickupEvents {\n    events(first: 9999) {\n      nodes {\n        uid name since until type rerun\n        pickups {\n          student { uid }\n          studentName\n        }\n      }\n    }\n  }\n": types.PickupEventsDocument,
@@ -65,7 +65,7 @@ export function graphql(source: string): unknown;
 /**
  * The graphql function is used to parse GraphQL queries into a document that can be used by GraphQL clients.
  */
-export function graphql(source: "\n  query AllStudents {\n    students {\n      id: studentId\n      name\n      school\n      initialTier\n      order\n      attackType\n      defenseType\n      role\n      equipments\n      released\n    }\n  }\n"): (typeof documents)["\n  query AllStudents {\n    students {\n      id: studentId\n      name\n      school\n      initialTier\n      order\n      attackType\n      defenseType\n      role\n      equipments\n      released\n    }\n  }\n"];
+export function graphql(source: "\n  query AllStudents {\n    students {\n      uid\n      name\n      school\n      initialTier\n      order\n      attackType\n      defenseType\n      role\n      equipments\n      released\n    }\n  }\n"): (typeof documents)["\n  query AllStudents {\n    students {\n      uid\n      name\n      school\n      initialTier\n      order\n      attackType\n      defenseType\n      role\n      equipments\n      released\n    }\n  }\n"];
 /**
  * The graphql function is used to parse GraphQL queries into a document that can be used by GraphQL clients.
  */
@@ -81,7 +81,7 @@ export function graphql(source: "\n  query UserPickupEvents($eventUids: [String!
 /**
  * The graphql function is used to parse GraphQL queries into a document that can be used by GraphQL clients.
  */
-export function graphql(source: "\n  query Sitemap {\n    contents {\n      nodes {\n        __typename\n        ... on Event {\n          id: eventId\n          until\n        }\n        ... on Raid {\n          id: raidId\n          until\n        }\n      }\n    }\n  }\n"): (typeof documents)["\n  query Sitemap {\n    contents {\n      nodes {\n        __typename\n        ... on Event {\n          id: eventId\n          until\n        }\n        ... on Raid {\n          id: raidId\n          until\n        }\n      }\n    }\n  }\n"];
+export function graphql(source: "\n  query Sitemap {\n    contents {\n      nodes {\n        __typename uid until\n      }\n    }\n  }\n"): (typeof documents)["\n  query Sitemap {\n    contents {\n      nodes {\n        __typename uid until\n      }\n    }\n  }\n"];
 /**
  * The graphql function is used to parse GraphQL queries into a document that can be used by GraphQL clients.
  */

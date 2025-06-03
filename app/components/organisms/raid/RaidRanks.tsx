@@ -69,7 +69,7 @@ export default function RaidRanks({ raidUid, filters, setFilters }: RaidRanksPro
                     <StudentCards
                       key={`party-${party.partyIndex}`}
                       students={party.slots.map((slot) => ({
-                        studentId: slot.student?.uid ?? null,
+                        uid: slot.student?.uid ?? null,
                         name: slot.student?.name,
                         tier: slot.tier,
                       }))}

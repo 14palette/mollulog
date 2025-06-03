@@ -74,7 +74,7 @@ export default function SlotCountInfo({ student, raid, slotsCount, assistsCount,
       {student && (
         <div className="pt-4 px-4 xl:px-6 flex items-center grow">
           <div className="w-16">
-            <StudentCard studentId={student.uid} />
+            <StudentCard uid={student.uid} />
           </div>
           <div className="mx-4 grow">
             <Link to={`/students/${student.uid}`}>
