@@ -39,7 +39,8 @@ export const loader = async ({ params }: LoaderFunctionArgs) => {
   const { data, error } = await runQuery<StudentDetailQuery>(studentDetailQuery, { uid, raidSince });
   let errorMessage: string | null = null;
   if (error || !data) {
-    errorMessage = error?.message ?? "학생 정보를 가져오는 중 오류가 발생했어요";
+    console.error(error);
+    errorMessage = "학생 정보를 가져오는 중 오류가 발생했어요";
   } else if (!data.student) {
     errorMessage = "학생 정보를 찾을 수 없어요";
   }

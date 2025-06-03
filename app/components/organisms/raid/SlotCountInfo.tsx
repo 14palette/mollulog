@@ -58,7 +58,9 @@ export default function SlotCountInfo({ student, raid, slotsCount, assistsCount,
               {raid.name}
               <ChevronRightIcon className="size-4 inline-block" />
             </p>
-            <p className="text-xs">{dayjs(raid.since).format("YYYY-MM-DD")} ~ {dayjs(raid.until).format("YYYY-MM-DD")}</p>
+            <p className="text-xs">
+              {dayjs(raid.since).format("YYYY-MM-DD")}<span className="hidden md:inline"> ~ {dayjs(raid.until).format("YYYY-MM-DD")}</span>
+            </p>
           </Link>
           <div
             className="absolute top-0 right-0 w-3/5 md:w-1/2 h-full rounded-tr-lg bg-cover"
