@@ -20,15 +20,23 @@ import { getPreference } from "./auth/preference.server";
 import { useEffect, useRef, useState } from "react";
 import { SignInProvider } from "./contexts/SignInProvider";
 import { SignInBottomSheet } from "./components/molecules/auth";
+import { getLatestPostTime } from "./models/post";
 
 export const loader = async ({ request, context }: LoaderFunctionArgs) => {
   const env = context.cloudflare.env;
 
   const sensei = await getAuthenticator(env).isAuthenticated(request);
   const preference = await getPreference(env, request);
+  const latestNewsTime = await getLatestPostTime(env, "news");
+
+  const threeDaysAgo = new Date();
+  threeDaysAgo.setDate(threeDaysAgo.getDate() - 3);
+
   return {
     currentUsername: sensei?.username ?? null,
+    currentRole: sensei?.role ?? null,
     darkMode: preference.darkMode ?? false,
+    hasRecentNews: latestNewsTime ? new Date(latestNewsTime) > threeDaysAgo : false,
   };
 };
 
@@ -67,7 +75,7 @@ const wideLayout = ["/raids", "/edit/students"];
 
 export default function App() {
   const loaderData = useLoaderData<typeof loader>();
-  const { currentUsername } = loaderData;
+  const { currentUsername, currentRole, hasRecentNews } = loaderData;
 
   const [darkMode, setDarkMode] = useState(loaderData.darkMode);
   const loadingBarRef = useRef<LoadingBarRef>(null);
@@ -93,7 +101,13 @@ export default function App() {
       <SignInProvider>
         <div className="flex flex-col xl:flex-row">
           <div className="fixed xl:relative w-full xl:w-96 xl:h-screen bg-white/90 dark:bg-neutral-800/90 backdrop-blur-sm border-b xl:border-b-0 xl:border-r border-neutral-200 dark:border-neutral-700 shadow-xl shadow-neutral-200/30 dark:shadow-neutral-900/30 z-100">
-            <Sidebar currentUsername={currentUsername} darkMode={darkMode} setDarkMode={setDarkMode} />
+            <Sidebar 
+              currentUsername={currentUsername} 
+              currentRole={currentRole} 
+              darkMode={darkMode} 
+              setDarkMode={setDarkMode}
+              hasRecentNews={hasRecentNews}
+            />
           </div>
           <div className="w-full pt-10 xl:pt-0 overflow-y-scroll">
             <div className={`xl:h-screen mx-auto ${wideLayout.find((path) => location.pathname.startsWith(path)) ? "max-w-6xl" : "max-w-3xl"} px-4 md:px-8 py-6`}>

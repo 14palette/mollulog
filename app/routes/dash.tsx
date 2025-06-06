@@ -3,7 +3,7 @@ import { getAuthenticator } from "~/auth/authenticator.server";
 
 export const meta: MetaFunction = () => {
   return [
-    { title: "관리자 화면 | 몰루로그" },
+    { title: "관리자 | 몰루로그" },
   ];
 };
 

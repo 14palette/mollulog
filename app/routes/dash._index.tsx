@@ -22,7 +22,7 @@ export default function DashboardIndex() {
 
   return (
     <>
-      <Title text="관리자 화면" />
+      <Title text="관리자" />
 
       <SubTitle text="게시물 관리" />
       <div className="mt-4 flex justify-between items-center">

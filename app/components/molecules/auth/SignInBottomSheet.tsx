@@ -53,16 +53,16 @@ export default function SignInBottomSheet() {
   return (
     <>
       <div
-        className="w-screen h-full min-h-screen top-0 left-0 fixed bg-black opacity-50 z-40"
+        className="w-screen h-full min-h-screen top-0 left-0 fixed bg-black opacity-50 z-100"
         onClick={hideSignIn}
       />
-      <div className="fixed bottom-0 w-full md:max-w-3xl mx-auto left-1/2 -translate-x-1/2 p-4 md:p-8 bg-white dark:bg-neutral-800 z-50 rounded-t-2xl">
+      <div className="fixed bottom-0 w-full md:max-w-3xl mx-auto left-1/2 -translate-x-1/2 p-4 md:p-8 bg-white dark:bg-neutral-800 z-200 rounded-t-2xl">
         <p className="mt-4 mb-4 md:mb-8 text-2xl md:text-4xl font-black">로그인</p>
         {error && <p className="my-4 text-sm md:text-base text-red-500">{error}</p>}
         <Button className="w-full py-2 cursor-pointer" type="submit" color="primary" onClick={signInWithGoogle} disabled={buttonDisabled}>
           <p>Google 계정으로 로그인</p>
         </Button>
-        <Button className="w-full py-2 cursor-pointer" type="button" onClick={signInWithPasskey} disabled={buttonDisabled}>
+        <Button className="w-full py-2 cursor-pointer" type="button" color="black" onClick={signInWithPasskey} disabled={buttonDisabled}>
           <p>Passkey로 로그인</p>
         </Button>
         <p className="my-4 text-sm text-neutral-500 text-center">

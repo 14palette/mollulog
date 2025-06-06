@@ -1,4 +1,4 @@
-import { MoonIcon, EnvelopeIcon } from "@heroicons/react/16/solid";
+import { MoonIcon, EnvelopeIcon, MegaphoneIcon } from "@heroicons/react/16/solid";
 import {
   HomeIcon as HomeIconOutline,
   CalendarIcon as CalendarIconOutline,
@@ -6,6 +6,7 @@ import {
   PencilSquareIcon as PencilSquareIconOutline,
   IdentificationIcon as IdentificationIconOutline,
   Bars3Icon,
+  Cog6ToothIcon as Cog6ToothIconOutline,
 } from "@heroicons/react/24/outline";
 import {
   HomeIcon as HomeIconSolid,
@@ -13,6 +14,7 @@ import {
   UserCircleIcon as UserCircleIconSolid,
   PencilSquareIcon as PencilSquareIconSolid,
   IdentificationIcon as IdentificationIconSolid,
+  Cog6ToothIcon as Cog6ToothIconSolid,
 } from "@heroicons/react/24/solid";
 import { Transition } from "@headlessui/react";
 import { Link, useMatches, useSubmit } from "react-router";
@@ -45,13 +47,15 @@ function MenuItem({ to, name, OutlineIcon, SolidIcon, isActive, onItemClick }: M
 
 interface MenuContentProps {
   currentUsername: string | null;
+  currentRole: string | null;
   pathname: string;
   onMenuClose: () => void;
   onShowSignIn: () => void;
   onDarkModeToggle: (fn: (prev: boolean) => boolean) => void;
+  hasRecentNews: boolean;
 }
 
-function MenuContent({ currentUsername, pathname, onMenuClose, onShowSignIn, onDarkModeToggle }: MenuContentProps) {
+function MenuContent({ currentUsername, currentRole, pathname, onMenuClose, onShowSignIn, onDarkModeToggle, hasRecentNews }: MenuContentProps) {
   const submit = useSubmit();
 
   return (
@@ -98,6 +102,16 @@ function MenuContent({ currentUsername, pathname, onMenuClose, onShowSignIn, onD
             isActive={pathname.startsWith("/edit")}
             onItemClick={onMenuClose}
           />
+          {currentRole === "admin" && (
+            <MenuItem
+              to="/dash"
+              name="관리자"
+              OutlineIcon={Cog6ToothIconOutline}
+              SolidIcon={Cog6ToothIconSolid}
+              isActive={pathname.startsWith("/dash")}
+              onItemClick={onMenuClose}
+            />
+          )}
         </>
       ) : (
         <div
@@ -111,8 +125,31 @@ function MenuContent({ currentUsername, pathname, onMenuClose, onShowSignIn, onD
         </div>
       )}
 
+      <div className="py-2" />
+
+      {currentUsername && (
+        <Link
+          to="/contact"
+          className="w-fit my-1.5 py-1 px-2 flex items-center text-neutral-500 dark:text-neutral-400 cursor-pointer hover:underline"
+          onClick={onMenuClose}
+        >
+          <EnvelopeIcon className="size-4" />
+          <span className="ml-2">제안/문의</span>
+        </Link>
+      )}
+      <Link
+        to="/news"
+        className="w-fit my-1.5 py-1 px-2 flex items-center text-neutral-500 dark:text-neutral-400 cursor-pointer hover:underline relative"
+        onClick={onMenuClose}
+      >
+        <MegaphoneIcon className="size-4" />
+        <span className="ml-2">업데이트 소식</span>
+        {hasRecentNews && (
+          <div className="absolute top-1 -right-1 size-1.5 bg-red-500 rounded-full animate-pulse" />
+        )}
+      </Link>
       <div
-        className="w-fit mb-2 mt-8 py-1 px-2 flex items-center font-bold text-yellow-600 dark:text-yellow-400 cursor-pointer hover:underline"
+        className="w-fit my-1.5 py-1 px-2 font-bold flex items-center text-yellow-600 dark:text-yellow-400 cursor-pointer hover:underline"
         onClick={() => {
           onDarkModeToggle((prev) => {
             submitPreference(submit, { darkMode: !prev });
@@ -123,27 +160,19 @@ function MenuContent({ currentUsername, pathname, onMenuClose, onShowSignIn, onD
         <MoonIcon className="size-4" />
         <span className="ml-2">다크 모드</span>
       </div>
-      {currentUsername && (
-        <Link
-          to="/contact"
-          className="w-fit mb-2 mt-2 py-1 px-2 flex items-center font-bold text-neutral-500 dark:text-neutral-400 cursor-pointer hover:underline"
-          onClick={onMenuClose}
-        >
-          <EnvelopeIcon className="size-4" />
-          <span className="ml-2">제안/문의</span>
-        </Link>
-      )}
     </>
   );
 }
 
 type SidebarProps = {
   currentUsername: string | null;
+  currentRole: string | null;
   darkMode: boolean;
   setDarkMode: (fn: (prev: boolean) => boolean) => void;
+  hasRecentNews: boolean;
 };
 
-export default function Sidebar({ currentUsername, darkMode, setDarkMode }: SidebarProps) {
+export default function Sidebar({ currentUsername, currentRole, darkMode, setDarkMode, hasRecentNews }: SidebarProps) {
   const matches = useMatches();
   const pathname = matches[matches.length - 1].pathname;
 
@@ -166,10 +195,12 @@ export default function Sidebar({ currentUsername, darkMode, setDarkMode }: Side
       <div className="mt-6 hidden xl:block">
         <MenuContent
           currentUsername={currentUsername}
+          currentRole={currentRole}
           pathname={pathname}
           onMenuClose={handleMenuClose}
           onShowSignIn={showSignIn}
           onDarkModeToggle={setDarkMode}
+          hasRecentNews={hasRecentNews}
         />
       </div>
       <Transition
@@ -185,10 +216,12 @@ export default function Sidebar({ currentUsername, darkMode, setDarkMode }: Side
       >
         <MenuContent
           currentUsername={currentUsername}
+          currentRole={currentRole}
           pathname={pathname}
           onMenuClose={handleMenuClose}
           onShowSignIn={showSignIn}
           onDarkModeToggle={setDarkMode}
+          hasRecentNews={hasRecentNews}
         />
       </Transition>
     </div>
