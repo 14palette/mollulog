@@ -8,7 +8,7 @@ export type ButtonProps = {
   children?: ReactNode | ReactNode[];
 
   type?: "button" | "submit" | "reset";
-  color?: "primary" | "red" | "white" | "black";
+  color?: "primary" | "red" | "black";
   onClick?: () => void;
   disabled?: boolean;
 };
@@ -28,7 +28,7 @@ export default function Button({ text, Icon, className, children, type, color, o
   return (
     <button
       type={type || "button"}
-      className={`inline-block my-2 mr-2 px-4 py-2 rounded-xl shadow shadow-neutral-200 dark:shadow-neutral-900 transition ${colorClass} ${className ?? ""}`}
+      className={`inline-block my-2 mr-2 px-4 py-2 rounded-xl shadow shadow-neutral-200 dark:shadow-neutral-900 transition cursor-pointer ${colorClass} ${className ?? ""}`}
       onClick={onClick}
       disabled={disabled}
     >

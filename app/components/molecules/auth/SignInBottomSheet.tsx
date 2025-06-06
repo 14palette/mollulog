@@ -62,7 +62,7 @@ export default function SignInBottomSheet() {
         <Button className="w-full py-2 cursor-pointer" type="submit" color="primary" onClick={signInWithGoogle} disabled={buttonDisabled}>
           <p>Google 계정으로 로그인</p>
         </Button>
-        <Button className="w-full py-2 cursor-pointer" type="button" color="black" onClick={signInWithPasskey} disabled={buttonDisabled}>
+        <Button className="w-full py-2 cursor-pointer" type="button" onClick={signInWithPasskey} disabled={buttonDisabled}>
           <p>Passkey로 로그인</p>
         </Button>
         <p className="my-4 text-sm text-neutral-500 text-center">
