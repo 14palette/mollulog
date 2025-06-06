@@ -36,7 +36,7 @@ export const loader = async ({ request, context }: LoaderFunctionArgs) => {
     currentUsername: sensei?.username ?? null,
     currentRole: sensei?.role ?? null,
     darkMode: preference.darkMode ?? false,
-    hasRecentNews: latestNewsTime ? new Date(latestNewsTime) > threeDaysAgo : false,
+    hasRecentNews: latestNewsTime ? latestNewsTime > threeDaysAgo : false,
   };
 };
 

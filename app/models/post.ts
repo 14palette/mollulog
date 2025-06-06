@@ -79,16 +79,15 @@ export async function updatePost(env: Env, uid: string, title: string, content: 
 
 export async function getAllPosts(env: Env, board?: string): Promise<Post[]> {
   const db = drizzle(env.DB);
-  const query = db.select().from(postsTable);
-  if (board) {
-    query.where(eq(postsTable.board, board));
-  }
-
-  const posts = await query.orderBy(sql`createdAt DESC`);
+  const posts = await db
+    .select()
+    .from(postsTable)
+    .where(board ? eq(postsTable.board, board) : undefined)
+    .orderBy(sql`createdAt DESC`);
   return posts.map(toModel);
 }
 
-export async function getLatestPostTime(env: Env, board: string): Promise<string | null> {
+export async function getLatestPostTime(env: Env, board: string): Promise<Date | null> {
   const db = drizzle(env.DB);
   const [post] = await db
     .select()
@@ -97,5 +96,5 @@ export async function getLatestPostTime(env: Env, board: string): Promise<string
     .orderBy(sql`createdAt DESC`)
     .limit(1);
 
-  return post?.createdAt ?? null;
+  return post?.createdAt ? new Date(post.createdAt) : null;
 }

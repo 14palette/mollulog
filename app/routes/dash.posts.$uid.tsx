@@ -1,11 +1,10 @@
 import { Form, redirect, useActionData, useNavigate, useLoaderData } from "react-router";
 import { useEffect, useState } from "react";
 import { Button, Input, Textarea } from "~/components/atoms/form";
-import { Title } from "~/components/atoms/typography";
+import { MarkdownText, Title } from "~/components/atoms/typography";
 import { createPost, getPostByUid, updatePost } from "~/models/post";
 import type { ActionFunctionArgs, LoaderFunctionArgs } from "react-router";
 import { getAuthenticator } from "~/auth/authenticator.server";
-import { marked } from "marked";
 
 export async function loader({ params, request, context }: LoaderFunctionArgs) {
   const env = context.cloudflare.env;
@@ -87,9 +86,7 @@ export default function PostForm() {
 
         {preview ? (
           <div className="mt-4 p-4 border border-neutral-200 dark:border-neutral-700 rounded-lg">
-            <div className="prose prose-neutral dark:prose-invert max-w-none prose-p:my-2 prose-headings:my-4 prose-hr:my-4">
-              <div dangerouslySetInnerHTML={{ __html: marked(content) }} />
-            </div>
+            <MarkdownText text={content} />
           </div>
         ) : (
           <Textarea

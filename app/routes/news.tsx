@@ -1,7 +1,6 @@
 import dayjs from "dayjs";
-import { marked } from "marked";
 import { LoaderFunctionArgs, useLoaderData, type MetaFunction } from "react-router";
-import { Title } from "~/components/atoms/typography";
+import { MarkdownText, Title } from "~/components/atoms/typography";
 import { ActionCard } from "~/components/molecules/editor";
 import { getAllPosts } from "~/models/post";
 
@@ -27,9 +26,7 @@ export default function News() {
             <h3 className="text-lg font-bold">{post.title}</h3>
             <p className="text-sm text-neutral-500 dark:text-neutral-400">{dayjs(post.createdAt).format("YYYY-MM-DD")}</p>
             <ActionCard actions={[]}>
-              <div className="prose prose-neutral dark:prose-invert max-w-none prose-p:my-1 prose-headings:my-2 prose-li:my-1 prose-hr:my-4">
-                <div dangerouslySetInnerHTML={{ __html: marked(post.content) }} />
-              </div>
+              <MarkdownText text={post.content} />
             </ActionCard>
           </div>
         ))}
