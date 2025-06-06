@@ -14,6 +14,7 @@ type StudentCardsProps = {
     schaleDbId?: string;
 
     tier?: number | null;
+    level?: number | null;
     label?: ReactNode;
     grayscale?: boolean;
 

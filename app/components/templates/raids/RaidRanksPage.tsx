@@ -60,6 +60,7 @@ export default function RaidRanksPage({ raid, signedIn, allStudents }: RaidRanks
         )}
         <RaidRanks
           raidUid={raid.uid}
+          raidSince={raid.since}
           filters={filters}
           setFilters={setFilters}
         />

@@ -1,4 +1,4 @@
-import { HeartIcon } from "@heroicons/react/16/solid";
+import { HeartIcon, StarIcon } from "@heroicons/react/16/solid";
 import type { ReactNode } from "react";
 import { studentImageUrl } from "~/models/assets";
 
@@ -8,7 +8,9 @@ type StudentCardProps = {
   nameSize?: "small" | "normal";
 
   tier?: number | null;
+  level?: number | null;
   label?: ReactNode;
+  isAssist?: boolean;
 
   favorited?: boolean;
   favoritedCount?: number;
@@ -24,9 +26,8 @@ function visibileTier(tier: number): [number, boolean] {
 }
 
 export default function StudentCard(
-  { uid, name, nameSize, tier, label, favorited, favoritedCount, grayscale }: StudentCardProps,
+  { uid, name, nameSize, tier, level, label, isAssist, favorited, favoritedCount, grayscale }: StudentCardProps,
 ) {
-  const showInfo = tier !== undefined || label !== undefined;
   const visibleNames = [];
   if (name === "하츠네 미쿠") {
     visibleNames.push("미쿠");
@@ -53,26 +54,34 @@ export default function StudentCard(
           src={studentImageUrl(uid ?? "unlisted")}
           alt={name ?? undefined} loading="lazy"
         />
+        {/* 우측 상단 */}
+        <div className="absolute top-0 right-0 text-xs font-bold">
+          {level && <span className="px-1.5 bg-black/90 rounded-lg text-neutral-100">Lv. {level}</span>}
+        </div>
+
         {(favoritedCount || favorited) && (
           <div className={`px-1 absolute top-0.5 right-0.5 text-white border rounded-lg flex items-center transition ${(favorited === undefined || favorited === true) ? "bg-red-500/90" : "bg-neutral-500/90"}`}>
             <HeartIcon className="size-3.5" />
             {favoritedCount && <span className="text-xs font-bold">{favoritedCount}</span>}
           </div>
         )}
-        {showInfo && (
-          <div className="absolute bottom-0 right-0 flex flex-col items-center px-2 rounded-lg bg-black/90 text-center font-bold text-xs">
-            {(tier) && (
-              <p className={`flex items-center ${visibileTier(tier)[1] ? "text-teal-300" : "text-yellow-300"}`}>
-                {(tier <= 5) ?
-                  <span className="mr-0.5">★</span> :
-                  <img className="w-4 h-4 mr-0.5 inline-block" src="/icons/exclusive_weapon.png" alt="고유 장비" />
-                }
-                <span>{visibileTier(tier)[0]}</span>
-              </p>
-            )}
-            {(label !== undefined) && label}
-          </div>
-        )}
+
+        {/* 하단 */}
+        <div className="absolute bottom-0 w-full flex justify-center text-xs font-bold bg-black/90 rounded-b-lg">
+          {isAssist && (
+            <div className="px-1 md:px-1.5 text-xs font-bold bg-linear-to-br from-cyan-300 to-sky-500 dark:from-cyan-400 dark:to-sky-600 text-white rounded-bl-lg text-center">A</div>
+          )}
+          {label}
+          {!label && tier && (
+            <div className={`flex-grow flex justify-center items-center ${visibileTier(tier)[1] ? "text-teal-300" : "text-yellow-300"}`}>
+              {(tier <= 5) ?
+                <StarIcon className="size-3.5 mr-0.5 inline-block" /> :
+                <img className="w-4 h-4 mr-0.5 inline-block" src="/icons/exclusive_weapon.png" alt="고유 장비" />
+              }
+              <span>{visibileTier(tier)[0]}</span>
+            </div>
+          )}
+        </div>
       </div>
       {name && (
         <div className="mt-1 text-center leading-tight tracking-tighter">

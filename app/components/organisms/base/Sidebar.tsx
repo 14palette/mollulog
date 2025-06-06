@@ -127,16 +127,6 @@ function MenuContent({ currentUsername, currentRole, pathname, onMenuClose, onSh
 
       <div className="py-2" />
 
-      {currentUsername && (
-        <Link
-          to="/contact"
-          className="w-fit my-1.5 py-1 px-2 flex items-center text-neutral-500 dark:text-neutral-400 cursor-pointer hover:underline"
-          onClick={onMenuClose}
-        >
-          <EnvelopeIcon className="size-4" />
-          <span className="ml-2">제안/문의</span>
-        </Link>
-      )}
       <Link
         to="/news"
         className="w-fit my-1.5 py-1 px-2 flex items-center text-neutral-500 dark:text-neutral-400 cursor-pointer hover:underline relative"
@@ -148,6 +138,16 @@ function MenuContent({ currentUsername, currentRole, pathname, onMenuClose, onSh
           <div className="absolute top-1 -right-1 size-1.5 bg-red-500 rounded-full animate-pulse" />
         )}
       </Link>
+      {currentUsername && (
+        <Link
+          to="/contact"
+          className="w-fit my-1.5 py-1 px-2 flex items-center text-neutral-500 dark:text-neutral-400 cursor-pointer hover:underline"
+          onClick={onMenuClose}
+        >
+          <EnvelopeIcon className="size-4" />
+          <span className="ml-2">제안/문의</span>
+        </Link>
+      )}
       <div
         className="w-fit my-1.5 py-1 px-2 font-bold flex items-center text-yellow-600 dark:text-yellow-400 cursor-pointer hover:underline"
         onClick={() => {

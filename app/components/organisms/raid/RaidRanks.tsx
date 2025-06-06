@@ -19,11 +19,34 @@ export type RaidRankFilters = {
 
 type RaidRanksProps = {
   raidUid: string;
+  raidSince: Date;
   filters: RaidRankFilters;
   setFilters: (filters: (prev: RaidRankFilters) => RaidRankFilters) => void;
 };
 
-export default function RaidRanks({ raidUid, filters, setFilters }: RaidRanksProps) {
+const maximumLevels: Record<string, number> = {
+  "2021-11-09": 70,
+  "2022-03-22": 73,
+  "2022-05-17": 75,
+  "2022-09-06": 78,
+  "2022-12-20": 80,
+  "2023-03-28": 83,
+  "2023-07-25": 85,
+  "2024-01-30": 88,
+  "2024-07-23": 90,
+};
+
+function getMaxLevelAt(date: Date): number {
+  const dates = Object.keys(maximumLevels).sort();
+  for (let i = dates.length - 1; i >= 0; i--) {
+    if (date >= new Date(dates[i])) {
+      return maximumLevels[dates[i]];
+    }
+  }
+  return 70;
+}
+
+export default function RaidRanks({ raidUid, raidSince, filters, setFilters }: RaidRanksProps) {
   const rankFetcher = useFetcher<RaidRanksData>();
   useEffect(() => {
     const query = new URLSearchParams();
@@ -53,6 +76,8 @@ export default function RaidRanks({ raidUid, filters, setFilters }: RaidRanksPro
   const showPrev = filters.rankAfter !== null || (filters.rankBefore !== null && (rankFetcher.data?.ranks[0]?.rank ?? 0) > 1 && rankFetcher.data?.hasMore);
   const showNext = filters.rankBefore !== null || rankFetcher.data?.hasMore;
 
+  const maxLevel = getMaxLevelAt(raidSince);
+
   return (
     <>
       <div>
@@ -72,6 +97,8 @@ export default function RaidRanks({ raidUid, filters, setFilters }: RaidRanksPro
                         uid: slot.student?.uid ?? null,
                         name: slot.student?.name,
                         tier: slot.tier,
+                        level: slot.level && slot.level < maxLevel ? slot.level : undefined,
+                        isAssist: slot.isAssist,
                       }))}
                     />
                   ))}
