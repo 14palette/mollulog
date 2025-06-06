@@ -2,8 +2,10 @@ import { nanoid } from "nanoid/non-secure";
 import type { Env } from "~/env.server";
 import { isUniqueConstraintError } from "./base";
 import { sqliteTable, int, text } from "drizzle-orm/sqlite-core";
-import { eq, inArray, sql } from "drizzle-orm";
+import { eq, inArray } from "drizzle-orm";
 import { drizzle } from "drizzle-orm/d1";
+
+type SenseiRole = "guest" | "admin";
 
 export const senseisTable = sqliteTable("senseis", {
   id: int().primaryKey({ autoIncrement: true }),
@@ -13,6 +15,7 @@ export const senseisTable = sqliteTable("senseis", {
   bio: text(),
   friendCode: text(),
   googleId: text(),
+  role: text().notNull().$type<SenseiRole>(),
   active: int().notNull().default(0),
 });
 
@@ -24,6 +27,7 @@ export type Sensei = {
   profileStudentId: string | null;
   bio: string | null;
   active: boolean;
+  role: SenseiRole;
   config?: {
     darkMode?: boolean;
   };
@@ -50,12 +54,6 @@ export async function getSenseisById(env: Env, ids: number[]): Promise<Sensei[]>
   return senseis.map((row) => toModel(row));
 }
 
-export async function getSenseiByRandom(env: Env): Promise<Sensei> {
-  const db = drizzle(env.DB);
-  const result = await db.select().from(senseisTable).orderBy(sql`random()`).limit(1);
-  return toModel(result[0]);
-}
-
 // Get or create a sensei by googleId
 export async function getOrCreateSenseiByGoogleId(env: Env, googleId: string): Promise<Sensei> {
   const db = drizzle(env.DB);
@@ -64,7 +62,7 @@ export async function getOrCreateSenseiByGoogleId(env: Env, googleId: string): P
     return toModel(result[0]);
   }
 
-  const createResult = await db.insert(senseisTable).values({ uid: nanoid(8), username: nanoid(8), googleId }).onConflictDoNothing();
+  const createResult = await db.insert(senseisTable).values({ uid: nanoid(8), username: nanoid(8), googleId, role: "guest" }).onConflictDoNothing();
   if (createResult.error) {
     throw createResult.error;
   }
@@ -120,5 +118,6 @@ function toModel(row: typeof senseisTable.$inferSelect): Sensei {
     profileStudentId: row.profileStudentId,
     bio: row.bio,
     active: row.active === 1,
+    role: row.role,
   };
 }

@@ -4,6 +4,7 @@ import MultilineText from "./MultilineText";
 import Callout from "./Callout";
 import KeyValueTable from "./KeyValueTable";
 import EmptyView from "./EmptyView";
+import MarkdownText from "./MarkdownText";
 
 export {
   Title,
@@ -12,4 +13,5 @@ export {
   Callout,
   KeyValueTable,
   EmptyView,
+  MarkdownText,
 };
