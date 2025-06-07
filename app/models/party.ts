@@ -60,8 +60,8 @@ export async function getPartiesByRaidId(env: Env, raidId: string, includeSensei
 // Delete a party by its UID
 const DELETE_PARTY_QUERY = "delete from parties where uid = ?1 and userId = ?2";
 
-export async function removePartyByUid(env: Env, sensei: Sensei, uid: string) {
-  return env.DB.prepare(DELETE_PARTY_QUERY).bind(uid, sensei.id).run();
+export async function removePartyByUid(env: Env, userId: number, uid: string) {
+  return env.DB.prepare(DELETE_PARTY_QUERY).bind(uid, userId).run();
 }
 
 // Create a party

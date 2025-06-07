@@ -9,7 +9,7 @@ const navigations = [
   { text: "프로필", to: "/edit/profile", icon: UserCircleIcon },
   { text: "학생 명부", to: "/edit/students", icon: UsersIcon },
   { text: "모집 이력", to: "/edit/pickups", icon: DocumentDuplicateIcon },
-  { text: "편성/공략", to: "/edit/parties", icon: Squares2X2Icon },
+  { text: "편성/공략", to: "/my?path=parties", icon: Squares2X2Icon },
   { text: "인증/보안", to: "/edit/security", icon: KeyIcon },
 ];
 
@@ -34,7 +34,7 @@ export default function Edit() {
   return (
     <>
       <Title text="프로필 관리" />
-      <Navigation links={navigations} allowPathPrefix />
+      <Navigation links={navigations} />
       <Outlet />
     </>
   );

@@ -1,16 +1,14 @@
 import type { LoaderFunctionArgs, MetaFunction } from "react-router";
-import { Link, useFetcher, useLoaderData } from "react-router";
-import { Callout, SubTitle } from "~/components/atoms/typography";
+import { useFetcher, useLoaderData } from "react-router";
 import type { ProfileCardProps } from "~/components/organisms/profile";
 import { ProfileCard } from "~/components/organisms/profile";
 import { getFollowerIds, getFollowingIds } from "~/models/followership";
-import { getUserStudentStates } from "~/models/student-state";
 import type { ActionData } from "./api.followerships";
 import { getAuthenticator } from "~/auth/authenticator.server";
-import { Timeline } from "~/components/organisms/useractivity";
 import { studentImageUrl } from "~/models/assets";
 import { getRouteSensei } from "./$username";
 import { useSignIn } from "~/contexts/SignInProvider";
+import { getRecruitedStudents } from "~/models/recruited-student";
 
 export const loader = async ({ context, request, params }: LoaderFunctionArgs) => {
   const env = context.cloudflare.env;
@@ -28,13 +26,10 @@ export const loader = async ({ context, request, params }: LoaderFunctionArgs) =
   }
 
   // Get student tiers
-  const states = (await getUserStudentStates(env, sensei.username)) ?? [];
+  const recruitedStudents = await getRecruitedStudents(env, sensei.id);
   const tierCounts: { [key: number]: number } = {};
-  states.forEach(({ student, tier, owned }) => {
-    if (owned) {
-      const studentTier = tier ?? student.initialTier;
-      tierCounts[studentTier] = (tierCounts[studentTier] ?? 0) + 1;
-    }
+  recruitedStudents.forEach(({ tier }) => {
+    tierCounts[tier] = (tierCounts[tier] ?? 0) + 1;
   });
 
   return {
@@ -77,19 +72,10 @@ export default function UserIndex() {
     imageUrl = studentImageUrl(sensei.profileStudentId);
   }
 
-  const isNewbee = sensei.username === currentUsername && Object.values(tierCounts).every((count) => count === 0);
-
   const { showSignIn } = useSignIn();
 
   return (
     <div className="my-8">
-      {isNewbee && (
-        <Callout className="my-8" emoji="✨">
-          <span className="grow">모집한 학생을 등록해보세요.</span>
-          <Link to="/edit/students" className="ml-1 underline">등록하러 가기 →</Link>
-        </Callout>
-      )}
-
       <div className="my-8">
         <ProfileCard
           {...sensei}
@@ -102,11 +88,6 @@ export default function UserIndex() {
           onFollow={() => currentUsername ? fetcher.submit({ username: sensei.username }, { method: "post", action: "/api/followerships" }) : showSignIn()}
           onUnfollow={() => currentUsername ? fetcher.submit({ username: sensei.username }, { method: "delete", action: "/api/followerships" }) : showSignIn()}
         />
-      </div>
-
-      <div className="md:my-8 my-16">
-        <SubTitle text="최근 활동" />
-        <Timeline activities={[]} />
       </div>
     </div>
   );

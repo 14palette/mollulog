@@ -3,7 +3,8 @@ import { getAuthenticator } from "~/auth/authenticator.server";
 import { graphql } from "~/graphql";
 import type { Defense, RaidRank, RaidRanksQuery } from "~/graphql/graphql";
 import { runQuery } from "~/lib/baql";
-import { getUserStudentStates } from "~/models/student-state";
+import { getRecruitedStudentTiers } from "~/models/recruited-student";
+import { getAllStudents } from "~/models/student";
 
 const raidRanksQuery = graphql(`
   query RaidRanks($defenseType: Defense, $raidUid: String!, $includeStudents: [RaidRankFilter!], $excludeStudents: [RaidRankFilter!], $rankAfter: Int, $rankBefore: Int) {
@@ -43,11 +44,13 @@ export const loader = async ({ request, context, params }: LoaderFunctionArgs) =
   if (filterNotOwned) {
     const sensei = await getAuthenticator(context.cloudflare.env).isAuthenticated(request);
     if (sensei) {
-      const ownedStudentIds = ((await getUserStudentStates(context.cloudflare.env, sensei.username)) ?? [])
-        .filter((state) => !state.owned)
-        .map((state) => state.student.uid);
+      const allStudents = await getAllStudents(context.cloudflare.env);
+      const recruitedStudentTiers = await getRecruitedStudentTiers(context.cloudflare.env, sensei.id);
+      const unrecruitedStudentUids = allStudents
+        .filter((student) => !recruitedStudentTiers[student.uid])
+        .map((student) => student.uid);
 
-      excludeStudentUids = excludeStudentUids.concat(ownedStudentIds);
+      excludeStudentUids = excludeStudentUids.concat(unrecruitedStudentUids);
     }
   }
 

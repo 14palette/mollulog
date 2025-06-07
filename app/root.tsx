@@ -71,7 +71,7 @@ export function Layout({ children }: { children: React.ReactNode }) {
   );
 }
 
-const wideLayout = ["/raids", "/edit/students"];
+const wideLayout = ["/raids"];
 
 export default function App() {
   const loaderData = useLoaderData<typeof loader>();

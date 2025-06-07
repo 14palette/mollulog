@@ -1,15 +1,15 @@
 import type { LoaderFunctionArgs } from "react-router";
 import { getAuthenticator } from "~/auth/authenticator.server";
-import { migrateFavoriteCounts } from "~/models/favorite-students";
+import { migrateRecruitedStudents } from "~/models/recruited-student";
 
 export const loader = async ({ request, context }: LoaderFunctionArgs) => {
   const env = context.cloudflare.env;
   const me = await getAuthenticator(env).isAuthenticated(request);
-  if (!me || (me.username !== env.SUPERUSER_NAME)) {
+  if (!me || me.role !== "admin") {
     return new Response("unauthorized", { status: 401 });
   }
 
-  await migrateFavoriteCounts(env);
+  await migrateRecruitedStudents(env);
 
   return new Response("ok", { status: 200 });
 }

@@ -1,20 +1,29 @@
 import type { LoaderFunctionArgs, MetaFunction } from "react-router";
-import { useLoaderData, Link } from "react-router";
-import { getUserStudentStates } from "~/models/student-state";
+import { useLoaderData } from "react-router";
 import { useStateFilter } from "~/components/organisms/student";
 import { StudentCards } from "~/components/molecules/student";
 import { getAuthenticator } from "~/auth/authenticator.server";
-import { Callout } from "~/components/atoms/typography";
+import { SubTitle, Description } from "~/components/atoms/typography";
 import { getRouteSensei } from "./$username";
+import { getAllStudents } from "~/models/student";
+import { getRecruitedStudents } from "~/models/recruited-student";
 
 export const loader = async ({ context, request, params }: LoaderFunctionArgs) => {
   const env = context.cloudflare.env;
   const currentUser = await getAuthenticator(env).isAuthenticated(request);
+
   const sensei = await getRouteSensei(env, params);
+
+  const recruitedStudents = await getRecruitedStudents(env, sensei.id);
+  const recruitedStudentTiers = recruitedStudents.reduce((acc, { studentUid, tier }) => {
+    acc[studentUid] = tier;
+    return acc;
+  }, {} as Record<string, number>);
+
   return {
-    currentUsername: currentUser?.username,
-    username: sensei.username,
-    states: await getUserStudentStates(env, sensei.username, false),
+    me: currentUser?.username === sensei.username,
+    allStudents: await getAllStudents(env),
+    recruitedStudentTiers,
   };
 };
 
@@ -29,50 +38,43 @@ export const meta: MetaFunction = ({ params }) => {
 
 export default function UserPage() {
   const loaderData = useLoaderData<typeof loader>();
-  const { currentUsername, username, states } = loaderData;
-  if (!states) {
-    return (
-      <p className="my-8">선생님을 찾을 수 없어요. 다른 이름으로 검색해보세요.</p>
-    );
-  }
+  const { me, allStudents, recruitedStudentTiers } = loaderData;
 
-  const noOwned = states.every(({ owned }) => !owned);
-  const isNewbee = (currentUsername === username) && noOwned;
+  const [StateFilter, filteredStudents] = useStateFilter(allStudents.map((student) => ({
+    ...student,
+    tier: recruitedStudentTiers[student.uid] ?? student.initialTier,
+  })), { useFilter: true, useSort: true, useSearch: true });
 
-  const [StateFilter, filteredStates] = useStateFilter(states, true, true, true);
+  const noOwned = Object.values(recruitedStudentTiers).length === 0;
+
   return (
     <>
-      {isNewbee && (
-        <Callout className="my-8" emoji="✨">
-          <span className="grow">모집한 학생을 등록해보세요.</span>
-          <Link to="/edit/students" className="ml-1 underline">등록하러 가기 →</Link>
-        </Callout>
-      )}
-
       {StateFilter}
 
       <div className="my-8">
-        <p className="font-bold text-xl my-4">모집한 학생</p>
+        <SubTitle text="모집한 학생" />
+        {me && !noOwned && <Description text="학생을 선택해 성장 등급을 수정할 수 있어요." />}
         {noOwned ?
           <div className="my-16 text-center">
-            아직 등록한 학생이 없어요
+            아직 모집한 학생이 없어요
           </div> :
           <StudentCards
-            students={filteredStates.filter(({ owned }) => owned).map(({ student, tier }) => ({
-              uid: student.uid,
-              name: student.name,
-              tier: tier ?? student.initialTier,
+            students={filteredStudents.filter(({ uid }) => recruitedStudentTiers[uid]).map(({ uid, name }) => ({
+              uid,
+              name,
+              tier: recruitedStudentTiers[uid],
             }))}
           />
         }
       </div>
 
       <div className="my-8">
-        <p className="font-bold text-xl my-4">미모집 학생</p>
+        <SubTitle text="미모집 학생" />
+        {me && <Description text="학생을 선택해 모집 정보를 등록할 수 있어요." />}
         <StudentCards
-          students={filteredStates.filter(({ owned }) => !owned).map(({ student }) => ({
-            uid: student.uid,
-            name: student.name,
+          students={filteredStudents.filter(({ uid }) => !recruitedStudentTiers[uid]).map(({ uid, name }) => ({
+            uid,
+            name,
             grayscale: true,
           }))}
         />

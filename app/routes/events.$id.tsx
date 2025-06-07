@@ -26,8 +26,7 @@ import { runQuery } from "~/lib/baql";
 import { attackTypeLocale, defenseTypeLocale, eventTypeLocale, pickupLabelLocale, roleLocale } from "~/locales/ko";
 import { getContentMemos, setMemo, setMemoVisibility } from "~/models/content";
 import { favoriteStudent, getFavoritedCounts, getUserFavoritedStudents, unfavoriteStudent } from "~/models/favorite-students";
-import type { StudentState} from "~/models/student-state";
-import { getUserStudentStates } from "~/models/student-state";
+import { getRecruitedStudents } from "~/models/recruited-student";
 
 const eventDetailQuery = graphql(`
   query EventDetail($eventUid: String!) {
@@ -96,9 +95,10 @@ export const loader = async ({ params, context, request }: LoaderFunctionArgs) =
 
   const env = context.cloudflare.env;
   const sensei = await getAuthenticator(env).isAuthenticated(request);
-  let studentStates: StudentState[] = [];
+  let recruitedStudentUids: string[] = [];
   if (sensei) {
-    studentStates = (await getUserStudentStates(env, sensei.username, true)) ?? [];
+    const recruitedStudents = await getRecruitedStudents(env, sensei.id);
+    recruitedStudentUids = recruitedStudents.map((student) => student.studentUid);
   }
 
   const memos = await getContentMemos(env, content.uid, sensei?.id);
@@ -107,7 +107,7 @@ export const loader = async ({ params, context, request }: LoaderFunctionArgs) =
   return {
     event: content,
     stages: getEventStages(params.id as string),
-    studentStates,
+    recruitedStudentUids,
     favoritedStudents: sensei ? await getUserFavoritedStudents(env, sensei.id, content.uid) : [],
     favoritedCounts: (await getFavoritedCounts(env, pickupStudentUids)).filter((favorited) => favorited.contentId === content.uid),
     signedIn: sensei !== null,
@@ -200,7 +200,7 @@ const roleColor = {
 };
 
 export default function EventDetail() {
-  const { event, stages, signedIn, studentStates, favoritedStudents, favoritedCounts, memos, myMemo } = useLoaderData<typeof loader>();
+  const { event, stages, signedIn, recruitedStudentUids, favoritedStudents, favoritedCounts, memos, myMemo } = useLoaderData<typeof loader>();
 
   const { showSignIn } = useSignIn();
 
@@ -310,7 +310,7 @@ export default function EventDetail() {
             <EventStages
               stages={stages}
               signedIn={signedIn}
-              ownedStudentUids={studentStates.filter(({ owned }) => owned).map(({ student }) => student.uid)}
+              ownedStudentUids={recruitedStudentUids}
             />
           )}
         </Await>

@@ -7,9 +7,8 @@ import { AddContentButton, ContentSelector, PartyUnitEditor } from "~/components
 import { StudentCards } from "~/components/molecules/student";
 import { raidTypeLocale, terrainLocale } from "~/locales/ko";
 import { bossImageUrl } from "~/models/assets";
-import type { RaidType, Terrain } from "~/models/content.d";
+import type { RaidType, Role, Terrain } from "~/models/content.d";
 import type { Party } from "~/models/party";
-import type { StudentState } from "~/models/student-state";
 
 type PartyGeneratorProps = {
   party?: Party;
@@ -22,10 +21,17 @@ type PartyGeneratorProps = {
     since: Date;
     until: Date;
   }[];
-  studentStates: StudentState[];
+  students: {
+    uid: string;
+    name: string;
+    tier: number;
+    role: Role;
+  }[];
 };
 
-export default function PartyGenerator({ party, raids, studentStates }: PartyGeneratorProps) {
+export default function PartyGenerator({ party, raids, students }: PartyGeneratorProps) {
+  const studentsMap = new Map(students.map((student) => [student.uid, student]));
+
   const [raidId, setRaidId] = useState<string | undefined>(party?.raidId ?? undefined);
 
   const [showPartyEditor, setShowPartyEditor] = useState(false);
@@ -64,11 +70,11 @@ export default function PartyGenerator({ party, raids, studentStates }: PartyGen
           <Label text={`${index + 1}번째 파티`} />
           <StudentCards
             students={unit.map((uid) => {
-              const state = uid ? studentStates.find(({ student }) => student.uid === uid) : null;
+              const student = uid ? studentsMap.get(uid) : null;
               return {
-                uid: state?.student?.uid ?? null,
-                name: state?.student?.name ?? undefined,
-                tier: state?.owned ? (state.tier ?? state.student.initialTier) : undefined,
+                uid: student?.uid ?? null,
+                name: student?.name ?? undefined,
+                tier: student?.tier ?? undefined,
               };
             })}
             mobileGrid={6}
@@ -88,12 +94,7 @@ export default function PartyGenerator({ party, raids, studentStates }: PartyGen
       {showPartyEditor ?
         <PartyUnitEditor
           index={units.length}
-          students={studentStates.map(({ student, owned, tier }) => ({
-            uid: student.uid,
-            name: student.name,
-            role: student.role,
-            tier: owned ? (tier ?? student.initialTier) : undefined,
-          }))}
+          students={students}
           onComplete={(studentUids) => {
             setUnits((prev) => [...prev, studentUids]);
             setShowPartyEditor(false);
@@ -106,7 +107,7 @@ export default function PartyGenerator({ party, raids, studentStates }: PartyGen
       <div className="flex gap-x-1">
         <Button type="submit" text="저장" color="primary" />
         <Button type="button" text="초기화" color="red" onClick={() => setUnits([])} />
-        <Link to="/edit/parties">
+        <Link to="/my?path=parties">
           <Button type="button" text="취소" />
         </Link>
       </div>

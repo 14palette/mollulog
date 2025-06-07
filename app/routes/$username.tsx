@@ -49,9 +49,9 @@ export default function User() {
       <Title text={`@${username}`} />
       <Navigation links={[
         { to: `/@${username}/`, text: "프로필" },
-        { to: `/@${username}/students`, text: "학생 명부" },
-        { to: `/@${username}/pickups`, text: "모집 이력" },
-        { to: `/@${username}/parties`, text: "편성/공략" },
+        { to: `/@${username}/students`, text: "학생 명부", allowPathPrefix: true },
+        { to: `/@${username}/pickups`, text: "모집 이력", allowPathPrefix: true },
+        { to: `/@${username}/parties`, text: "편성/공략", allowPathPrefix: true },
         { to: `/@${username}/futures`, text: "모집 계획" },
       ]} />
       <Outlet key={`user-${params.username}`} />
