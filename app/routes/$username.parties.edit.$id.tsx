@@ -80,7 +80,7 @@ export default function EditParties() {
 
   return (
     <>
-      <Title text="편성 관리" />
+      <Title text="편성/공략 관리" />
       <Form method="post">
         {loaderData.party && <input type="hidden" name="uid" value={loaderData.party.uid} />}
         <div className="max-w-4xl">

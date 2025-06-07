@@ -5,7 +5,7 @@ import { useState } from "react";
 import { getAuthenticator } from "~/auth/authenticator.server";
 import { Button } from "~/components/atoms/form";
 import { StudentCard } from "~/components/atoms/student";
-import { SubTitle } from "~/components/atoms/typography";
+import { SubTitle, Title } from "~/components/atoms/typography";
 import { ContentSelector } from "~/components/molecules/editor";
 import { PickupHistoryEditor, PickupHistoryImporter } from "~/components/organisms/pickup";
 import { graphql } from "~/graphql";
@@ -80,7 +80,7 @@ export const action = async ({ context, request, params }: ActionFunctionArgs) =
   } else {
     await createPickupHistory(env, sensei.id, data.eventUid, data.result, data.rawResult ?? null);
   }
-  return redirect("/edit/pickups");
+  return redirect("/my?path=pickups");
 }
 
 export default function EditPickup() {
@@ -117,7 +117,8 @@ export default function EditPickup() {
   const submit = (data: ActionData) => rawSubmit(data, { method: "post", encType: "application/json" });
 
   return (
-    <div className="min-h-screen max-w-4xl pb-96">
+    <>
+      <Title text="모집 이력 관리" />
       <ContentSelector
         contents={events.map((event) => ({
           uid: event.uid,
@@ -171,6 +172,6 @@ export default function EditPickup() {
           )}
         </>
       )}
-    </div>
+    </>
   );
 }
