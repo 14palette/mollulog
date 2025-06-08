@@ -4,6 +4,7 @@ import { sqliteTable, text, int } from "drizzle-orm/sqlite-core";
 import { Env } from "~/env.server";
 import { senseisTable } from "./sensei";
 import { getUserStudentStates } from "./student-state";
+import { nanoid } from "nanoid/non-secure";
 
 export const recruitedStudentsTable = sqliteTable("recruited_students", {
   id: int().primaryKey({ autoIncrement: true }),
@@ -41,6 +42,15 @@ export async function getRecruitedStudentTiers(env: Env, senseiId: number): Prom
     acc[studentUid] = tier;
     return acc;
   }, {} as Record<string, number>);
+}
+
+export async function upsertRecruitedStudent(env: Env, senseiId: number, studentUid: string, tier: number) {
+  const db = drizzle(env.DB);
+  const uid = nanoid(8);
+  await db.insert(recruitedStudentsTable).values({ uid, userId: senseiId, studentUid, tier }).onConflictDoUpdate({
+    target: [recruitedStudentsTable.userId, recruitedStudentsTable.studentUid],
+    set: { tier },
+  });
 }
 
 // Temporary function: migrate from student states

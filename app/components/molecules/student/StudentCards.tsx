@@ -1,8 +1,6 @@
-import { StudentCard } from "~/components/atoms/student"
-import StudentInfo from "./StudentInfo";
-import type { ReactNode} from "react";
-import { useState } from "react";
+import type { ReactNode } from "react";
 import type { AttackType, DefenseType, Role } from "~/models/content.d";
+import { StudentCard } from "~/components/atoms/student";
 
 type StudentCardsProps = {
   students?: {
@@ -26,12 +24,9 @@ type StudentCardsProps = {
   mobileGrid?: 4 | 5 | 6 | 8;
   pcGrid?: 4 | 6 | 8 | 10 | 12;
   onSelect?: (id: string) => void;
-  onFavorite?: (id: string, favorited: boolean) => void;
 };
 
-export default function StudentCards({ students, mobileGrid, pcGrid, onSelect, onFavorite }: StudentCardsProps) {
-  const [selectedStudentId, setSelectedStudentId] = useState<string | null>(null);
-
+export default function StudentCards({ students, mobileGrid, pcGrid, onSelect }: StudentCardsProps) {
   let gridClass = "grid-cols-6";
   if (mobileGrid === 8) {
     gridClass = "grid-cols-8";
@@ -55,41 +50,15 @@ export default function StudentCards({ students, mobileGrid, pcGrid, onSelect, o
   return (
     <div className={`relative grid ${gridClass} ${pcGridClass} gap-1 sm:gap-2`}>
       {students && students.map((student, index) => {
-        const { uid, name } = student;
-        const showInfo = uid && name && student.attackType && student.defenseType && student.role && student.schaleDbId;
-
+        const { uid } = student;
         return (
-          <div key={`student-card-${name ?? uid}-${index}`}>
-            <div
-              className={((onSelect || onFavorite) && uid) ? "hover:scale-105 cursor-pointer transition" : ""}
-              onClick={uid ? () => {
-                onSelect?.(uid);
-                setSelectedStudentId(uid);
-              } : undefined}
-            >
-              <StudentCard
-                {...student}
-                favorited={student.state?.favorited}
-                favoritedCount={student.state?.favoritedCount}
-              />
-            </div>
-
-            {(showInfo && selectedStudentId === uid) && (
-              <StudentInfo
-                student={{
-                  uid,
-                  name,
-                  attackType: student.attackType!,
-                  defenseType: student.defenseType!,
-                  role: student.role!,
-                  schaleDbId: student.schaleDbId!,
-                }}
-                favorited={student?.state?.favorited ?? false}
-                onRemoveFavorite={() => { onFavorite?.(uid, false); }}
-                onAddFavorite={() => { onFavorite?.(uid, true); }}
-                onClose={() => { setSelectedStudentId(null); }}
-              />
-            )}
+          <div key={`student-card-${student.name ?? uid}-${index}`}>
+            <StudentCard
+              {...student}
+              favorited={student.state?.favorited}
+              favoritedCount={student.state?.favoritedCount}
+              onSelect={onSelect}
+            />
           </div>
         );
       })}

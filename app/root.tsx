@@ -21,6 +21,7 @@ import { useEffect, useRef, useState } from "react";
 import { SignInProvider } from "./contexts/SignInProvider";
 import { SignInBottomSheet } from "./components/molecules/auth";
 import { getLatestPostTime } from "./models/post";
+import { StudentCardPopupProvider } from "./contexts/StudentCardPopupProvider";
 
 export const loader = async ({ request, context }: LoaderFunctionArgs) => {
   const env = context.cloudflare.env;
@@ -99,26 +100,28 @@ export default function App() {
         waitingTime={300}
       />
       <SignInProvider>
-        <div className="flex flex-col xl:flex-row">
-          <div className="fixed xl:relative w-full xl:w-96 xl:h-screen bg-white/90 dark:bg-neutral-800/90 backdrop-blur-sm border-b xl:border-b-0 xl:border-r border-neutral-200 dark:border-neutral-700 shadow-xl shadow-neutral-200/30 dark:shadow-neutral-900/30 z-100">
-            <Sidebar 
-              currentUsername={currentUsername} 
-              currentRole={currentRole} 
-              darkMode={darkMode} 
-              setDarkMode={setDarkMode}
-              hasRecentNews={hasRecentNews}
-            />
-          </div>
-          <div className="w-full pt-10 xl:pt-0 overflow-y-scroll">
-            <div className={`xl:h-screen mx-auto ${wideLayout.find((path) => location.pathname.startsWith(path)) ? "max-w-6xl" : "max-w-3xl"} px-4 md:px-8 py-6`}>
-              <div className="pb-32">
-                <Outlet />
+        <StudentCardPopupProvider>
+          <div className="flex flex-col xl:flex-row">
+            <div className="fixed xl:relative w-full xl:w-96 xl:h-screen bg-white/90 dark:bg-neutral-800/90 backdrop-blur-sm border-b xl:border-b-0 xl:border-r border-neutral-200 dark:border-neutral-700 shadow-xl shadow-neutral-200/30 dark:shadow-neutral-900/30 z-100">
+              <Sidebar 
+                currentUsername={currentUsername} 
+                currentRole={currentRole} 
+                darkMode={darkMode} 
+                setDarkMode={setDarkMode}
+                hasRecentNews={hasRecentNews}
+              />
+            </div>
+            <div className="w-full pt-10 xl:pt-0 overflow-y-scroll">
+              <div className={`xl:h-screen mx-auto ${wideLayout.find((path) => location.pathname.startsWith(path)) ? "max-w-6xl" : "max-w-3xl"} px-4 md:px-8 py-6`}>
+                <div className="pb-32">
+                  <Outlet />
+                </div>
+                <Footer />
               </div>
-              <Footer />
             </div>
           </div>
-        </div>
-        <SignInBottomSheet />
+          <SignInBottomSheet />
+        </StudentCardPopupProvider>
       </SignInProvider>
     </div>
   );

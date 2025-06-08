@@ -7,6 +7,7 @@ import { SubTitle, Description } from "~/components/atoms/typography";
 import { getRouteSensei } from "./$username";
 import { getAllStudents } from "~/models/student";
 import { getRecruitedStudents } from "~/models/recruited-student";
+import { MinusCircleIcon, IdentificationIcon, PlusCircleIcon } from "@heroicons/react/24/outline";
 
 export const loader = async ({ context, request, params }: LoaderFunctionArgs) => {
   const env = context.cloudflare.env;
@@ -59,10 +60,23 @@ export default function UserPage() {
             아직 모집한 학생이 없어요
           </div> :
           <StudentCards
-            students={filteredStudents.filter(({ uid }) => recruitedStudentTiers[uid]).map(({ uid, name }) => ({
-              uid,
-              name,
+            students={filteredStudents.filter(({ uid }) => recruitedStudentTiers[uid]).map(({ uid, name, attackType, defenseType, role }) => ({
+              uid, name, attackType, defenseType, role,
               tier: recruitedStudentTiers[uid],
+              popups: [
+                {
+                  Icon: MinusCircleIcon,
+                  text: "모집한 학생에서 제외",
+                  onClick: () => {
+                    // TODO
+                  },
+                },
+                {
+                  Icon: IdentificationIcon,
+                  text: "학생부 보기",
+                  link: `/students/${uid}`,
+                },
+              ],
             }))}
           />
         }
@@ -72,10 +86,23 @@ export default function UserPage() {
         <SubTitle text="미모집 학생" />
         {me && <Description text="학생을 선택해 모집 정보를 등록할 수 있어요." />}
         <StudentCards
-          students={filteredStudents.filter(({ uid }) => !recruitedStudentTiers[uid]).map(({ uid, name }) => ({
-            uid,
-            name,
+          students={filteredStudents.filter(({ uid }) => !recruitedStudentTiers[uid]).map(({ uid, name, attackType, defenseType, role }) => ({
+            uid, name, attackType, defenseType, role,
             grayscale: true,
+            popups: [
+              {
+                Icon: PlusCircleIcon,
+                text: "모집한 학생에 추가",
+                onClick: () => {
+                  // TODO
+                },
+              },
+              {
+                Icon: IdentificationIcon,
+                text: "학생부 보기",
+                link: `/students/${uid}`,
+              },
+            ],
           }))}
         />
       </div>
