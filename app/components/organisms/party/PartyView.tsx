@@ -3,7 +3,6 @@ import { SubTitle } from "~/components/atoms/typography";
 import { raidTypeLocale, terrainLocale } from "~/locales/ko";
 import type { RaidType, Terrain } from "~/models/content.d";
 import type { Party } from "~/models/party"
-import type { StudentState } from "~/models/student-state";
 import { useState } from "react";
 import { ActionCard } from "~/components/molecules/editor";
 import { CheckCircleIcon } from "@heroicons/react/24/outline";
@@ -18,12 +17,11 @@ type PartyViewProps = {
     profileStudentId: string | null;
     username: string;
   };
-  students?: {
+  students: {
     uid: string;
     name: string;
-    initialTier: number;
+    tier: number | null;
   }[];
-  studentStates: StudentState[];
   editable?: boolean;
   raids?: {
     uid: string;
@@ -35,8 +33,9 @@ type PartyViewProps = {
   }[];
 };
 
-export default function PartyView({ party, sensei, students, studentStates, editable, raids }: PartyViewProps) {
+export default function PartyView({ party, sensei, students, editable, raids }: PartyViewProps) {
   const [memoOpened, setMemoOpened] = useState(false);
+  const studentsMap = new Map(students.map((student) => [student.uid, student]));
 
   const raid = (raids && party.raidId) ? raids.find(({ uid }) => party.raidId === uid) : null;
   let raidText;
@@ -48,24 +47,11 @@ export default function PartyView({ party, sensei, students, studentStates, edit
     ].filter((text) => text).join(" | ");
   }
 
-  const studentsMap: Map<string, Exclude<PartyViewProps["students"], undefined>[number]> = new Map();
-  if (students) {
-    for (const student of students) {
-      studentsMap.set(student.uid, student);
-    }
-  }
-
-  const studentStatesMap: Map<string, StudentState> = new Map();
-  for (const state of studentStates) {
-    studentStatesMap.set(state.student.uid, state);
-    studentsMap.set(state.student.uid, { uid: state.student.uid, name: state.student.name, initialTier: state.student.initialTier });
-  }
-
   return (
     <ActionCard actions={editable ?
       [
-        { text: "편집", color: "default", link: `/edit/parties/${party.uid}` },
-        { text: "삭제", color: "red", form: { method: "post", hiddenInputs: [{ name: "uid", value: party.uid }] } },
+        { text: "편집", color: "default", link: `/my?path=parties/edit/${party.uid}` },
+        { text: "삭제", color: "red", danger: true, form: { method: "post", hiddenInputs: [{ name: "uid", value: party.uid }] } },
       ] : []
     }>
       <div className="-mt-4">
@@ -104,7 +90,7 @@ export default function PartyView({ party, sensei, students, studentStates, edit
       )}
 
       {party.studentIds.map((squad, index) => (
-        <div key={`squad-${squad.join(":")}`} className={index > 0 ? "mt-2 pt-2 md:pt-0 border-t border-neutral-200 md:border-0" : undefined}>
+        <div key={`squad-${index}`} className={index > 0 ? "mt-2 pt-2 md:pt-0 border-t border-neutral-200 md:border-0" : undefined}>
           <StudentCards
             students={squad.map((uid) => {
               if (!uid) {
@@ -112,12 +98,7 @@ export default function PartyView({ party, sensei, students, studentStates, edit
               }
 
               const student = studentsMap.get(uid)!;
-              const state = studentStatesMap.get(uid);
-              return {
-                uid,
-                name: student.name,
-                tier: state?.owned ? (state.tier ?? student.initialTier) : undefined,
-              };
+              return { uid, name: student.name, tier: student.tier };
             })}
             mobileGrid={6}
             pcGrid={10}

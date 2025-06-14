@@ -8,7 +8,8 @@ import { graphql } from "~/graphql";
 import type { RaidForPartyEditQuery } from "~/graphql/graphql";
 import { runQuery } from "~/lib/baql";
 import { updateParty, getUserParties, createParty } from "~/models/party";
-import { getUserStudentStates } from "~/models/student-state";
+import { getRecruitedStudentTiers } from "~/models/recruited-student";
+import { getAllStudents } from "~/models/student";
 
 export const raidForPartyEditQuery = graphql(`
   query RaidForPartyEdit {
@@ -19,7 +20,7 @@ export const raidForPartyEditQuery = graphql(`
 `);
 
 export const meta: MetaFunction = () => [
-  { title: "편성 관리 | 몰루로그" },
+  { title: "편성/공략 관리 | 몰루로그" },
 ];
 
 export const loader = async ({ context, request, params }: LoaderFunctionArgs) => {
@@ -39,9 +40,9 @@ export const loader = async ({ context, request, params }: LoaderFunctionArgs) =
     throw "failed to load data";
   }
 
-  const states = await getUserStudentStates(env, sensei.username, true);
   return {
-    states: states!,
+    allStudents: (await getAllStudents(env, true)).sort((a, b) => a.order - b.order),
+    recruitedStudentTiers: await getRecruitedStudentTiers(env, sensei.id),
     raids: data.raids.nodes,
     party,
   };
@@ -71,7 +72,7 @@ export const action: ActionFunction = async ({ context, request }) => {
     await updateParty(env, sensei, uid as string, partyPatches);
   }
 
-  return redirect(`/edit/parties`);
+  return redirect("/my?path=parties");
 };
 
 export default function EditParties() {
@@ -79,14 +80,17 @@ export default function EditParties() {
 
   return (
     <>
-      <Title text="편성 관리" />
+      <Title text="편성/공략 관리" />
       <Form method="post">
         {loaderData.party && <input type="hidden" name="uid" value={loaderData.party.uid} />}
         <div className="max-w-4xl">
           <PartyGenerator
             party={loaderData.party ?? undefined}
             raids={loaderData.raids.map((raid) => ({ ...raid, since: new Date(raid.since), until: new Date(raid.until) }))}
-            studentStates={loaderData.states}
+            students={loaderData.allStudents.map((student) => ({
+              ...student,
+              tier: loaderData.recruitedStudentTiers[student.uid],
+            }))}
           />
         </div>
       </Form>

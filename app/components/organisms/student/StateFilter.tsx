@@ -10,33 +10,35 @@ import type { Role } from "~/models/student";
 const { disassemble, search } = hangul;
 
 type FilterableStudentState = {
-  student: {
-    name: string;
-    attackType: AttackType;
-    defenseType: DefenseType;
-    role: Role;
-    order: number;
-    initialTier: number;
-  };
-  tier?: number | null;
-}
+  name: string;
+  attackType: AttackType;
+  defenseType: DefenseType;
+  role: Role;
+  order: number;
+  initialTier: number;
+  tier?: number;
+};
 
 type Filter = {
   role: Role | null;
   attackTypes: AttackType[];
   defenseTypes: DefenseType[];
-}
+};
 
 type Sort = {
   by: "tier" | "name" | null;
-}
+};
 
 export function useStateFilter<T extends FilterableStudentState>(
   initStates: T[],
-  useFilter = true,
-  useSort: boolean | { by: ("tier" | "name")[] } = true,
-  useSearch = false,
+  options: {
+    useFilter?: boolean;
+    useSort?: boolean | { by: ("tier" | "name")[] };
+    useSearch?: boolean;
+  } = {},
 ): [JSX.Element, T[], Dispatch<SetStateAction<T[]>>] {
+  const { useFilter = true, useSort = true, useSearch = false } = options;
+
   const [allStates, setAllStates] = useState(initStates);
   const [filter, setFilter] = useState<Filter>({
     role: null,
@@ -77,7 +79,7 @@ export function useStateFilter<T extends FilterableStudentState>(
   };
 
   const filterAndSort = (): T[] => {
-    const results = allStates.filter(({ student }) => {
+    const results = allStates.filter((student) => {
       // 학생 능력치로 필터
       if (filter.attackTypes.length > 0 && !filter.attackTypes.includes(student.attackType)) {
         return false;
@@ -98,16 +100,16 @@ export function useStateFilter<T extends FilterableStudentState>(
     });
 
     results.sort((a, b) => {
-      const defaultComparision = a.student.order - b.student.order;
+      const defaultComparision = a.order - b.order;
       if (sort.by === "tier") {
-        const tierA = a.tier ?? a.student.initialTier;
-        const tierB = b.tier ?? b.student.initialTier;
+        const tierA = a.tier ?? a.initialTier;
+        const tierB = b.tier ?? b.initialTier;
         if (tierA === tierB) {
           return defaultComparision;
         }
         return tierB - tierA;
       } else if (sort.by === "name") {
-        return a.student.name.localeCompare(b.student.name);
+        return a.name.localeCompare(b.name);
       }
       return defaultComparision;
     });

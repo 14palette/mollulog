@@ -31,8 +31,8 @@ function formatPercentage(ratio: number) {
 export default function PickupHistoryView({ uid, event, tier3Students, pickupStudentUids, trial, editable }: PickupHistoryViewProps) {
   const actions: ActionCardAction[] = [];
   if (editable) {
-    actions.push({ text: "편집", color: "default", link: `/edit/pickups/${uid}` });
-    actions.push({ text: "삭제", color: "red", form: { method: "delete", hiddenInputs: [{ name: "uid", value: uid }] } });
+    actions.push({ text: "편집", color: "default", link: `/my?path=pickups/edit/${uid}` });
+    actions.push({ text: "삭제", color: "red", form: { method: "delete", hiddenInputs: [{ name: "uid", value: uid }] }, danger: true });
   }
 
   const tier3StudentUids = tier3Students.map(({ uid }) => uid);

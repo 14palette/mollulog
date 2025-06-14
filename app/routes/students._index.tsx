@@ -30,8 +30,8 @@ export default function Students() {
   const { students } = useLoaderData<typeof loader>();
   const navigate = useNavigate();
   const [StateFilter, filteredStates] = useStateFilter(
-    students.map((student) => ({ student })),
-    true, { by: ["name"] }, true
+    students,
+    { useFilter: true, useSort: { by: ["name"] }, useSearch: true }
   );
 
   return (
@@ -42,10 +42,7 @@ export default function Students() {
       </p>
       {StateFilter}
       <StudentCards
-        students={filteredStates.map(({ student }) => ({
-          uid: student.uid,
-          name: student.name,
-        }))}
+        students={filteredStates}
         onSelect={(uid) => navigate(`/students/${uid}`)}
       />
     </>

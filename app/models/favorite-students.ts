@@ -107,31 +107,3 @@ async function updateFavoritedCount(env: Env, studentId: string, contentId: stri
       },
     });
 }
-
-export async function migrateFavoriteCounts(env: Env): Promise<void> {
-  const db = drizzle(env.DB);
-  const results = await db.select({
-    studentId: favoriteStudentsTable.studentId,
-    contentId: favoriteStudentsTable.contentId,
-    count: count().as("count")
-  })
-  .from(favoriteStudentsTable)
-  .groupBy(favoriteStudentsTable.studentId, favoriteStudentsTable.contentId)
-  .all();
-
-  for (const result of results) {
-    await db.insert(contentFavoriteCountsTable)
-      .values({
-        studentId: result.studentId,
-        contentId: result.contentId,
-        count: result.count
-      })
-      .onConflictDoUpdate({
-        target: [contentFavoriteCountsTable.studentId, contentFavoriteCountsTable.contentId],
-        set: {
-          count: result.count,
-          updatedAt: sql`current_timestamp`,
-        },
-      });
-  }
-}

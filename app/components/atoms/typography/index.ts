@@ -5,6 +5,7 @@ import Callout from "./Callout";
 import KeyValueTable from "./KeyValueTable";
 import EmptyView from "./EmptyView";
 import MarkdownText from "./MarkdownText";
+import Description from "./Description";
 
 export {
   Title,
@@ -14,4 +15,5 @@ export {
   KeyValueTable,
   EmptyView,
   MarkdownText,
+  Description,
 };

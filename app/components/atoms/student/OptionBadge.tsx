@@ -14,7 +14,7 @@ const colorClass = {
 
 export default function OptionBadge({ text, color, dark }: OptionBadgeProps) {
   return (
-    <div className={`flex-shrink-0 px-2 py-0.5 flex items-center ${dark ? "bg-neutral-800 text-white" : "bg-neutral-200"} dark:bg-neutral-800 rounded-full`}>
+    <div className={`flex-shrink-0 px-2 py-0.5 flex items-center ${dark ? "bg-neutral-800 text-white" : "bg-neutral-200"} dark:bg-neutral-800 rounded-full shadow-lg`}>
       {color && <div className={`size-2.5 rounded-full mr-1 ` + colorClass[color]} />}
       <span className="text-sm">{text}</span>
     </div>

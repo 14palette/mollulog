@@ -1,11 +1,9 @@
-import type { LoaderFunctionArgs, MetaFunction } from "react-router";
+import type { ActionFunctionArgs, LoaderFunctionArgs, MetaFunction } from "react-router";
 import { EventTypeEnum, type UserPickupEventsQuery, type UserPickupEventsQueryVariables } from "~/graphql/graphql";
 import { getAuthenticator } from "~/auth/authenticator.server";
 import { runQuery } from "~/lib/baql";
-import { getPickupHistories } from "~/models/pickup-history";
-import { useLoaderData } from "react-router";
-import { ErrorPage } from "~/components/organisms/error";
-import { SparklesIcon } from "@heroicons/react/24/outline";
+import { deletePickupHistory, getPickupHistories } from "~/models/pickup-history";
+import { redirect, useLoaderData } from "react-router";
 import { AddContentButton } from "~/components/molecules/editor";
 import { PickupHistoryView } from "~/components/organisms/pickup";
 import { SubTitle } from "~/components/atoms/typography";
@@ -34,6 +32,18 @@ export const meta: MetaFunction = ({ params }) => {
     { name: "og:title", content: `${params.username || ""} - 모집 이력 | 몰루로그`.trim() },
     { name: "og:description", content: `${params.username} 선생님이 모집한 학생 목록을 확인해보세요` },
   ];
+};
+
+export const action = async ({ context, request }: ActionFunctionArgs) => {
+  const env = context.cloudflare.env;
+  const sensei = await getAuthenticator(env).isAuthenticated(request);
+  if (!sensei) {
+    return redirect("/unauthorized");
+  }
+
+  const formData = await request.formData();
+  await deletePickupHistory(env, sensei.id, formData.get("uid") as string);
+  return null;
 };
 
 export const loader = async ({ context, request, params }: LoaderFunctionArgs) => {
@@ -100,14 +110,6 @@ export const loader = async ({ context, request, params }: LoaderFunctionArgs) =
 
 export default function UserPickups() {
   const { pickupHistories, pickupStatistics, me } = useLoaderData<typeof loader>();
-  if (pickupHistories.length === 0) {
-    return (
-      <div className="my-8">
-        {me && <AddContentButton text="새로운 모집 이력 추가하기" link="/edit/pickups/new" />}
-        <ErrorPage Icon={SparklesIcon} message="아직 모집 이력이 없어요" />
-      </div>
-    );
-  }
 
   return (
     <div className="my-8">
@@ -133,7 +135,12 @@ export default function UserPickups() {
       </p>
 
       <SubTitle text="모집 이력" />
-      {me && <AddContentButton text="새로운 모집 이력 추가하기" link="/edit/pickups/new" />}
+      {me && <AddContentButton text="새로운 모집 이력 추가하기" link="/my?path=pickups/edit/new" />}
+      {pickupHistories.length === 0 && (
+        <p className="my-16 text-center">
+          아직 모집 이력이 없어요
+        </p>
+      )}
       {pickupHistories.map(({ uid, event, tier3Students, trial }) => {
         const pickupStudentUids = event.pickups.map((pickup) => pickup.student?.uid).filter((id) => id !== undefined);
         return (
@@ -144,6 +151,7 @@ export default function UserPickups() {
             tier3Students={tier3Students.map((student) => ({ uid: student.studentId, name: student.name }))}
             pickupStudentUids={pickupStudentUids}
             trial={trial}
+            editable={me}
           />
         );
       })}

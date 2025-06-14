@@ -8,6 +8,8 @@ import { MemoEditor } from "../editor";
 import { ChevronRightIcon, ChartBarIcon, ClockIcon, CheckCircleIcon } from "@heroicons/react/16/solid";
 import dayjs from "dayjs";
 import { OptionBadge } from "~/components/atoms/student";
+import { ArrowTopRightOnSquareIcon, IdentificationIcon, HeartIcon as EmptyHeartIcon } from "@heroicons/react/24/outline";
+import { HeartIcon as FilledHeartIcon } from "@heroicons/react/24/solid";
 
 export type ContentTimelineItemProps = {
   name: string;
@@ -161,9 +163,29 @@ export default function ContentTimelineItem(
                   favorited: favoritedStudents?.includes(student.uid),
                   favoritedCount: favoritedCounts?.[student.uid],
                 } : undefined,
+                popups: (student?.uid && student?.schaleDbId) ? [
+                  favoritedStudents?.includes(student.uid) ? {
+                    Icon: FilledHeartIcon,
+                    text: "관심 학생에서 해제",
+                    onClick: () => onFavorite?.(student.uid, false),
+                  } : {
+                    Icon: EmptyHeartIcon,
+                    text: "관심 학생에 등록",
+                    onClick: () => onFavorite?.(student.uid, true),
+                  },
+                  {
+                    Icon: IdentificationIcon,
+                    text: "학생부 보기",
+                    link: `/students/${student?.uid}`,
+                  },
+                  {
+                    Icon: ArrowTopRightOnSquareIcon,
+                    text: "샬레DB에서 학생 정보 보기",
+                    link: `https://schaledb.com/student/${student?.schaleDbId}`,
+                  },
+                ] : undefined,
               };
             })}
-            onFavorite={onFavorite}
           />
         </div>
       )}
