@@ -25,6 +25,7 @@ type StudentCardProps = {
   favorited?: boolean;
   favoritedCount?: number;
   grayscale?: boolean;
+  border?: "gray" | "blue";
 
   onSelect?: (id: string) => void;
   popups?: StudentCardPopupProps["popups"];
@@ -40,7 +41,7 @@ function visibileTier(tier: number): [number, boolean] {
 
 export default function StudentCard({
   uid, name, nameSize, tier, level, label, isAssist, attackType, defenseType, role,
-  favorited, favoritedCount, grayscale, onSelect, popups,
+  favorited, favoritedCount, grayscale, border, onSelect, popups,
 }: StudentCardProps) {
   const { activePopupId, setActivePopupId } = useStudentCardPopup();
   const showPopup = uid === activePopupId;
@@ -63,57 +64,69 @@ export default function StudentCard({
     visibleNames.push(name);
   }
 
+  let borderClass = "";
+  if (border === "gray") {
+    borderClass = "border-4 border-gray-400 dark:border-gray-500";
+  } else if (border === "blue") {
+    borderClass = "border-4 border-blue-500";
+  }
+
   return (
     <div className="relative">
       <div
         className={((onSelect || popups) && uid) ? "hover:scale-105 cursor-pointer transition" : ""}
         onClick={uid ? () => {
-          onSelect?.(uid);
-          setActivePopupId(uid === activePopupId ? null : uid);
+          if (onSelect) {
+            onSelect(uid);
+          } else {
+            setActivePopupId(uid === activePopupId ? null : uid);
+          }
         } : undefined}
       >
         <div className="my-1">
           <div className="relative">
-            <img
-              className={`rounded-lg ${grayscale ? "grayscale opacity-75" : ""} transition`}
-              src={studentImageUrl(uid ?? "unlisted")}
-              alt={name ?? undefined} loading="lazy"
-            />
-            {/* 우측 상단 */}
-            <div className="absolute top-0 right-0 text-xs font-bold">
-              {level && <span className="px-1.5 bg-black/90 rounded-lg text-neutral-100">Lv. {level}</span>}
-            </div>
-
-            {(favoritedCount || favorited) && (
-              <div className={`px-1 absolute top-0.5 right-0.5 text-white border rounded-lg flex items-center transition ${(favorited === undefined || favorited === true) ? "bg-red-500/90" : "bg-neutral-500/90"}`}>
-                <HeartIcon className="size-3.5" />
-                {favoritedCount && <span className="text-xs font-bold">{favoritedCount}</span>}
+            <div className={`relative rounded-lg overflow-hidden ${borderClass}`}>
+              <img
+                className={`w-full h-full ${grayscale ? "grayscale opacity-75" : ""} transition`}
+                src={studentImageUrl(uid ?? "unlisted")}
+                alt={name ?? undefined} loading="lazy"
+              />
+              {/* 우측 상단 */}
+              <div className="absolute top-0 right-0 text-xs font-bold">
+                {level && <span className="px-1.5 bg-black/90 rounded-lg text-neutral-100">Lv. {level}</span>}
               </div>
-            )}
 
-            {/* 하단 */}
-            <div className="absolute bottom-0 w-full flex justify-center text-xs font-bold bg-black/90 rounded-b-lg">
-              {isAssist && (
-                <div className="px-1 md:px-1.5 text-xs font-bold bg-linear-to-br from-cyan-300 to-sky-500 dark:from-cyan-400 dark:to-sky-600 text-white rounded-bl-lg text-center">A</div>
-              )}
-              {label}
-              {!label && tier && (
-                <div className={`flex-grow flex justify-center items-center ${visibileTier(tier)[1] ? "text-teal-300" : "text-yellow-300"}`}>
-                  {(tier <= 5) ?
-                    <StarIcon className="size-3.5 mr-0.5 inline-block" /> :
-                    <img className="w-4 h-4 mr-0.5 inline-block" src="/icons/exclusive_weapon.png" alt="고유 장비" />
-                  }
-                  <span>{visibileTier(tier)[0]}</span>
+              {(favoritedCount || favorited) && (
+                <div className={`px-1 absolute top-0.5 right-0.5 text-white border rounded-lg flex items-center transition ${(favorited === undefined || favorited === true) ? "bg-red-500/90" : "bg-neutral-500/90"}`}>
+                  <HeartIcon className="size-3.5" />
+                  {favoritedCount && <span className="text-xs font-bold">{favoritedCount}</span>}
                 </div>
               )}
+
+              {/* 하단 */}
+              <div className="absolute bottom-0 w-full flex justify-center text-xs font-bold bg-black/90 rounded-b-sm">
+                {isAssist && (
+                  <div className="px-1 md:px-1.5 text-xs font-bold bg-linear-to-br from-cyan-300 to-sky-500 dark:from-cyan-400 dark:to-sky-600 text-white rounded-bl-lg text-center">A</div>
+                )}
+                {label}
+                {!label && tier && (
+                  <div className={`flex-grow flex justify-center items-center ${visibileTier(tier)[1] ? "text-teal-300" : "text-yellow-300"}`}>
+                    {(tier <= 5) ?
+                      <StarIcon className="size-3.5 mr-0.5 inline-block" /> :
+                      <img className="w-4 h-4 mr-0.5 inline-block" src="/icons/exclusive_weapon.png" alt="고유 장비" />
+                    }
+                    <span>{visibileTier(tier)[0]}</span>
+                  </div>
+                )}
+              </div>
             </div>
+            {name && (
+              <div className="mt-1 text-center leading-tight tracking-tighter">
+                <p className={nameSize === "small" ? "text-xs" : "text-sm"}>{visibleNames[0]}</p>
+                {(visibleNames.length === 2) && <p className="text-xs">{visibleNames[1]}</p>}
+              </div>
+            )}
           </div>
-          {name && (
-            <div className="mt-1 text-center leading-tight tracking-tighter">
-              <p className={nameSize === "small" ? "text-xs" : "text-sm"}>{visibleNames[0]}</p>
-              {(visibleNames.length === 2) && <p className="text-xs">{visibleNames[1]}</p>}
-            </div>
-          )}
         </div>
       </div>
 
@@ -149,8 +162,9 @@ type StudentCardPopupProps = {
     role?: Role;
   };
   popups: {
-    Icon: React.ElementType;
-    text: string;
+    Icon?: React.ElementType;
+    text?: string;
+    children?: ReactNode;
     link?: string;
     onClick?: () => void;
   }[];
@@ -161,7 +175,7 @@ export function StudentCardPopup({ student, popups, onClose }: StudentCardPopupP
   const { name, attackType, defenseType, role } = student;
 
   return (
-    <div className="m-4 md:m-0 bg-neutral-100/80 dark:bg-black/80 backdrop-blur-sm text-black dark:text-white rounded-xl border border-neutral-200 dark:border-neutral-800 shadow-lg">
+    <div className="m-4 md:m-0 bg-neutral-100/90 dark:bg-black/80 backdrop-blur-sm text-black dark:text-white rounded-xl border border-neutral-200 dark:border-neutral-800 shadow-lg">
       <div className="px-4 pt-4 pb-2">
         <p className="text-lg font-bold">{name}</p>
         {attackType && defenseType && role && (
@@ -186,23 +200,25 @@ export function StudentCardPopup({ student, popups, onClose }: StudentCardPopupP
                 ${index === popups.length - 1 ? "rounded-b-lg" : ""}
               `)}
             >
-              <popup.Icon className="size-5" />
-              <span>{popup.text}</span>
+              {popup.Icon && <popup.Icon className="size-5" />}
+              {popup.text && <span>{popup.text}</span>}
+              {popup.children}
             </div>
           );
 
+          const key = `${popup.text ?? popup.link ?? `popup-${index}`}`;
           if (popup.link && popup.link.startsWith("/")) {
             return (
-              <Link key={popup.text} to={popup.link}>{content}</Link>
+              <Link key={key} to={popup.link}>{content}</Link>
             );
           } else if (popup.link) {
             return (
-              <a key={popup.text} href={popup.link} target="_blank" rel="noopener noreferrer">
+              <a key={key} href={popup.link} target="_blank" rel="noopener noreferrer">
                 {content}
               </a>
             );
           }
-          return <div key={popup.text}>{content}</div>;
+          return <div key={key}>{content}</div>;
         })}
       </div>
     </div>

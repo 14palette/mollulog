@@ -1,4 +1,4 @@
-import { eq, sql } from "drizzle-orm";
+import { and, eq, sql } from "drizzle-orm";
 import { drizzle } from "drizzle-orm/d1";
 import { sqliteTable, text, int } from "drizzle-orm/sqlite-core";
 import { Env } from "~/env.server";
@@ -45,12 +45,22 @@ export async function getRecruitedStudentTiers(env: Env, senseiId: number): Prom
 }
 
 export async function upsertRecruitedStudent(env: Env, senseiId: number, studentUid: string, tier: number) {
+  if (tier < 1 || tier > 8) {
+    throw new Error(`Invalid tier: ${tier}`);
+  }
+
   const db = drizzle(env.DB);
   const uid = nanoid(8);
   await db.insert(recruitedStudentsTable).values({ uid, userId: senseiId, studentUid, tier }).onConflictDoUpdate({
     target: [recruitedStudentsTable.userId, recruitedStudentsTable.studentUid],
     set: { tier },
   });
+}
+
+export async function removeRecruitedStudent(env: Env, senseiId: number, studentUid: string) {
+  const db = drizzle(env.DB);
+  await db.delete(recruitedStudentsTable)
+    .where(and(eq(recruitedStudentsTable.userId, senseiId), eq(recruitedStudentsTable.studentUid, studentUid)));
 }
 
 // Temporary function: migrate from student states

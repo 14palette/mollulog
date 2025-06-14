@@ -16,7 +16,7 @@ type FilterableStudentState = {
   role: Role;
   order: number;
   initialTier: number;
-  tier: number;
+  tier?: number;
 };
 
 type Filter = {
