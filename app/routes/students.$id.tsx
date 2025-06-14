@@ -14,6 +14,7 @@ import { ArrowTopRightOnSquareIcon, ChevronDownIcon, ChevronUpIcon } from "@hero
 import { OptionBadge } from "~/components/atoms/student";
 import { ErrorPage } from "~/components/organisms/error";
 import { SlotCountInfo } from "~/components/organisms/raid";
+import { studentStandingImageUrl } from "~/models/assets";
 
 const studentDetailQuery = graphql(`
   query StudentDetail($uid: String!, $raidSince: ISO8601DateTime!) {
@@ -107,7 +108,7 @@ export default function StudentDetail() {
         </div>
         <div className="relative w-1/3 h-full overflow-hidden rounded-r-xl">
           <img
-            src={`https://assets.mollulog.net/images/students/standing/${student.uid}`}
+            src={studentStandingImageUrl(student.uid)}
             alt={student.name}
             className="absolute w-full h-full object-cover object-top scale-125 translate-y-1/20 transform-gpu origin-top"
           />
