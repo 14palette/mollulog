@@ -2,8 +2,6 @@ import { and, eq, sql } from "drizzle-orm";
 import { drizzle } from "drizzle-orm/d1";
 import { sqliteTable, text, int } from "drizzle-orm/sqlite-core";
 import { Env } from "~/env.server";
-import { senseisTable } from "./sensei";
-import { getUserStudentStates } from "./student-state";
 import { nanoid } from "nanoid/non-secure";
 
 export const recruitedStudentsTable = sqliteTable("recruited_students", {
@@ -61,32 +59,4 @@ export async function removeRecruitedStudent(env: Env, senseiId: number, student
   const db = drizzle(env.DB);
   await db.delete(recruitedStudentsTable)
     .where(and(eq(recruitedStudentsTable.userId, senseiId), eq(recruitedStudentsTable.studentUid, studentUid)));
-}
-
-// Temporary function: migrate from student states
-export async function migrateRecruitedStudents(env: Env) {
-  const db = drizzle(env.DB);
-  const allSenseis = await db.select({ id: senseisTable.id, username: senseisTable.username }).from(senseisTable);
-  for (const sensei of allSenseis) {
-    const senseiId = sensei.id;
-    console.log(`Migrating recruited students for sensei ${sensei.username} (${senseiId})`);
-
-    const studentStates = await getUserStudentStates(env, sensei.username);
-    if (!studentStates) {
-      continue;
-    }
-
-    const recruitedStudents = studentStates.filter((state) => state.owned).map((state) => ({
-      uid: state.student.uid,
-      userId: senseiId,
-      studentUid: state.student.uid,
-      tier: state.tier ?? state.student.initialTier,
-    }));
-
-    await Promise.all(recruitedStudents.map((recruitedStudent) =>
-      db.insert(recruitedStudentsTable).values(recruitedStudent).onConflictDoNothing(),
-    ));
-
-    console.log(`Migrated ${recruitedStudents.length} recruited students for sensei ${sensei.username} (${senseiId})`);
-  }
 }
