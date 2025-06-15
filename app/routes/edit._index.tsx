@@ -35,11 +35,11 @@ export const loader = async ({ context, request }: LoaderFunctionArgs) => {
       profileStudentId: senseiData.profileStudentId,
       friendCode: senseiData.friendCode,
     },
-    allStudents: (await getAllStudents(env)).map((student) => ({
+    allStudents: (await getAllStudents(env, true)).map((student) => ({
       uid: student.uid,
       name: student.name,
       order: student.order,
-    })),
+    })).sort((a, b) => a.order - b.order),
     passkeyCount: (await getPasskeysBySensei(env, sensei)).length,
   };
 }

@@ -41,7 +41,7 @@ export default function ProfileEditor({ method, students, initialData, error, su
       <SelectForm
         label="프로필 학생" name="profileStudentId"
         description="학생을 프로필 이미지로 설정할 수 있어요"
-        options={students.sort((a, b) => a.order - b.order).map((student) => ({
+        options={students.map((student) => ({
           label: student.name,
           labelImageUrl: studentImageUrl(student.uid),
           value: student.uid,

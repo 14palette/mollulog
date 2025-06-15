@@ -51,7 +51,7 @@ export default function SelectForm({ label, description, name, initialValue, pla
         {isOpen && (
           <div className="absolute top-full left-0 w-full max-h-72 overflow-y-auto no-scrollbar bg-white/90 dark:bg-black/80 backdrop-blur-sm rounded-b-lg shadow-lg">
             {useSearch && (
-              <div className="sticky top-0 p-2 border-b border-neutral-200 dark:border-neutral-800">
+              <div className="sticky top-0 p-2 bg-white/90 dark:bg-black/80 backdrop-blur-sm border-b border-neutral-200 dark:border-neutral-800">
                 <input
                   type="text"
                   className="w-full p-2"

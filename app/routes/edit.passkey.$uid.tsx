@@ -27,7 +27,6 @@ export const action = async ({ context, request, params }: ActionFunctionArgs) =
   }
 
   const { uid } = params;
-  console.log(request.method);
   if (request.method === "PATCH") {
     const formData = await request.formData();
     const memo = formData.get("memo") as string;

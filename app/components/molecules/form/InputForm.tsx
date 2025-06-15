@@ -15,7 +15,7 @@ export default function InputForm({ label, type, name, defaultValue, description
 
   return (
     <div className="p-4" onClick={() => inputRef.current?.focus()}>
-      <label className="font-bold">{label}</label>
+      <label className="font-bold" htmlFor={name}>{label}</label>
       <p className="text-sm">{description}</p>
       <div className="mt-2 text-neutral-500 dark:text-neutral-400">
         <input

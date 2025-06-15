@@ -21,11 +21,11 @@ export const loader = async ({ request, context }: LoaderFunctionArgs) => {
 
   const env = context.cloudflare.env;
   return {
-    allStudents: (await getAllStudents(env)).sort((a, b) => a.order - b.order).map((student) => ({
+    allStudents: (await getAllStudents(env, true)).map((student) => ({
       uid: student.uid,
       name: student.name,
       order: student.order,
-    })),
+    })).sort((a, b) => a.order - b.order),
   };
 }
 
