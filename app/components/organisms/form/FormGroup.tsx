@@ -1,5 +1,5 @@
 import { ArrowPathIcon } from "@heroicons/react/16/solid";
-import { createContext, ReactNode, useCallback, useContext, useEffect, useRef } from "react";
+import { createContext, ReactNode, useCallback, useContext, useRef } from "react";
 import { Form, useNavigation, useSubmit } from "react-router";
 
 type FormGroupProps = {
@@ -36,7 +36,7 @@ export default function FormGroup({ method, children, submitOnChange }: FormGrou
   const layout = (
     <>
       <div className="bg-neutral-100 dark:bg-neutral-900 rounded-lg">
-        {childrenArray.map((child, index) => (
+        {childrenArray.filter(Boolean).map((child, index) => (
           <div key={index} className="first:rounded-t-lg last:rounded-b-lg not-last:border-b border-neutral-200 dark:border-neutral-800 hover:bg-neutral-200 dark:hover:bg-neutral-950 transition">
             {child}
           </div>
