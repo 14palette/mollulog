@@ -1,6 +1,5 @@
 import { FormGroup } from "~/components/organisms/form";
-import { ButtonForm, InputForm, SelectForm, TextareaForm } from "~/components/molecules/form";
-import { studentImageUrl } from "~/models/assets";
+import { ButtonForm, InputForm, StudentSelectForm, TextareaForm } from "~/components/molecules/form";
 
 type ProfileStudent = {
   uid: string;
@@ -38,17 +37,12 @@ export default function ProfileEditor({ method, students, initialData, error, su
         placeholder="닉네임 입력 (필수)"
         error={error?.username}
       />
-      <SelectForm
+      <StudentSelectForm
         label="프로필 학생" name="profileStudentId"
         description="학생을 프로필 이미지로 설정할 수 있어요"
-        options={students.map((student) => ({
-          label: student.name,
-          labelImageUrl: studentImageUrl(student.uid),
-          value: student.uid,
-        }))}
-        initialValue={initialProfileStudentId}
+        students={students}
+        initialStudentUids={initialProfileStudentId ? [initialProfileStudentId] : undefined}
         placeholder="프로필 학생 선택"
-        useSearch
       />
       <InputForm
         label="친구 코드" type="text" name="friendCode"

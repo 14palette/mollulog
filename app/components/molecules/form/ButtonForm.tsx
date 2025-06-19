@@ -13,8 +13,8 @@ export default function ButtonForm({ type = "button", label, color = "default", 
   }[color];
 
   return (
-    <button type={type} className="p-4 cursor-pointer" onClick={onClick}>
-      <label className={colorClass}>{label}</label>
+    <button type={type} className="w-full text-left p-4 cursor-pointer" onClick={onClick}>
+      <label className={`${colorClass} cursor-pointer`}>{label}</label>
     </button>
   );
 }

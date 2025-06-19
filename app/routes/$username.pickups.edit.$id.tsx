@@ -3,16 +3,17 @@ import { useLoaderData, useSearchParams, useSubmit } from "react-router";
 import dayjs from "dayjs";
 import { useState } from "react";
 import { getAuthenticator } from "~/auth/authenticator.server";
-import { Button } from "~/components/atoms/form";
-import { StudentCard } from "~/components/atoms/student";
 import { SubTitle, Title } from "~/components/atoms/typography";
-import { ContentSelector } from "~/components/molecules/editor";
 import { PickupHistoryEditor, PickupHistoryImporter } from "~/components/organisms/pickup";
 import { graphql } from "~/graphql";
 import type { PickupEventsQuery } from "~/graphql/graphql";
 import { runQuery } from "~/lib/baql";
 import { createPickupHistory, getPickupHistory, type PickupHistory, updatePickupHistory } from "~/models/pickup-history";
 import { getAllStudents } from "~/models/student";
+import { FormGroup } from "~/components/organisms/form";
+import { ContentSelectForm } from "~/components/molecules/form";
+import { FilterButtons } from "~/components/molecules/content";
+import { Bars3Icon } from "@heroicons/react/16/solid";
 
 const pickupEventsQuery = graphql(`
   query PickupEvents {
@@ -55,6 +56,7 @@ export const loader = async ({ context, request, params }: LoaderFunctionArgs) =
     events: data.events.nodes.filter((event) => event.pickups.length > 0 && dayjs(event.since).isBefore(now)).reverse(),
     tier3Students: (await getAllStudents(env))
       .filter((student) => student.initialTier === 3)
+      .sort((a, b) => b.order - a.order)
       .map((student) => ({ uid: student.uid, name: student.name })),
     currentPickupHistory,
   };
@@ -119,36 +121,33 @@ export default function EditPickup() {
   return (
     <>
       <Title text="모집 이력 관리" />
-      <ContentSelector
-        contents={events.map((event) => ({
-          uid: event.uid,
-          name: event.name,
-          imageUrl: null,
-          description: (
-            <div className="flex gap-x-2">
-              {event.pickups.map((pickup) => (
-                <div className="w-8" key={pickup.studentName}>
-                  <StudentCard uid={pickup.student?.uid ?? null} />
-                </div>
-              ))}
-            </div>
-          ),
-          searchKeyword: `${event.name} ${event.pickups.map((pickup) => pickup.studentName).join(" ")}`,
-        }))}
-        placeholder="모집 이력을 기록할 이벤트를 선택하세요"
-        initialContentUid={eventUid ?? undefined}
-        onSelectContent={setEventUid}
-        searchable
-      />
+
+      <SubTitle text="모집 이벤트" />
+      <FormGroup>
+        <ContentSelectForm
+          label="이벤트"
+          description="모집을 진행한 이벤트를 선택해주세요."
+          name="eventUid"
+          contents={events}
+          initialValue={initialEventUid ?? undefined}
+          onSelect={setEventUid}
+        />
+      </FormGroup>
 
       {eventUid && (
         <>
-          <SubTitle text="모집 내용" />
+          <SubTitle text="모집 결과" />
           {!currentPickupHistory && (
-            <Button
-              text={editorMode === "edit" ? "외부 데이터 불러오기" : "직접 입력하기"}
-              onClick={() => setEditorMode((prev) => prev === "edit" ? "import" : "edit")}
-            />
+            <div className="mb-4">
+              <FilterButtons
+                Icon={Bars3Icon}
+                buttonProps={[
+                  { text: "직접 추가", active: editorMode === "edit", onToggle: () => setEditorMode("edit") },
+                  { text: "외부 데이터", active: editorMode === "import", onToggle: () => setEditorMode("import") },
+                ]}
+                exclusive atLeastOne
+              />
+            </div> 
           )}
           {editorMode === "edit" && (
             <PickupHistoryEditor
@@ -165,9 +164,15 @@ export default function EditPickup() {
           {editorMode === "import" && (
             <PickupHistoryImporter
               tier3Students={tier3Students}
-              initialResult={currentPickupHistory?.result ?? undefined}
-              initialRawResult={currentPickupHistory?.rawResult ?? undefined}
-              onComplete={({ result, rawResult }) => submit({ eventUid, result, rawResult })}
+              initialTotalCount={initialTotalCount}
+              initialTier3Count={initialTier3Count}
+              initialTier3StudentIds={initialTier3StudentUids}
+              initialRawData={currentPickupHistory?.rawResult ?? undefined}
+              onComplete={({ totalCount, tier3Count, tier3StudentIds, rawData }) => submit({
+                eventUid,
+                result: [{ trial: totalCount, tier3Count, tier3StudentIds }],
+                rawResult: rawData,
+              })}
             />
           )}
         </>

@@ -2,8 +2,7 @@ import { FunnelIcon } from "@heroicons/react/24/outline";
 import dayjs from "dayjs";
 import { useState } from "react";
 import type { ContentTimelineItemProps } from "~/components/molecules/content";
-import { ContentTimelineItem } from "~/components/molecules/content";
-import { FilterButtons } from "~/components/molecules/student";
+import { ContentTimelineItem, FilterButtons } from "~/components/molecules/content";
 import type { EventType, RaidType } from "~/models/content.d";
 
 export type ContentTimelineProps = {

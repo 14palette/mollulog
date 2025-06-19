@@ -8,16 +8,17 @@ type InputFormProps = {
   description?: string;
   placeholder?: string;
   error?: string;
+  onChange?: (value: string) => void;
 };
 
-export default function InputForm({ label, type, name, defaultValue, description, placeholder, error }: InputFormProps) {
+export default function InputForm({ label, type, name, defaultValue, description, placeholder, error, onChange }: InputFormProps) {
   const inputRef = useRef<HTMLInputElement>(null);
 
   return (
     <div className="p-4" onClick={() => inputRef.current?.focus()}>
       <label className="font-bold" htmlFor={name}>{label}</label>
-      <p className="text-sm">{description}</p>
-      <div className="mt-2 text-neutral-500 dark:text-neutral-400">
+      <p className="text-sm text-neutral-500 dark:text-neutral-400">{description}</p>
+      <div className="mt-2 text-neutral-700 dark:text-neutral-300">
         <input
           ref={inputRef}
           type={type}
@@ -25,6 +26,7 @@ export default function InputForm({ label, type, name, defaultValue, description
           defaultValue={defaultValue}
           className="w-full"
           placeholder={placeholder}
+          onChange={(e) => onChange?.(e.target.value)}
         />
       </div>
       {error && <p className="text-red-500 text-sm mt-2">{error}</p>}

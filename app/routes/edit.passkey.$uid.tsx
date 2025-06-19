@@ -48,7 +48,7 @@ export default function EditPasskey() {
 
   return (
     <>
-      <FormGroup method="patch">
+      <FormGroup method="patch" submitOnChange>
         <InputForm label="이름" type="text" name="memo" defaultValue={passkey.memo} />
         <ButtonForm label="이 Passkey 삭제" color="red" onClick={() => {
           if (confirm("정말 삭제할까요? 삭제된 Passkey는 복구할 수 없어요.")) {

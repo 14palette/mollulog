@@ -2,7 +2,7 @@ import { MagnifyingGlassIcon, ShieldCheckIcon } from "@heroicons/react/24/outlin
 import { useState } from "react";
 import { FloatingButton } from "~/components/atoms/button";
 import { Callout } from "~/components/atoms/typography";
-import { FilterButtons } from "~/components/molecules/student";
+import { FilterButtons } from "~/components/molecules/content";
 import { RaidRankFilter } from "~/components/organisms/raid";
 import RaidRanks, { type RaidRankFilters } from "~/components/organisms/raid/RaidRanks";
 import { defenseTypeColor, defenseTypeLocale } from "~/locales/ko";

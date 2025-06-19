@@ -13,7 +13,7 @@ import { raidTypeLocale } from "~/locales/ko";
 import { bossBannerUrl } from "~/models/assets";
 import { getAllStudents } from "~/models/student";
 import { ErrorPage } from "~/components/organisms/error";
-import { FilterButtons } from "~/components/molecules/student";
+import { FilterButtons } from "~/components/molecules/content";
 import { RaidRanksPage, RaidStatisticsPage } from "~/components/templates/raids";
 
 const raidDetailQuery = graphql(`

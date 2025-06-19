@@ -3,7 +3,7 @@ import hangul from 'hangul-js';
 import type { Dispatch, SetStateAction} from "react";
 import { useEffect, useState } from "react";
 import { Input } from "~/components/atoms/form";
-import { FilterButtons } from "~/components/molecules/student";
+import { FilterButtons } from "~/components/molecules/content";
 import type { AttackType, DefenseType } from "~/models/content.d";
 import type { Role } from "~/models/student";
 

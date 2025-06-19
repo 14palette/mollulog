@@ -1,97 +1,75 @@
-import { useState } from "react";
-import { Button, Textarea } from "~/components/atoms/form";
-import { PickupStudentSelectCard } from "~/components/molecules/pickup";
-import { parsePickupHistory, type PickupHistory } from "~/models/pickup-history";
+import { useEffect, useState } from "react";
+import { parsePickupHistory } from "~/models/pickup-history";
+import { FormGroup } from "~/components/organisms/form";
+import { ButtonForm, StudentSelectForm, TextareaForm } from "~/components/molecules/form";
 
 type PickupHistoryImporterProps = {
   tier3Students: {
     uid: string;
     name: string;
   }[];
-  initialResult?: PickupHistory["result"];
-  initialRawResult?: string;
-  onComplete: ({ result, rawResult }: { result: PickupHistory["result"], rawResult?: string }) => void;
+
+  initialTotalCount?: number;
+  initialTier3Count?: number;
+  initialTier3StudentIds?: string[];
+  initialRawData?: string;
+
+  onComplete: (pickupData: {
+    totalCount: number;
+    tier3Count: number;
+    tier3StudentIds: string[];
+    rawData: string;
+  }) => void;
 };
 
 export default function PickupHistoryImporter(
-  { tier3Students, initialResult, initialRawResult, onComplete }: PickupHistoryImporterProps,
+  { tier3Students, initialTotalCount, initialTier3Count, initialTier3StudentIds, initialRawData, onComplete }: PickupHistoryImporterProps,
 ) {
-  const [rawResult, setRawResult] = useState<string | undefined>(initialRawResult);
-  const [parsedResult, setParsedResult] = useState<PickupHistory["result"]>(initialResult ?? []);
+  const [totalCount, setTotalCount] = useState(initialTotalCount ?? 0);
+  const [tier3Count, setTier3Count] = useState(initialTier3Count ?? 0);
+  const [tier3StudentIds, setTier3StudentIds] = useState(initialTier3StudentIds ?? []);
+  const [rawData, setRawData] = useState(initialRawData);
+
+  useEffect(() => {
+    if (rawData && tier3StudentIds.length === 0) {
+      const parsedResult = parsePickupHistory(rawData, tier3Students);
+      setTotalCount(Math.max(...parsedResult.map((result) => result.trial)));
+      setTier3Count(parsedResult.reduce((acc, result) => acc + result.tier3Count, 0));
+      setTier3StudentIds(parsedResult.flatMap((result) => result.tier3StudentIds));
+    }
+  }, [rawData]);
 
   return (
-    <>
-     <Textarea
-        className="h-64"
+    <FormGroup>
+      <TextareaForm
         label="모집 결과"
         description="10연 모집 결과를 한 줄에 하나씩 입력"
         placeholder="1/2/7 드요코&#10;1 3 6 밴즈사&#10;..."
-        defaultValue={initialRawResult}
+        defaultValue={initialRawData}
         onChange={(value) => {
-          setRawResult(value);
-          setParsedResult(parsePickupHistory(value, tier3Students));
+          setTier3StudentIds([]);
+          setTier3Count(0);
+          setTotalCount(0);
+          setRawData(value);
         }}
       />
-
-      {parsedResult.length > 0 && (
-        <>
-          <p className="my-2 text-sm text-neutral-500 dark:text-neutral-300">
-            학생 이미지를 클릭하여 모집한 학생을 수정할 수 있어요.
-          </p>
-          <table className="w-full md:w-fit">
-            <thead className="bg-neutral-100 dark:bg-neutral-900 rounded-lg">
-              <tr>
-                <th className="text-left px-4 py-2 rounded-l-lg">횟수</th>
-                <th className="text-left min-w-96 p-2 pr-4 rounded-r-lg">모집한 ★3 학생</th>
-              </tr>
-            </thead>
-            <tbody>
-              {parsedResult.map((eachResult) => {
-                const resultTier3Students = new Array(eachResult.tier3Count).fill(null);
-                eachResult.tier3StudentIds.forEach((studentUid, index) => {
-                  if (index < resultTier3Students.length) {
-                    resultTier3Students[index] = studentUid;
-                  }
-                });
-
-                return (
-                  <tr key={`trial-${eachResult.trial}`} className="relative py-2 hover:bg-neutral-100 dark:hover:bg-neutral-700 transition">
-                    <td className="px-4 p-2 h-16 font-bold rounded-l-lg">{eachResult.trial}</td>
-                    <td className="rounded-r-lg">
-                      <div className="flex gap-x-2">
-                        {resultTier3Students.length === 0 && <span className="text-neutral-300">(★3 학생 없음)</span>}
-                        {resultTier3Students.map((studentUid, index) => (
-                          <PickupStudentSelectCard
-                            key={`student-${studentUid ?? "unselected"}-${index}`}
-                            uid={studentUid}
-                            tier3Students={tier3Students}
-                            onChange={(newStudentUid) => {
-                              setParsedResult((prev) => {
-                                const newResult = [...prev];
-                                newResult.find((result) => result.trial === eachResult.trial)!.tier3StudentIds[index] = newStudentUid;
-                                return newResult;
-                              });
-                            }}
-                          />
-                        ))}
-                      </div>
-                    </td>
-                  </tr>
-                );
-              })}
-            </tbody>
-          </table>
-        </>
+      {tier3Count && tier3Count > 0 && (
+        <StudentSelectForm
+          label="모집한 ★3 학생"
+          description="모집한 ★3 학생을 선택해주세요"
+          students={tier3Students}
+          initialStudentUids={tier3StudentIds}
+          onSelect={(value) => setTier3StudentIds(value as string[])}
+          multiple
+        />
       )}
-
-      <div className="my-8">
-        {parsedResult.length > 0 && parsedResult.every((result) => result.tier3StudentIds.length === result.tier3Count) && (
-          <Button
-            text="완료" color="primary"
-            onClick={() => onComplete({ result: parsedResult, rawResult })}
-          />
-        )}
-      </div>
-    </>
-  );
+      {totalCount && totalCount > 0 && tier3Count && tier3Count > 0 && tier3StudentIds.length === tier3Count && rawData && (
+        <ButtonForm
+          label="모집 결과 저장"
+          color="blue"
+          onClick={() => onComplete({ totalCount, tier3Count, tier3StudentIds, rawData })}
+        />
+      )}
+    </FormGroup>
+  )
 }
