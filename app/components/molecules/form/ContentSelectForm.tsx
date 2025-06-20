@@ -1,6 +1,7 @@
 import dayjs from "dayjs";
 import SelectForm, { type SelectFormProps } from "./SelectForm";
 import { StudentCards } from "../student";
+import { bossImageUrl } from "~/models/assets";
 
 type ContentSelectFormProps = Omit<SelectFormProps, "options"> & {
   contents: {
@@ -8,11 +9,13 @@ type ContentSelectFormProps = Omit<SelectFormProps, "options"> & {
     name: string;
     since: Date;
     until: Date;
-    pickups: {
+    pickups?: {
       student: { uid: string;} | null;
       studentName: string;
     }[];
+    boss?: string;
   }[];
+  searchPlaceholder?: string;
   onSelect?: (contentUid: string) => void;
 };
 
@@ -23,22 +26,29 @@ export default function ContentSelectForm(props: ContentSelectFormProps) {
       options={props.contents.map((content) => ({
         label: content.name,
         value: content.uid,
-        searchLabel: `${content.name} ${content.pickups.map((pickup) => pickup.studentName).join(" ")}`,
+        searchLabel: `${content.name} ${content.pickups?.map((pickup) => pickup.studentName).join(" ")}`,
         element: (
-          <div className="px-4 py-2">
+          <div className="w-full px-4 py-2 relative">
             <p className="font-bold">{content.name}</p>
-            <p className="mb-2 text-sm text-neutral-500">
+            <p className="text-sm text-neutral-500">
               {dayjs(content.since).format("YYYY.MM.DD")} ~ {dayjs(content.until).format("YYYY.MM.DD")}
             </p>
-            <StudentCards
-              students={content.pickups.filter((pickup) => pickup.student).map((pickup) => pickup.student!)}
-              pcGrid={12} mobileGrid={8}
-            />
+            {content.pickups && (
+              <div className="mt-2">
+                <StudentCards
+                  students={content.pickups.filter((pickup) => pickup.student).map((pickup) => pickup.student!)}
+                  pcGrid={12} mobileGrid={8}
+                />
+              </div>
+            )}
+            {content.boss && (
+              <img src={bossImageUrl(content.boss)} alt="raid boss" className="absolute top-0 right-0 h-full" />
+            )}
           </div>
         ),
       }))}
       useSearch
-      searchPlaceholder="이벤트 또는 픽업 학생 이름으로 찾기..."
+      searchPlaceholder={props.searchPlaceholder ?? "이벤트 또는 픽업 학생 이름으로 찾기..."}
     />
   )
 }

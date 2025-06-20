@@ -43,7 +43,7 @@ export const loader = async ({ context, request, params }: LoaderFunctionArgs) =
   return {
     allStudents: (await getAllStudents(env, true)).sort((a, b) => a.order - b.order),
     recruitedStudentTiers: await getRecruitedStudentTiers(env, sensei.id),
-    raids: data.raids.nodes,
+    raids: data.raids.nodes.sort((a, b) => new Date(b.since).getTime() - new Date(a.since).getTime()),
     party,
   };
 };
