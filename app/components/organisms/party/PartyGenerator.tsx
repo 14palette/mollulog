@@ -1,14 +1,14 @@
 import { Link } from "react-router";
-import dayjs from "dayjs";
 import { useState } from "react";
-import { Button, Input, Label, Textarea, Toggle } from "~/components/atoms/form";
+import { Button, Label } from "~/components/atoms/form";
 import { SubTitle } from "~/components/atoms/typography";
-import { AddContentButton, ContentSelector, PartyUnitEditor } from "~/components/molecules/editor";
+import { AddContentButton, PartyUnitEditor } from "~/components/molecules/editor";
 import { StudentCards } from "~/components/molecules/student";
-import { raidTypeLocale, terrainLocale } from "~/locales/ko";
-import { bossImageUrl } from "~/models/assets";
 import type { RaidType, Role, Terrain } from "~/models/content.d";
 import type { Party } from "~/models/party";
+import { ContentSelectForm, InputForm, TextareaForm } from "~/components/molecules/form";
+import { FormGroup } from "~/components/organisms/form";
+import { raidTypeLocale } from "~/locales/ko";
 
 type PartyGeneratorProps = {
   party?: Party;
@@ -32,38 +32,38 @@ type PartyGeneratorProps = {
 export default function PartyGenerator({ party, raids, students }: PartyGeneratorProps) {
   const studentsMap = new Map(students.map((student) => [student.uid, student]));
 
-  const [raidId, setRaidId] = useState<string | undefined>(party?.raidId ?? undefined);
+  const [raidUid, setRaidUid] = useState<string | undefined>(party?.raidId ?? undefined);
 
   const [showPartyEditor, setShowPartyEditor] = useState(false);
   const [units, setUnits] = useState<(string | null)[][]>(party?.studentIds ?? []);
 
   return (
     <div className="my-8">
-      <SubTitle text="편성 만들기" />
-      <Input name="name" label="편성 이름" placeholder="예) 비나 인세인 고점팟" defaultValue={party?.name} />
+      <SubTitle text="공략 작성하기" />
+      <FormGroup>
+        <InputForm name="name" label="공략 이름" placeholder="예) 비나 인세인 고점팟" defaultValue={party?.name} />
+        <ContentSelectForm
+          label="공략 컨텐츠"
+          description="공략 대상 컨텐츠를 선택하세요"
+          name="raidId"
+          contents={raids.map((raid) => ({
+            ...raid,
+            name: `${raid.name} (${raidTypeLocale[raid.type]})`,
+          }))}
+          initialValue={raidUid}
+          onSelect={(raidUid) => setRaidUid(raidUid)}
+          searchPlaceholder="컨텐츠 이름으로 찾기..."
+        />
+        <TextareaForm
+          label="공략 설명"
+          description="공략에 대한 설명을 적어주세요"
+          name="memo"
+          defaultValue={party?.memo ?? undefined}
+          placeholder={"8코 : 정후카 히마리 ..."}
+        />
+      </FormGroup>
 
-      <ContentSelector
-        contents={raids.map((raid) => ({
-          ...raid,
-          contentId: raid.uid,
-          description: `${dayjs(raid.since).format("YYYY-MM-DD")} | ${raidTypeLocale[raid.type]} | ${terrainLocale[raid.terrain]}`,
-          imageUrl: bossImageUrl(raid.boss),
-        }))}
-        initialContentUid={raidId}
-        placeholder="편성을 사용할 컨텐츠를 선택하세요"
-        onSelectContent={(contentId) => setRaidId(contentId)}
-      />
-      {raidId && (
-        <>
-          <input type="hidden" name="raidId" value={raidId} />
-          <Toggle name="showAsRaidTip" label="컨텐츠 공략에 공개하기" initialState={party?.showAsRaidTip ?? false} />
-        </>
-      )}
- 
-      <div className="h-8" />
-      <Textarea name="memo" label="편성 설명" placeholder="편성에 대한 설명을 적어주세요" defaultValue={party?.memo ?? undefined} />
-
-      <SubTitle text="파티" />
+      <SubTitle text="편성" />
       <input type="hidden" name="studentIds" value={JSON.stringify(units)} />
       {units.map((unit, index) => (
         <div className="my-4 px-4 py-2 md:px-6 md:py-4 bg-neutral-100 dark:bg-neutral-900 rounded-xl" key={`party-unit-${index}`}>

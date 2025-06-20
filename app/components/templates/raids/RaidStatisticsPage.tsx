@@ -1,6 +1,6 @@
 import { useFetcher } from "react-router";
 import { defenseTypeColor, defenseTypeLocale } from "~/locales/ko";
-import { FilterButtons } from "~/components/molecules/student";
+import { FilterButtons } from "~/components/molecules/content";
 import { useEffect, useState } from "react";
 import type { DefenseType } from "~/models/content.d";
 import { EmptyView } from "~/components/atoms/typography";
