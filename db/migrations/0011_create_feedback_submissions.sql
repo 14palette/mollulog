@@ -9,5 +9,5 @@ create table feedback_submissions (
   updatedAt text not null default current_timestamp
 );
 
-create index if not exists feedback_submissions_uid on feedback_submissions (uid);
+create unique index if not exists feedback_submissions_uid on feedback_submissions (uid);
 create index if not exists feedback_submissions_userId on feedback_submissions (userId);

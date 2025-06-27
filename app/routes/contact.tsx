@@ -1,4 +1,4 @@
-import { useFetcher, useRouteError, isRouteErrorResponse, redirect, Form, useSubmit } from "react-router";
+import { useFetcher, useRouteError, isRouteErrorResponse, redirect } from "react-router";
 import type { ActionFunctionArgs, LoaderFunctionArgs, MetaFunction } from "react-router";
 import { useState, useEffect } from "react";
 import { CheckCircleIcon, ArrowPathIcon } from "@heroicons/react/20/solid";
@@ -29,9 +29,9 @@ export const action = async ({ request, context }: ActionFunctionArgs) => {
   const content = formData.get("content") as string;
   const replyEmail = formData.get("replyEmail") as string | null;
 
-  if (!title) {
+  if (!title.trim()) {
     return { error: { title: "제목을 입력해주세요." } };
-  } else if (!content) {
+  } else if (!content.trim()) {
     return { error: { content: "내용을 입력해주세요." } };
   } else if (replyEmail && !replyEmail.includes("@")) {
     return { error: { replyEmail: "올바른 이메일 주소를 입력해주세요." } };
