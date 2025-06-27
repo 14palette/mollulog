@@ -15,9 +15,6 @@ STAGE = "prod"
 # [secrets]
 #   - SESSION_SECRET
 #   - GOOGLE_CLIENT_SECRET
-#   - EMAIL_ROUTE_HOST
-#   - EMAIL_ROUTE_API_KEY
-#   - EMAIL_ROUTE_DESTINATION
 
 [[kv_namespaces]]
 binding = "KV_USERDATA"
