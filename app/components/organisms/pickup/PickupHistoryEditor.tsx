@@ -44,7 +44,7 @@ export default function PickupHistoryEditor(
         defaultValue={initialTier3Count?.toString()}
         onChange={(value) => {
           const newCount = Number.parseInt(value);
-          setTier3Count(isNaN(newCount) ? 0 : newCount);
+          setTier3Count(isNaN(newCount) ? undefined : newCount);
           if (tier3StudentIds.length > newCount) {
             setTier3StudentIds((prev) => prev.slice(0, newCount));
           }
@@ -60,7 +60,7 @@ export default function PickupHistoryEditor(
           multiple
         />
       )}
-      {totalCount && totalCount > 0 && tier3Count && tier3Count > 0 && tier3StudentIds.length === tier3Count && (
+      {totalCount && totalCount > 0 && tier3Count !== undefined && tier3StudentIds.length === tier3Count && (
         <ButtonForm
           label="모집 결과 저장"
           color="blue"

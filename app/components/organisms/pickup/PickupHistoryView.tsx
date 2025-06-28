@@ -54,15 +54,19 @@ export default function PickupHistoryView({ uid, event, tier3Students, pickupStu
         {eventTypeLocale[event.type]} | {dayjs(event.since).format("YYYY-MM-DD")}
       </p>
 
-      <p className="mt-4 mb-2 font-bold">모집한 ★3 학생</p>
-      <StudentCards
-        pcGrid={10}
-        students={tier3Students.map(({ uid, name }) => ({
-          uid,
-          name,
-          label: pickupStudentUids.includes(uid) ? <span className="text-yellow-500">픽업</span> : undefined,
-        }))}
-      />
+      {tier3StudentUids.length > 0 && (
+        <>
+          <p className="mt-4 mb-2 font-bold">모집한 ★3 학생</p>
+          <StudentCards
+            pcGrid={10}
+            students={tier3Students.map(({ uid, name }) => ({
+              uid,
+              name,
+              label: pickupStudentUids.includes(uid) ? <span className="text-yellow-500">픽업</span> : undefined,
+            }))}
+          />
+        </>
+      )}
 
       <div className="mt-4">
         {keyValueItems.length > 0 && <KeyValueTable keyPrefix={`pickup-stats-${event.uid}`} items={keyValueItems} />}
