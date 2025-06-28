@@ -1,75 +1,61 @@
-import dayjs from "dayjs";
-import { useLoaderData, useFetcher, useRouteError, isRouteErrorResponse } from "react-router";
-import type { LoaderFunctionArgs, ActionFunctionArgs, MetaFunction } from "react-router";
+import { useFetcher, useRouteError, isRouteErrorResponse, redirect } from "react-router";
+import type { ActionFunctionArgs, LoaderFunctionArgs, MetaFunction } from "react-router";
 import { useState, useEffect } from "react";
-import { ClipboardDocumentIcon } from "@heroicons/react/24/outline";
 import { CheckCircleIcon, ArrowPathIcon } from "@heroicons/react/20/solid";
 import { Title } from "~/components/atoms/typography";
-import { sanitizeClassName } from "~/prophandlers";
-import { useSignIn } from "~/contexts/SignInProvider";
 import { getAuthenticator } from "~/auth/authenticator.server";
 import { ErrorPage } from "~/components/organisms/error";
-import { Env } from "~/env.server";
+import Input from "~/components/atoms/form/Input";
+import Textarea from "~/components/atoms/form/Textarea";
+import Button from "~/components/atoms/form/Button";
+import { createFeedbackSubmission } from "~/models/feedback";
 
 export const loader = async ({ context, request }: LoaderFunctionArgs) => {
   const sensei = await getAuthenticator(context.cloudflare.env).isAuthenticated(request);
-  return {
-    signedIn: sensei !== null,
+  if (!sensei) {
+    return redirect("/unauthorized");
   }
 };
 
-export const action = async ({ context, request }: ActionFunctionArgs) => {
-  const sensei = await getAuthenticator(context.cloudflare.env).isAuthenticated(request);
-  if (sensei === null) {
-    throw new Response(
-      JSON.stringify({ error: { message: "로그인이 필요해요." } }),
-      {
-        status: 401,
-        headers: { "Content-Type": "application/json" },
-      },
-    );
+export const action = async ({ request, context }: ActionFunctionArgs) => {
+  const env = context.cloudflare.env;
+  const currentUser = await getAuthenticator(env).isAuthenticated(request);
+  if (!currentUser) {
+    return redirect("/unauthorized");
   }
 
-  // Check if we have a valid email route in KV storage
-  const env = context.cloudflare.env as Env;
-  const userEmailRouteKey = `email-route:user:${sensei.id}`;
-  const storedRoute = await env.KV_USERDATA.get<{ address: string, expireAt: number }>(userEmailRouteKey, "json");
-  const now = Math.floor(Date.now());
-  if (storedRoute && storedRoute.expireAt > now) {
-    return storedRoute;
+  const formData = await request.formData();
+  const title = formData.get("title") as string;
+  const content = formData.get("content") as string;
+  const replyEmail = formData.get("replyEmail") as string | null;
+
+  if (!title.trim()) {
+    return { error: { title: "제목을 입력해주세요." } };
+  } else if (!content.trim()) {
+    return { error: { content: "내용을 입력해주세요." } };
+  } else if (replyEmail && !replyEmail.includes("@")) {
+    return { error: { replyEmail: "올바른 이메일 주소를 입력해주세요." } };
   }
 
-  // Generate a new email route
-  const routeResponse = await fetch(`${env.EMAIL_ROUTE_HOST}/generate`, {
-    method: "POST",
-    body: JSON.stringify({ domain: "mollulog.net", destination: env.EMAIL_ROUTE_DESTINATION }),
-    headers: {
-      "X-Api-Key": env.EMAIL_ROUTE_API_KEY,
-      "Content-Type": "application/json",
-    }
-  });
-
-  if (!routeResponse.ok) {
-    console.error("Error generating email address:", await routeResponse.text());
+  try {
+    await createFeedbackSubmission(env, currentUser.id, title.trim(), content.trim(), replyEmail);
+    return { success: true };
+  } catch (error) {
+    console.error("Error creating feedback submission:", error);
     throw new Response(
-      JSON.stringify({ error: { message: "이메일 주소 생성 중 오류가 발생했어요. 잠시 후 다시 시도해주세요." } }),
+      JSON.stringify({ error: { message: "오류가 발생했어요. 잠시 후 다시 시도해주세요." } }),
       {
         status: 500,
         headers: { "Content-Type": "application/json" },
       },
     );
   }
-
-  const route = await routeResponse.json<{ address: string, expireAt: number }>();
-  const expirationTtl = Math.max(0, route.expireAt - now) / 1000;
-  await env.KV_USERDATA.put(userEmailRouteKey, JSON.stringify(route), { expirationTtl });
-  return route;
-};
+}; 
 
 export const meta: MetaFunction = () => {
   return [
     { title: "제안/문의 | 몰루로그" },
-    { name: "description", content: "게임 <블루 아카이브> 관련 컨텐츠 제안, 오류 신고, 기타 문의 사항이 있다면 연락해주세요." },
+    { name: "description", content: "게임 <블루 아카이브> 관련 컨텐츠 제안, 오류 신고, 기타 문의 사항을 제출해주세요." },
   ];
 };
 
@@ -82,76 +68,55 @@ export function ErrorBoundary() {
   }
 }
 
-type ContactInfo = {
-  address: string;
-  expireAt: number;
-};
 
 export default function Contact() {
-  const { signedIn } = useLoaderData<typeof loader>();
-  const { showSignIn } = useSignIn();
-  const [copied, setCopied] = useState(false);
+  const [submitted, setSubmitted] = useState(false);
 
-  const fetcher = useFetcher<ContactInfo>();
+  const fetcher = useFetcher<typeof action>();
   useEffect(() => {
-    if (copied) {
-      const timer = setTimeout(() => {
-        setCopied(false);
-      }, 1500);
-      return () => clearTimeout(timer);
+    if (fetcher.data?.success) {
+      setSubmitted(true);
     }
-  }, [copied]);
+  }, [fetcher.data]);
+
+  if (submitted) {
+    return (
+      <>
+        <Title text="제안/문의" />
+        <div className="p-4 flex gap-4 bg-neutral-100 dark:bg-neutral-800 rounded-lg">
+          <CheckCircleIcon className="my-2 w-16 h-16" strokeWidth={2} />
+          <div className="flex flex-col">
+            <p className="my-2 text-2xl font-bold">의견 감사합니다!</p>
+            <p>답변이 필요한 내용의 경우 남겨주신 연락처로 연락드리겠습니다.</p>
+          </div>
+        </div>
+      </>
+    );
+  }
 
   return (
     <>
       <Title text="제안/문의" />
-      <p className="text-neutral-500 dark:text-neutral-400 -mt-2 mb-4">
-        컨텐츠 제안, 오류 신고, 기타 문의 사항이 있다면 아래 이메일 주소로 연락해주세요.
+      <p className="text-neutral-500 dark:text-neutral-400 -mt-2 mb-6">
+        서비스 개선을 위한 의견이나 새로운 기능 요청, 발견한 문제점 등을 제출해주세요.
       </p>
 
-      {fetcher.data ? (
-        <>
-          <div className="my-4 p-4 flex bg-neutral-100 dark:bg-neutral-900 rounded-lg">
-            <div className="grow">
-              <p className="text-sm text-neutral-500 dark:text-neutral-400">이메일 주소</p>
-              <p className="text-lg xl:text-xl">{fetcher.data.address}</p>
-            </div>
-            <div
-              className={sanitizeClassName(`
-                px-2 -mr-2 xl:mr-0 flex items-center justify-center rounded-md cursor-pointer transition-all duration-300
-                ${copied ? "bg-green-600 text-white" : "text-neutral-500 dark:text-neutral-400"}
-              `)}
-              onClick={() => {
-                if (fetcher.data) {
-                  navigator.clipboard.writeText(fetcher.data.address);
-                  setCopied(true);
-                }
-              }}
-            >
-              {copied ? <CheckCircleIcon className="size-6" /> : <ClipboardDocumentIcon className="size-6" />}
-              <span className="ml-1">복사</span>
-            </div>
-          </div>
-          <p>위 주소는 {dayjs(fetcher.data.expireAt).format("YYYY-MM-DD HH:mm:ss")} 까지 유효합니다.</p>
-        </>
-      ) : (
-        <div
-          className="my-4 p-4 flex items-center bg-neutral-100 dark:bg-neutral-900 rounded-lg cursor-pointer hover:bg-neutral-200 dark:hover:bg-neutral-800 transition-all"
-          onClick={() => {
-            if (!signedIn) {
-              showSignIn();
-            } else if (fetcher.state === "idle") {
-              fetcher.submit(null, { method: "POST" });
-            }
-          }}
-        >
-          <div className="grow">
-            <p className="text-sm text-neutral-500 dark:text-neutral-400">이메일 주소</p>
-            <p className="text-lg xl:text-xl">눌러서 확인하기</p>
-          </div>
-          {fetcher.state === "submitting" && <ArrowPathIcon className="size-6 animate-spin" />}
-        </div>
-      )}
+      <fetcher.Form method="post">
+        <Input label="제목" name="title" error={fetcher.data?.error?.title} required />
+        <Input label="연락처 (선택)" name="replyEmail" description="답변이 필요한 경우 이메일 주소를 남겨주세요." error={fetcher.data?.error?.replyEmail} />
+        <Textarea label="내용" name="content" rows={6} error={fetcher.data?.error?.content} required />
+
+        <p className="mb-2 text-sm text-neutral-500 dark:text-neutral-400">
+          제출된 정보는 서비스 개선 등을 위해서만 사용하며, 개인정보 등은 목적 달성 즉시 파기됩니다.
+        </p>
+        <Button
+          type="submit"
+          text={fetcher.state === "submitting" ? "제출 중..." : "제출하기"}
+          color="primary"
+          disabled={fetcher.state === "submitting"}
+          Icon={fetcher.state === "submitting" ? ArrowPathIcon : undefined}
+        />
+      </fetcher.Form>
     </>
   );
 }
