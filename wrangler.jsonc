@@ -4,6 +4,7 @@
   "compatibility_flags": ["nodejs_compat"],
   "main": "./workers/app.ts",
   "workers_dev": false,
+  "preview_urls": false,
 
   "assets": {
     "directory": "./build/client",
@@ -11,6 +12,10 @@
   },
   "placement": {
     "mode": "smart"
+  },
+  "observability": {
+    "enabled": true,
+    "head_sampling_rate": 1
   },
 
   "kv_namespaces": [
@@ -55,6 +60,12 @@
       ]
     },
     "production": {
+      "routes": [
+        {
+          "pattern": "mollulog.net",
+          "custom_domain": true
+        }
+      ],
       "vars": {
         "HOST": "https://mollulog.net",
         "STAGE": "prod"
