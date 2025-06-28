@@ -11,6 +11,8 @@ node_modules
 app/**/*.json
 **/*.log
 
+worker-configuration.d.ts
+
 ### Terraform or OpenTofu
 **/.terraform/*
 
