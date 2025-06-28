@@ -1,0 +1,87 @@
+{
+  "name": "mollulog",
+  "compatibility_date": "2025-06-17",  // https://developers.cloudflare.com/workers/platform/compatibility-dates
+  "compatibility_flags": ["nodejs_compat"],
+  "main": "./workers/app.ts",
+  "workers_dev": false,
+  "preview_urls": false,
+
+  "assets": {
+    "directory": "./build/client",
+    "not_found_handling": "single-page-application"
+  },
+  "placement": {
+    "mode": "smart"
+  },
+  "observability": {
+    "enabled": true,
+    "head_sampling_rate": 1
+  },
+
+  "kv_namespaces": [
+    { "binding": "KV_USERDATA", "id": "local_kv_userdata" },
+    { "binding": "KV_SESSION", "id": "local_kv_session" }
+  ],
+  "d1_databases": [
+    {
+      "binding": "DB",
+      "database_name": "local_mollulog_db",
+      "database_id": "local_mollulog_db",
+      "migrations_dir": "db/migrations"
+    }
+  ],
+
+  // Secrets configuration
+  // - SESSION_SECRET
+  // - GOOGLE_CLIENT_SECRET
+  "env": {
+    "staging": {
+      "routes": [
+        {
+          "pattern": "staging.mollulog.net",
+          "custom_domain": true
+        }
+      ],
+      "vars": {
+        "HOST": "https://staging.mollulog.net",
+        "STAGE": "staging"
+      },
+      "kv_namespaces": [
+        { "binding": "KV_USERDATA", "id": "a613bc84ffeb4362b3deaa05c617a7b3" },
+        { "binding": "KV_SESSION", "id": "757ca5d838364689af06edc372cd4c56" }
+      ],
+      "d1_databases": [
+        {
+          "binding": "DB",
+          "database_name": "mollulog",
+          "database_id": "7a71335f-8622-43c2-8b63-d842b6ef7761",
+          "migrations_dir": "db/migrations"
+        }
+      ]
+    },
+    "production": {
+      "routes": [
+        {
+          "pattern": "mollulog.net",
+          "custom_domain": true
+        }
+      ],
+      "vars": {
+        "HOST": "https://mollulog.net",
+        "STAGE": "prod"
+      },
+      "kv_namespaces": [
+        { "binding": "KV_USERDATA", "id": "a613bc84ffeb4362b3deaa05c617a7b3"},
+        { "binding": "KV_SESSION", "id": "757ca5d838364689af06edc372cd4c56" }
+      ],
+      "d1_databases": [
+        {
+          "binding": "DB",
+          "database_name": "mollulog",
+          "database_id": "7a71335f-8622-43c2-8b63-d842b6ef7761",
+          "migrations_dir": "db/migrations"
+        }
+      ]
+    }
+  }
+}

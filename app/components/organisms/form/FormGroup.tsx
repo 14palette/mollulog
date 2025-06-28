@@ -51,7 +51,7 @@ export default function FormGroup({ method, children, submitOnChange }: FormGrou
 
   if (method) {
     return (
-      <FormGroupContext.Provider value={{ submitFormGroup: () => formRef.current && debouncedSubmit(formRef.current) }}>
+      <FormGroupContext.Provider value={{ submitFormGroup: () => submitOnChange && formRef.current && debouncedSubmit(formRef.current) }}>
         <Form method={method} ref={formRef} onChange={(e) => submitOnChange && debouncedSubmit(e.currentTarget)}>
           {layout}
         </Form>
