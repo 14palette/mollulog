@@ -122,12 +122,16 @@ export default function UserPickups() {
         <div className="my-4 text-center">
           <p className="text-neutral-500 dark:text-neutral-400">★3 학생 모집 횟수</p>
           <p className="text-2xl font-bold">{pickupStatistics.tier3Count} 번</p>
-          <p className="text-sm text-neutral-500 dark:text-neutral-400">{(pickupStatistics.tier3RateCount / pickupStatistics.trial * 100).toFixed(2)} %</p>
+          {pickupStatistics.trial > 0 && (
+            <p className="text-sm text-neutral-500 dark:text-neutral-400">{(pickupStatistics.tier3RateCount / pickupStatistics.trial * 100).toFixed(2)} %</p>
+          )}
         </div>
         <div className="my-4 text-center">
           <p className="text-neutral-500 dark:text-neutral-400">픽업 학생 모집 횟수</p>
           <p className="text-2xl font-bold">{pickupStatistics.pickupCount} 번</p>
-          <p className="text-sm text-neutral-500 dark:text-neutral-400">{(pickupStatistics.pickupRateCount / pickupStatistics.trial * 100).toFixed(2)} %</p>
+          {pickupStatistics.trial > 0 && (
+            <p className="text-sm text-neutral-500 dark:text-neutral-400">{(pickupStatistics.pickupRateCount / pickupStatistics.trial * 100).toFixed(2)} %</p>
+          )}
         </div>
       </div>
       <p className="mt-4 mb-16 text-neutral-500 dark:text-neutral-400 text-sm">

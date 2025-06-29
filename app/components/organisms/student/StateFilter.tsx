@@ -1,6 +1,6 @@
-import { ArrowsUpDownIcon, BarsArrowDownIcon, FireIcon, MagnifyingGlassIcon, ShieldCheckIcon } from '@heroicons/react/24/outline';
-import hangul from 'hangul-js';
-import type { Dispatch, SetStateAction} from "react";
+import { ArrowsUpDownIcon, BarsArrowDownIcon, FireIcon, MagnifyingGlassIcon, ShieldCheckIcon } from "@heroicons/react/24/outline";
+import hangul from "hangul-js";
+import type { Dispatch, SetStateAction } from "react";
 import { useEffect, useState } from "react";
 import { Input } from "~/components/atoms/form";
 import { FilterButtons } from "~/components/molecules/content";
@@ -25,18 +25,28 @@ type Filter = {
   defenseTypes: DefenseType[];
 };
 
+type SortBy = "tier" | "name" | "recent";
 type Sort = {
-  by: "tier" | "name" | null;
+  by: SortBy | null;
+};
+
+const sortByText: Record<SortBy, string> = {
+  tier: "★ 등급순",
+  name: "이름순",
+  recent: "최신순",
 };
 
 export function useStateFilter<T extends FilterableStudentState>(
   initStates: T[],
   options: {
     useFilter?: boolean;
-    useSort?: boolean | { by: ("tier" | "name")[] };
+    useSort?: boolean | { by: SortBy[] };
     useSearch?: boolean;
   } = {},
-): [JSX.Element, T[], Dispatch<SetStateAction<T[]>>] {
+  initialOptions: {
+    sort?: Sort;
+  } = {},
+): [React.JSX.Element, T[], Dispatch<SetStateAction<T[]>>] {
   const { useFilter = true, useSort = true, useSearch = false } = options;
 
   const [allStates, setAllStates] = useState(initStates);
@@ -45,9 +55,7 @@ export function useStateFilter<T extends FilterableStudentState>(
     attackTypes: [],
     defenseTypes: [],
   });
-  const [sort, setSort] = useState<Sort>({
-    by: null,
-  });
+  const [sort, setSort] = useState<Sort>(initialOptions.sort ?? { by: null });
   const [keyword, setKeyword] = useState<string>("");
 
   const toggleAttackType = (attackType: AttackType): (activated: boolean) => void => {
@@ -110,6 +118,8 @@ export function useStateFilter<T extends FilterableStudentState>(
         return tierB - tierA;
       } else if (sort.by === "name") {
         return a.name.localeCompare(b.name);
+      } else if (sort.by === "recent") {
+        return b.order - a.order;
       }
       return defaultComparision;
     });
@@ -144,7 +154,7 @@ export function useStateFilter<T extends FilterableStudentState>(
             { text: "특수", color: "blue", onToggle: toggleDefenseType("special") },
             { text: "탄력", color: "purple", onToggle: toggleDefenseType("elastic") },
           ]} />
-          <FilterButtons Icon={ArrowsUpDownIcon} exclusive={true} buttonProps={[
+          <FilterButtons Icon={ArrowsUpDownIcon} buttonProps={[
             {
               text: "스트라이커", color: "red",
               onToggle: (activated) => { setFilter((prev) => ({ ...prev, role: activated ? "striker" : null })) },
@@ -158,11 +168,17 @@ export function useStateFilter<T extends FilterableStudentState>(
       )}
 
       {useSort && (
-        <FilterButtons Icon={BarsArrowDownIcon} exclusive={true} buttonProps={
-          [
-            (useSort === true || useSort.by.includes("tier")) ? { text: "★ 등급순", onToggle: (activated: boolean) => { setSort({ by: activated ? "tier" : null }) } } : null,
-            (useSort === true || useSort.by.includes("name")) ? { text: "이름순", onToggle: (activated: boolean) => { setSort({ by: activated ? "name" : null }) } } : null,
-          ].filter((button) => button !== null)
+        <FilterButtons Icon={BarsArrowDownIcon} exclusive buttonProps={
+          (["recent", "name", "tier"] satisfies SortBy[]).map((by) => {
+            if (useSort !== true && !useSort.by.includes(by)) {
+              return null;
+            }
+            return {
+              text: sortByText[by],
+              onToggle: (activated: boolean) => { setSort({ by: activated ? by : null }) },
+              active: sort.by === by,
+            }
+          }).filter((button) => button !== null)
         } />
       )}
 

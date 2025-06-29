@@ -31,7 +31,8 @@ export default function Students() {
   const navigate = useNavigate();
   const [StateFilter, filteredStates] = useStateFilter(
     students,
-    { useFilter: true, useSort: { by: ["name"] }, useSearch: true }
+    { useFilter: true, useSort: { by: ["name", "recent"] }, useSearch: true },
+    { sort: { by: "recent" } },
   );
 
   return (

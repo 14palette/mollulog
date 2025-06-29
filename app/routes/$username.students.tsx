@@ -83,10 +83,10 @@ export default function UserPage() {
   const [batchAddMode, setBatchAddMode] = useState(false);
   const [batchAddStudents, setBatchAddStudents] = useState<string[]>([]);
 
-  const [StateFilter, filteredStudents] = useStateFilter(allStudents.map((student) => ({
-    ...student,
-    tier: recruitedStudentTiers[student.uid] ?? student.initialTier,
-  })), { useFilter: true, useSort: true, useSearch: true });
+  const [StateFilter, filteredStudents] = useStateFilter(
+    allStudents.map((student) => ({ ...student, tier: recruitedStudentTiers[student.uid] ?? student.initialTier, })),
+    { useFilter: true, useSort: { by: ["name", "tier"] }, useSearch: true },
+  );
 
   const noOwned = Object.values(recruitedStudentTiers).length === 0;
 
