@@ -52,12 +52,12 @@ export const difficultyLocale: Record<string, string> = {
 
 export const eventTypeLocale: Record<EventType, string> = {
   event: "이벤트",
-  immortal_event: "이벤트 상설화",
+  immortal_event: "상설화 이벤트",
   mini_event: "미니 이벤트",
   guide_mission: "가이드 미션",
   collab: "콜라보 이벤트",
   fes: "페스 이벤트",
-  pickup: "모집",
+  pickup: "픽업 모집",
   campaign: "캠페인",
   exercise: "종합전술시험",
   main_story: "메인 스토리",

@@ -1,9 +1,10 @@
-import { SpeakerWaveIcon, SpeakerXMarkIcon } from "@heroicons/react/16/solid";
+import { SpeakerWaveIcon, SpeakerXMarkIcon, ArrowLeftIcon, ShareIcon } from "@heroicons/react/16/solid";
 import { ChevronDoubleLeftIcon, ChevronDoubleRightIcon } from "@heroicons/react/24/outline";
 import type { Dayjs } from "dayjs";
 import dayjs from "dayjs";
 import { Suspense, useEffect, useRef } from "react";
 import { useState } from "react";
+import { Link } from "react-router";
 import YouTube from "react-youtube";
 import { MultilineText } from "~/components/atoms/typography";
 import { sanitizeClassName } from "~/prophandlers";
@@ -70,6 +71,11 @@ export default function ContentHeader(
     }
   }, [muted, playerRef]);
 
+  const [canShare, setCanShare] = useState(false);
+  useEffect(() => {
+    setCanShare(navigator.share !== undefined);
+  }, []);
+
   let dDayText = "";
   const now = dayjs();
   if (now.isAfter(until)) {
@@ -83,7 +89,7 @@ export default function ContentHeader(
 
   if (!image) {
     return (
-      <div>
+      <div className="mt-4">
         <p className="text-sm md:text-base text-neutral-500">{type}</p>
         <MultilineText className="text-lg md:text-2xl font-bold" texts={name.split("\n")} />
         <div className="flex items-end">
@@ -142,10 +148,40 @@ export default function ContentHeader(
             className={`absolute w-full md:rounded-xl ${videoPlaying ? "opacity-0" : "opacity-100"} ease-in duration-500 transition dark:brightness-75 dark:hover:brightness-100`}
             src={image} alt={`${name} 이벤트 이미지`}
           />
+
+          <div className="absolute w-full left-0 top-2 xl:top-4 px-2 xl:px-4 flex items-center gap-2 text-neutral-100">
+            <Link to="/futures">
+              <div className={`${videoPlaying ? "bg-neutral-900/50 group-hover:bg-neutral-900/80" : "bg-neutral-900/80"} backdrop-blur-sm transition p-2 rounded-full`}>
+                <ArrowLeftIcon className="size-4 md:size-5" />
+              </div>
+            </Link>
+
+            <div className="grow" />
+            {canShare && (
+              <div
+                className={`${videoPlaying ? "bg-neutral-900/50 group-hover:bg-neutral-900/80" : "bg-neutral-900/80"} backdrop-blur-sm transition p-2 rounded-full cursor-pointer`}
+                onClick={() => navigator.share({
+                  title: name,
+                  text: `블루 아카이브의 ${type} "${name.replaceAll("\n", " ")}" 에 대한 정보를 확인해보세요 | 몰루로그`,
+                  url: window.location.href,
+                })}
+              >
+                <ShareIcon className="size-4 md:size-5" />
+              </div>
+            )}
+            {videos && videos.length > 0 && (
+              <div
+                className={`${videoPlaying ? "bg-neutral-900/50 group-hover:bg-neutral-900/80" : "bg-neutral-900/80"} backdrop-blur-sm transition p-2 rounded-full cursor-pointer`}
+                onClick={() => setMuted((prev) => !prev)}
+              >
+                {muted ? <SpeakerXMarkIcon className="size-4 md:size-5" /> : <SpeakerWaveIcon className="size-4 md:size-5" />}
+              </div>
+            )}
+          </div>
         </div>
         <div className={sanitizeClassName(`
           absolute bottom-0 w-full px-4 md:px-6 py-4 text-white bg-linear-to-t from-neutral-900/75 from-75% md:rounded-b-xl
-          ${videoPlaying ? "opacity-75" : ""} group-hover:opacity-100 transition-opacity ease-in duration-500
+          ${videoPlaying ? "opacity-75" : ""} group-hover:opacity-100 transition-opacity
         `)}>
           <p className="text-sm md:text-base text-neutral-300">{type}</p>
           <MultilineText className="text-lg md:text-2xl font-bold" texts={name.split("\n")} />
@@ -153,14 +189,7 @@ export default function ContentHeader(
             <p className="grow text-sm md:text-base">
               {dayjs(since).format("YYYY-MM-DD")} ~ {dayjs(until).format("YYYY-MM-DD")}
             </p>
-            <div className="flex items-center">
-              <span className="py-1 px-4 bg-neutral-900 text-xs md:text-sm rounded-full">{dDayText}</span>
-              {videos && videos.length > 0 && (
-                <div className="p-1.5 ml-2 bg-neutral-900 rounded-full cursor-pointer text-white" onClick={() => setMuted((prev) => !prev)}>
-                  {muted ? <SpeakerXMarkIcon className="size-3.5" /> : <SpeakerWaveIcon className="size-3.5" />}
-                </div>
-              )}
-            </div>
+            <span className="py-1 px-4 bg-neutral-900 text-xs md:text-sm rounded-full">{dDayText}</span>
           </div>
         </div>
       </div>

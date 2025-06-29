@@ -103,9 +103,6 @@ export default function RaidDetail() {
 
   return (
     <>
-      <Link to="/futures" className="xl:hidden">
-        <p className="-mx-1 py-4 text-sm text-neutral-700 dark:text-neutral-300">← 전체 이벤트 미래시 보기</p>
-      </Link>
       <div className="mb-8 xl:mt-8 max-w-3xl mx-auto">
         <ContentHeader
           name={raid.name}

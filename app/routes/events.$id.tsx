@@ -209,23 +209,18 @@ export default function EventDetail() {
 
   return (
     <>
-      <Link to="/futures" className="xl:hidden">
-        <p className="-mx-1 py-4 text-sm text-neutral-700 dark:text-neutral-300">← 전체 이벤트 미래시 보기</p>
-      </Link>
-      <div className="mb-8 xl:mt-8">
-        <ContentHeader
-          name={event.name}
-          type={eventTypeLocale[event.type]}
-          since={dayjs(event.since)}
-          until={dayjs(event.until)}
-          image={event.imageUrl}
-          videos={event.videos}
-        />
-      </div>
+      <ContentHeader
+        name={event.name}
+        type={eventTypeLocale[event.type]}
+        since={dayjs(event.since)}
+        until={dayjs(event.until)}
+        image={event.imageUrl}
+        videos={event.videos}
+      />
 
       {event.pickups.length > 0 && (
         <div className="my-8">
-          <SubTitle text="모집 학생" />
+          <SubTitle text="픽업 모집 학생" />
           {event.pickups.map((pickup) => {
             const studentUid = pickup.student?.uid ?? null;
             const { attackType, defenseType, role } = pickup.student ?? {};

@@ -102,16 +102,6 @@ function MenuContent({ currentUsername, currentRole, pathname, onMenuClose, onSh
             isActive={pathname.startsWith("/edit")}
             onItemClick={onMenuClose}
           />
-          {currentRole === "admin" && (
-            <MenuItem
-              to="/dash"
-              name="관리자"
-              OutlineIcon={Cog6ToothIconOutline}
-              SolidIcon={Cog6ToothIconSolid}
-              isActive={pathname.startsWith("/dash")}
-              onItemClick={onMenuClose}
-            />
-          )}
         </>
       ) : (
         <div
