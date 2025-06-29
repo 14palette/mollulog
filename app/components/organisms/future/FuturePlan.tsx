@@ -4,6 +4,7 @@ import { MultilineText } from "~/components/atoms/typography";
 import { MemoEditor } from "~/components/molecules/editor";
 import { ResourceCards, StudentCards } from "~/components/molecules/student";
 import { pickupLabelLocale } from "~/locales/ko";
+import { PickupType } from "~/models/content.d";
 
 type FuturePlanProps = {
   events: {
@@ -12,13 +13,13 @@ type FuturePlanProps = {
     since: Date;
     memo: string | null;
     pickups: {
-      type: string;
+      type: PickupType;
       rerun: boolean;
       student: {
         uid: string;
         name: string;
         school: string;
-        schaleDbId: string;
+        schaleDbId: string | null;
         equipments: string[];
       };
     }[];

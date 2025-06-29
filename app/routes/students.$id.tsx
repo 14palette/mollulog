@@ -14,12 +14,17 @@ import { ArrowTopRightOnSquareIcon, ChevronDownIcon, ChevronUpIcon } from "@hero
 import { OptionBadge } from "~/components/atoms/student";
 import { ErrorPage } from "~/components/organisms/error";
 import { SlotCountInfo } from "~/components/organisms/raid";
+import { PickupHistories } from "~/components/organisms/student";
 import { studentStandingImageUrl } from "~/models/assets";
 
 const studentDetailQuery = graphql(`
   query StudentDetail($uid: String!, $raidSince: ISO8601DateTime!) {
     student(uid: $uid) {
       name uid attackType defenseType role school schaleDbId
+      pickups {
+        since until
+        event { type uid name rerun imageUrl }
+      }
       raidStatistics(raidSince: $raidSince) {
         raid { uid name boss type since until terrain }
         difficulty
@@ -116,6 +121,13 @@ export default function StudentDetail() {
         </div>
       </div>
 
+      {student.pickups.length > 0 && (
+        <>
+          <SubTitle text="픽업 정보" />
+          <PickupHistories pickups={student.pickups} />
+        </>
+      )}
+
       <SubTitle text="총력전/대결전 통계" />
       <p className="text-sm text-neutral-500">최근 1년간 개최된 총력전/대결전의 편성 횟수를 제공해요.</p>
       <div>
@@ -152,8 +164,4 @@ export default function StudentDetail() {
       </div>
     </>
   );
-}
-
-function formatPercentage(ratio: number) {
-  return (ratio * 100).toFixed(1) + "%";
 }

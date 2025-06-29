@@ -9,7 +9,7 @@ type StudentCardsProps = {
     attackType?: AttackType;
     defenseType?: DefenseType;
     role?: Role;
-    schaleDbId?: string;
+    schaleDbId?: string | null;
 
     tier?: number | null;
     level?: number | null;

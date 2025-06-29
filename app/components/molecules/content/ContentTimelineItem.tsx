@@ -36,7 +36,7 @@ export type ContentTimelineItemProps = {
       attackType?: AttackType;
       defenseType?: DefenseType;
       role?: Role;
-      schaleDbId?: string;
+      schaleDbId?: string | null;
     } | null;
     studentName: string;
   }[];
