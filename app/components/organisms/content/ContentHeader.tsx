@@ -108,44 +108,47 @@ export default function ContentHeader(
         <div className="relative w-full h-full">
           {currentVideo && (
             <Suspense>
-              <YouTube
-                videoId={currentVideo.youtube}
-                className="absolute w-full aspect-video"
-                iframeClassName="w-full h-full md:rounded-xl"
-                opts={{
-                  playerVars: {
-                    autoplay: 1,
-                    mute: 1,
-                    controls: 0,
-                    rel: 0,
-                    start: currentVideo.start ?? 0,
-                  }
-                }}
-                // @ts-ignore
-                onReady={(ytEvent) => {
-                  playerRef.current = ytEvent.target;
-                  setMuted(true);
-                }}
-                // @ts-ignore
-                onPlay={(ytEvent) => {
-                  if (videoEndTimer) {
-                    clearTimeout(videoEndTimer);
-                  }
+              <div className="absolute w-full h-full overflow-hidden md:rounded-xl">
+                <YouTube
+                  videoId={currentVideo.youtube}
+                  className="w-full h-full"
+                  iframeClassName="w-full h-full"
+                  style={{ transform: 'scale(1.01)' }}
+                  opts={{
+                    playerVars: {
+                      autoplay: 1,
+                      mute: 1,
+                      controls: 0,
+                      rel: 0,
+                      start: currentVideo.start ?? 0,
+                    }
+                  }}
+                  // @ts-ignore
+                  onReady={(ytEvent) => {
+                    playerRef.current = ytEvent.target;
+                    setMuted(true);
+                  }}
+                  // @ts-ignore
+                  onPlay={(ytEvent) => {
+                    if (videoEndTimer) {
+                      clearTimeout(videoEndTimer);
+                    }
 
-                  setVideoPlaying(true);
-                  setVideoEndTimer(
-                    setTimeout(
-                      () => { setVideoPlaying(false); },
-                      (ytEvent.target.getDuration() - (currentVideo.start ?? 0) - 1.0) * 1000,
-                    ),
-                  );
-                }}
-                onEnd={() => setVideoPlaying(false)}
-              />
+                    setVideoPlaying(true);
+                    setVideoEndTimer(
+                      setTimeout(
+                        () => { setVideoPlaying(false); },
+                        (ytEvent.target.getDuration() - (currentVideo.start ?? 0) - 1.0) * 1000,
+                      ),
+                    );
+                  }}
+                  onEnd={() => setVideoPlaying(false)}
+                />
+              </div>
             </Suspense>
           )}
           <img
-            className={`absolute w-full md:rounded-xl ${videoPlaying ? "opacity-0" : "opacity-100"} ease-in duration-500 transition dark:brightness-75 dark:hover:brightness-100`}
+            className={`absolute w-full h-full md:rounded-xl ${videoPlaying ? "opacity-0" : "opacity-100"} ease-in duration-500 transition dark:brightness-75 dark:hover:brightness-100`}
             src={image} alt={`${name} 이벤트 이미지`}
           />
 
