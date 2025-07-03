@@ -1,4 +1,6 @@
-import { ChevronRightIcon, HeartIcon } from "@heroicons/react/16/solid";
+import { ChevronRightIcon, ExclamationTriangleIcon } from "@heroicons/react/16/solid";
+import { HeartIcon as HeartIconOutline } from "@heroicons/react/24/outline";
+import { ClockIcon, HeartIcon as HeartIconSolid, StarIcon, XCircleIcon } from "@heroicons/react/24/solid";
 import type { ActionFunctionArgs, LoaderFunctionArgs, MetaFunction } from "react-router";
 import { redirect } from "react-router";
 import {
@@ -12,7 +14,7 @@ import {
 import dayjs from "dayjs";
 import { Suspense } from "react";
 import { getAuthenticator } from "~/auth/authenticator.server";
-import { ProfileImage, StudentCard } from "~/components/atoms/student";
+import { OptionBadge, ProfileImage, StudentCard } from "~/components/atoms/student";
 import { SubTitle } from "~/components/atoms/typography";
 import { MemoEditor } from "~/components/molecules/editor";
 import { ContentHeader } from "~/components/organisms/content";
@@ -23,7 +25,7 @@ import { useSignIn } from "~/contexts/SignInProvider";
 import { graphql } from "~/graphql";
 import type { EventStagesQuery, EventDetailQuery } from "~/graphql/graphql";
 import { runQuery } from "~/lib/baql";
-import { attackTypeLocale, defenseTypeLocale, eventTypeLocale, pickupLabelLocale, roleLocale } from "~/locales/ko";
+import { attackTypeColor, attackTypeLocale, defenseTypeColor, defenseTypeLocale, eventTypeLocale, pickupLabelLocale, roleColor, roleLocale } from "~/locales/ko";
 import { getContentMemos, setMemo, setMemoVisibility } from "~/models/content";
 import { favoriteStudent, getFavoritedCounts, getUserFavoritedStudents, unfavoriteStudent } from "~/models/favorite-students";
 import { getRecruitedStudents } from "~/models/recruited-student";
@@ -34,8 +36,7 @@ const eventDetailQuery = graphql(`
       uid name type since until imageUrl
       videos { title youtube start }
       pickups {
-        type
-        rerun
+        type rerun since until
         student { uid attackType defenseType role }
         studentName
       }
@@ -180,25 +181,6 @@ export const ErrorBoundary = () => {
   }
 };
 
-const attackTypeColor = {
-  explosive: "bg-red-500",
-  piercing: "bg-yellow-500",
-  mystic: "bg-blue-500",
-  sonic: "bg-purple-500",
-};
-
-const defenseTypeColor = {
-  light: "bg-red-500",
-  heavy: "bg-yellow-500",
-  special: "bg-blue-500",
-  elastic: "bg-purple-500",
-};
-
-const roleColor = {
-  striker: "bg-red-500",
-  special: "bg-blue-500",
-};
-
 export default function EventDetail() {
   const { event, stages, signedIn, recruitedStudentUids, favoritedStudents, favoritedCounts, memos, myMemo } = useLoaderData<typeof loader>();
 
@@ -207,6 +189,8 @@ export default function EventDetail() {
   const fetcher = useFetcher();
   const submit = (data: ActionData) => fetcher.submit(data, { method: "post", encType: "application/json" });
 
+  const isPickupSinceDifferent = event.pickups.length > 0 && !dayjs(event.pickups[0].since).isSame(dayjs(event.since), "day");
+  const isPickupUntilDifferent = event.pickups.length > 0 && !dayjs(event.pickups[0].until).isSame(dayjs(event.until), "day");
   return (
     <>
       <ContentHeader
@@ -218,52 +202,72 @@ export default function EventDetail() {
         videos={event.videos}
       />
 
+      {event.type === "fes" && <FesInfo />}
+
       {event.pickups.length > 0 && (
         <div className="my-8">
           <SubTitle text="픽업 모집 학생" />
+          {isPickupSinceDifferent || isPickupUntilDifferent && (
+            <div className="mb-4 p-4 bg-gradient-to-r from-amber-50 to-orange-50 dark:from-amber-900/20 dark:to-orange-900/20 border border-amber-200 dark:border-amber-700 rounded-xl">
+              <div className="flex items-center gap-3">
+                <div className="flex-shrink-0">
+                  <ExclamationTriangleIcon className="size-5 text-amber-600 dark:text-amber-400" />
+                </div>
+                <div className="flex-1">
+                  <p className="text-amber-700 dark:text-amber-300 mb-1">
+                    이벤트 개최 기간과 픽업 모집 기간이 달라요
+                  </p>
+                  <div className="text-sm text-amber-600 dark:text-amber-400">
+                    픽업 모집은&nbsp;
+                    <span className={isPickupSinceDifferent ? "font-semibold" : ""}>{dayjs(event.pickups[0].since).format("M월 D일")}</span>부터&nbsp;
+                    <span className={isPickupUntilDifferent ? "font-semibold" : ""}>{dayjs(event.pickups[0].until).format("M월 D일")}</span>까지만 진행해요.
+                  </div>
+                </div>
+              </div>
+            </div>
+          )}
           {event.pickups.map((pickup) => {
             const studentUid = pickup.student?.uid ?? null;
             const { attackType, defenseType, role } = pickup.student ?? {};
 
             const favorited = favoritedStudents.some((favorited) => favorited.studentId === studentUid);
             return (
-              <div key={`pickup-${studentUid}`} className="my-4 p-2 flex flex-col md:flex-row bg-neutral-100 dark:bg-neutral-900 rounded-lg">
+              <div key={`pickup-${studentUid}`} className="relative my-4 p-2 flex flex-col md:flex-row bg-neutral-100 dark:bg-neutral-900 rounded-lg">
                 <div className="flex items-center grow">
-                  <div className="w-16 mx-2">
+                  <div className="w-12 md:w-16 mx-1 md:mx-2">
                     <StudentCard uid={studentUid} />
                   </div>
-                  <div className="px-2 md:px-4 grow">
-                    <p className="text-xs text-neutral-500">{pickupLabelLocale(pickup)}</p>
-                    <Link to={`/students/${studentUid}`} className="hover:underline">
-                      <span className="font-bold">{pickup.studentName}</span>
-                      {studentUid && <ChevronRightIcon className="ml-1 size-4 inline" />}
-                    </Link>
+                  <div className="px-2 grow">
+                    <div className="pt-2">
+                      <p className="text-sm text-neutral-500">{pickupLabelLocale(pickup)}</p>
+                      <Link to={`/students/${studentUid}`} className="flex items-center hover:underline">
+                        <span className="font-bold text-lg">{pickup.studentName}</span>
+                        {studentUid && <ChevronRightIcon className="ml-1 size-4 inline" />}
+                      </Link>
+                    </div>
                     {attackType && defenseType && role && (
                       <div className="py-1 flex text-sm gap-x-1 tracking-tighter md:tracking-normal">
-                        <div className="px-2 flex items-center bg-neutral-200 dark:bg-neutral-800 rounded-full">
-                          <div className={`size-2.5 rounded-full ` + attackTypeColor[attackType]} />
-                          <span className="ml-1">{attackTypeLocale[attackType]}</span>
-                        </div>
-                        <div className="px-2 flex items-center bg-neutral-200 dark:bg-neutral-800 rounded-full">
-                          <div className={`size-2.5 rounded-full ` + defenseTypeColor[defenseType]} />
-                          <span className="ml-1">{defenseTypeLocale[defenseType]}</span>
-                        </div>
-                        <div className="px-2 flex items-center bg-neutral-200 dark:bg-neutral-800 rounded-full">
-                          <div className={`size-2.5 rounded-full ` + roleColor[role]} />
-                          <span className="ml-1">{roleLocale[role]}</span>
-                        </div>
+                        <OptionBadge text={attackTypeLocale[attackType]} color={attackTypeColor[attackType]} />
+                        <OptionBadge text={defenseTypeLocale[defenseType]} color={defenseTypeColor[defenseType]} />
+                        <OptionBadge text={roleLocale[role]} color={roleColor[role]} />
                       </div>
                     )}
                   </div>
                 </div>
                 {studentUid && (
-                  <div className="py-2 flex items-center justify-end">
+                  <div className="absolute right-4 top-4 md:top-0 h-full flex items-start md:items-center justify-end">
                     <div
-                      className={`mx-2 px-2 flex items-center rounded-full text-white hover:opacity-50 transition cursor-pointer ${(!signedIn || favorited) ? "bg-red-500" : "bg-neutral-500"}`}
+                      className={`group inline-flex items-center gap-2 px-4 py-1 md:py-2 rounded-xl font-medium transition-all duration-200 cursor-pointer ${
+                        favorited
+                          ? "bg-gradient-to-r from-red-500 to-pink-500 text-white shadow-lg shadow-red-500/25 hover:shadow-red-500/40"
+                        : "bg-white dark:bg-neutral-800 text-neutral-700 dark:text-neutral-300 border border-neutral-200 dark:border-neutral-700 shadow-lg shadow-neutral-200/50 dark:shadow-neutral-700/50 hover:bg-neutral-100 dark:hover:bg-neutral-700"
+                      }`}
                       onClick={() => signedIn ? submit({ favorite: { studentUid, favorited: !favorited } }) : showSignIn()}
                     >
-                      <HeartIcon className="size-4" strokeWidth={2} />
-                      <span className="ml-1 font-bold">{favoritedCounts.find((favorited) => favorited.studentId === studentUid)?.count ?? 0}</span>
+                      {favorited ? <HeartIconSolid className="size-4" /> : <HeartIconOutline className="size-4" strokeWidth={2} />}
+                      <span className="font-semibold">
+                        {favoritedCounts.find((favorited) => favorited.studentId === studentUid)?.count ?? 0}
+                      </span>
                     </div>
                   </div>
                 )}
@@ -311,5 +315,42 @@ export default function EventDetail() {
         </Await>
       </Suspense>
     </>
+  );
+}
+
+function FesInfo() {
+  const FesInfoCard = ({ Icon, title, description }: { Icon: React.ElementType, title: string, description: string }) => (
+    <div className="my-2 flex items-center gap-3 p-4 bg-white dark:bg-neutral-800 rounded-lg border border-neutral-200 dark:border-neutral-700">
+      <div className="flex-shrink-0 p-2 bg-neutral-100 dark:bg-neutral-700 rounded-lg">
+        <Icon className="size-5 text-neutral-600 dark:text-neutral-300" />
+      </div>
+      <div>
+        <h4 className="font-semibold text-neutral-900 dark:text-neutral-100 mb-1">{title}</h4>
+        <p className="text-sm text-neutral-700 dark:text-neutral-300">{description}</p>
+      </div>
+    </div>
+  );
+
+  return (
+    <div className="my-8">
+      <SubTitle text="페스 모집 소개" />
+      <div>
+        <FesInfoCard
+          Icon={StarIcon}
+          title="모집 확률 상승"
+          description="★3 학생 모집 확률이 6%로 상승해요"
+        />
+        <FesInfoCard
+          Icon={ClockIcon}
+          title="기간 한정 모집"
+          description={"일부 학생은 페스 기간에만 모집할 수 있어요. 아래 \"페스 신규/복각\" 학생 목록을 확인해주세요."}
+        />
+        <FesInfoCard
+          Icon={XCircleIcon}
+          title="모집 포인트 교환 불가"
+          description={"\"페스 복각\" 학생은 모집 포인트(천장)로는 교환할 수 없어요."}
+        />
+      </div>
+    </div>
   );
 }

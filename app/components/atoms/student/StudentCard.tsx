@@ -136,9 +136,9 @@ export default function StudentCard({
           as="div"
           enter="transition duration-200 ease-out"
           enterFrom="opacity-0 scale-95"
-          enterTo="opacity-100 scale-100"
+          enterTo="scale-100"
           leave="transition duration-100 ease-in"
-          leaveFrom="opacity-100 scale-100"
+          leaveFrom="scale-100"
           leaveTo="opacity-0 scale-95"
           className="fixed md:absolute left-0 bottom-4 md:top-full md:bottom-auto w-full md:w-auto min-w-72 md:mt-2 z-10 whitespace-nowrap"
         >
@@ -175,7 +175,7 @@ export function StudentCardPopup({ student, popups, onClose }: StudentCardPopupP
   const { name, attackType, defenseType, role } = student;
 
   return (
-    <div className="m-4 md:m-0 bg-neutral-100/90 dark:bg-black/80 backdrop-blur-sm text-black dark:text-white rounded-xl border border-neutral-200 dark:border-neutral-800 shadow-lg">
+    <div className="m-4 md:m-0 bg-neutral-100/75 dark:bg-black/75 backdrop-blur-sm text-black dark:text-white rounded-xl border border-neutral-200 dark:border-neutral-800 shadow-lg">
       <div className="px-4 pt-4 pb-2">
         <p className="text-lg font-bold">{name}</p>
         {attackType && defenseType && role && (

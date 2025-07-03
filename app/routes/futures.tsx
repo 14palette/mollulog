@@ -28,8 +28,7 @@ export const futureContentsQuery = graphql(`
           eventType: type
           rerun
           pickups {
-            type
-            rerun
+            type rerun since until
             student { uid attackType defenseType role schaleDbId }
             studentName
           }

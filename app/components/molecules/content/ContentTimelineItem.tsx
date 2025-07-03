@@ -1,15 +1,15 @@
-import { attackTypeColor, attackTypeLocale, contentTypeLocale, defenseTypeColor, defenseTypeLocale, pickupLabelLocale, terrainLocale } from "~/locales/ko";
-import { bossImageUrl } from "~/models/assets";
-import type { AttackType, DefenseType, EventType, PickupType, RaidType, Role, Terrain } from "~/models/content.d";
-import { StudentCards } from "../student";
 import type { ReactNode } from "react";
 import { Link } from "react-router";
-import { MemoEditor } from "../editor";
-import { ChevronRightIcon, ChartBarIcon, ClockIcon, CheckCircleIcon } from "@heroicons/react/16/solid";
 import dayjs from "dayjs";
-import { OptionBadge } from "~/components/atoms/student";
+import { ChevronRightIcon, ChartBarIcon, ClockIcon, CheckCircleIcon, ExclamationTriangleIcon } from "@heroicons/react/16/solid";
 import { ArrowTopRightOnSquareIcon, IdentificationIcon, HeartIcon as EmptyHeartIcon } from "@heroicons/react/24/outline";
 import { HeartIcon as FilledHeartIcon } from "@heroicons/react/24/solid";
+import type { AttackType, DefenseType, EventType, PickupType, RaidType, Role, Terrain } from "~/models/content.d";
+import { attackTypeColor, attackTypeLocale, contentTypeLocale, defenseTypeColor, defenseTypeLocale, pickupLabelLocale, terrainLocale } from "~/locales/ko";
+import { bossImageUrl } from "~/models/assets";
+import { MemoEditor } from "~/components/molecules/editor";
+import { StudentCards } from "~/components/molecules/student";
+import { OptionBadge } from "~/components/atoms/student";
 
 export type ContentTimelineItemProps = {
   name: string;
@@ -39,6 +39,8 @@ export type ContentTimelineItemProps = {
       schaleDbId?: string | null;
     } | null;
     studentName: string;
+    since?: Date | null;
+    until?: Date | null;
   }[];
   raidInfo?: {
     uid: string;
@@ -110,6 +112,9 @@ export default function ContentTimelineItem(
       </div>
     </div>
   ) : null;
+
+  const isPickupDayDifferent = pickups && pickups.length > 0 &&
+    (pickups[0].since && !dayjs(pickups[0].since).isSame(dayjs(since), "day") || pickups[0].until && !dayjs(pickups[0].until).isSame(dayjs(until), "day"));
 
   return (
     <div className="my-4 md:my-6">
@@ -187,6 +192,20 @@ export default function ContentTimelineItem(
               };
             })}
           />
+        </div>
+      )}
+
+      {isPickupDayDifferent && (
+        <div className="mb-2 px-2 py-2 flex items-center gap-x-2 bg-gradient-to-r from-amber-50 to-orange-50 dark:from-amber-900/20 dark:to-orange-900/20 rounded-xl text-sm">
+          <ExclamationTriangleIcon className="shrink-0 size-5 text-amber-600 dark:text-amber-400" />
+          <div className="flex flex-wrap gap-x-1">
+            <p className="shrink-0 text-amber-700 dark:text-amber-300">
+              이벤트 개최 기간과 픽업 모집 기간이 달라요.
+            </p>
+            <Link to={link} className="flex-shrink-0 text-amber-600 dark:text-amber-400 underline cursor-pointer hover:text-amber-700 dark:hover:text-amber-300">
+              자세히 보기
+            </Link>
+          </div>
         </div>
       )}
 

@@ -162,7 +162,7 @@ export default function EventStages({ stages, signedIn, ownedStudentUids }: Even
                   <p className="font-bold">{item.name}</p>
                   {item.eventBonuses.length > 0 && (
                     <p className="text-sm text-neutral-500">
-                      모집 학생 보너스{signedIn ? ` +${Math.floor(ratio * 100)}% (최대 +${Math.floor(maxRatio * 100)}%)` : "는 로그인 후 확인 가능"}
+                      모집 학생 보너스{signedIn ? ` +${Math.round(ratio * 100)}% (최대 +${Math.round(maxRatio * 100)}%)` : "는 로그인 후 확인 가능"}
                     </p>
                   )}
                 </div>
@@ -176,7 +176,7 @@ export default function EventStages({ stages, signedIn, ownedStudentUids }: Even
                     <StudentCards mobileGrid={8} pcGrid={6} students={item.eventBonuses.filter(({ student }) => student.role === "striker").map(({ student, ratio }) => ({
                       uid: student.uid,
                       grayscale: signedIn && !ownedStudentUids.includes(student.uid),
-                      label: (<span className="text-white font-normal">{Math.floor(ratio * 100)}%</span>),
+                      label: (<span className="text-white font-normal">{Math.round(ratio * 100)}%</span>),
                     }))} />
                   </div>
                   <div className="w-full md:w-1/2 p-2">
@@ -184,7 +184,7 @@ export default function EventStages({ stages, signedIn, ownedStudentUids }: Even
                     <StudentCards mobileGrid={8} pcGrid={6} students={item.eventBonuses.filter(({ student }) => student.role === "special").map(({ student, ratio }) => ({
                       uid: student.uid,
                       grayscale: signedIn && !ownedStudentUids.includes(student.uid),
-                      label: (<span className="text-white font-normal">{Math.floor(ratio * 100)}%</span>),
+                      label: (<span className="text-white font-normal">{Math.round(ratio * 100)}%</span>),
                     }))} />
                   </div>
                 </div>
