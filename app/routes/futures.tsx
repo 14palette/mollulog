@@ -5,6 +5,7 @@ import { getAuthenticator } from "~/auth/authenticator.server";
 import { Title } from "~/components/atoms/typography";
 import type { ContentTimelineProps } from "~/components/organisms/content";
 import { ContentTimeline } from "~/components/organisms/content";
+import { ContentFilter, type ContentFilterType } from "~/components/molecules/content";
 import { graphql } from "~/graphql";
 import type { FutureContentsQuery } from "~/graphql/graphql";
 import { runQuery } from "~/lib/baql";
@@ -100,6 +101,7 @@ export default function Futures() {
 
   const [favoritedStudents, setFavoritedStudents] = useState<{ contentUid: string, studentUid: string }[] | undefined>(loaderData.favoritedStudents?.map(f => ({ contentUid: f.contentId, studentUid: f.studentId })) ?? undefined);
   const [favoritedCounts, setFavoritedCounts] = useState(loaderData.favoritedCounts.map(f => ({ contentUid: f.contentId, studentUid: f.studentId, count: f.count })));
+  const [contentFilter, setContentFilter] = useState<ContentFilterType>({ types: [], onlyPickups: false });
   const toggleFavorite = (contentUid: string, studentUid: string, favorited: boolean) => {
     submit({ favorite: { contentUid, studentUid, favorited } });
 
@@ -128,54 +130,82 @@ export default function Futures() {
     });
   };
 
+  // Filter contents based on the selected filter
+  const filteredContents = contents.filter((content) => {
+      if (content.__typename === "Event") {
+        if (contentFilter.types.length > 0 && !contentFilter.types.includes(content.eventType)) {
+          return false;
+        } else if (contentFilter.onlyPickups && content.pickups?.length === 0) {
+          return false;
+        }
+        return true;
+      } else if (content.__typename === "Raid") {
+        if (contentFilter.types.length > 0 && !contentFilter.types.includes(content.raidType)) {
+          return false;
+        } else if (contentFilter.onlyPickups) {
+          return false;
+        }
+        return true;
+      }
+      return false;
+    });
+
   return (
     <>
       <Title text="미래시" />
       <p className="text-neutral-500 dark:text-neutral-400 -mt-2 mb-4">미래시는 일본 서버 일정을 바탕으로 추정된 것으로, 실제 일정과 다를 수 있습니다.</p>
 
-      <ContentTimeline
-        contents={contents.map((content) => {
-          const contentAttrs: Partial<ContentTimelineProps["contents"][number]> = {
-            ...content,
-            since: new Date(content.since),
-            until: new Date(content.until),
-          };
+      <div className="flex flex-col xl:flex-row">
+        <div className="w-full xl:max-w-2xl shrink-0">
+          <ContentTimeline
+            contents={filteredContents.map((content) => {
+              const contentAttrs: Partial<ContentTimelineProps["contents"][number]> = {
+                ...content,
+                since: new Date(content.since),
+                until: new Date(content.until),
+              };
 
-          if (content.__typename === "Event") {
-            contentAttrs.contentType = content.eventType;
-            contentAttrs.rerun = content.rerun;
-            contentAttrs.pickups = content.pickups ?? undefined;
-            contentAttrs.link = `/events/${content.uid}`;
-          } else if (content.__typename === "Raid") {
-            contentAttrs.contentType = content.raidType;
-            contentAttrs.rerun = false;
-            contentAttrs.link = `/raids/${content.uid}`;
-            contentAttrs.raidInfo = {
-              uid: content.uid,
-              boss: content.boss,
-              terrain: content.terrain,
-              attackType: content.attackType,
-              defenseType: content.defenseType,
-              rankVisible: content.rankVisible,
-            };
-          }
+              if (content.__typename === "Event") {
+                contentAttrs.contentType = content.eventType;
+                contentAttrs.rerun = content.rerun;
+                contentAttrs.pickups = content.pickups ?? undefined;
+                contentAttrs.link = `/events/${content.uid}`;
+              } else if (content.__typename === "Raid") {
+                contentAttrs.contentType = content.raidType;
+                contentAttrs.rerun = false;
+                contentAttrs.link = `/raids/${content.uid}`;
+                contentAttrs.raidInfo = {
+                  uid: content.uid,
+                  boss: content.boss,
+                  terrain: content.terrain,
+                  attackType: content.attackType,
+                  defenseType: content.defenseType,
+                  rankVisible: content.rankVisible,
+                };
+              }
 
-          return contentAttrs as ContentTimelineProps["contents"][number];
-        })}
+              return contentAttrs as ContentTimelineProps["contents"][number];
+            })}
 
-        favoritedStudents={favoritedStudents}
-        favoritedCounts={favoritedCounts}
-        onFavorite={(contentUid, studentUid, favorited) => {
-          if (!signedIn) {
-            showSignIn();
-            return;
-          }
-          toggleFavorite(contentUid, studentUid, favorited);
-        }}
+            favoritedStudents={favoritedStudents}
+            favoritedCounts={favoritedCounts}
+            onFavorite={(contentUid, studentUid, favorited) => {
+              if (!signedIn) {
+                showSignIn();
+                return;
+              }
+              toggleFavorite(contentUid, studentUid, favorited);
+            }}
 
-        memos={memos.map((memo) => ({ contentUid: memo.contentId, body: memo.body }))}
-        onMemoUpdate={signedIn ? (contentUid, memo) => submit({ memo: { contentUid, body: memo } }) : undefined}
-      />
+            memos={memos.map((memo) => ({ contentUid: memo.contentId, body: memo.body }))}
+            onMemoUpdate={signedIn ? (contentUid, memo) => submit({ memo: { contentUid, body: memo } }) : undefined}
+          />
+        </div>
+
+        <div className="w-full xl:grow xl:sticky xl:top-4 xl:self-start xl:pl-6">
+          <ContentFilter onFilterChange={setContentFilter} />
+        </div>
+      </div>
 
       {signedIn && (
         <Link to="/my?path=futures">
