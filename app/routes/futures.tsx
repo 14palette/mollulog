@@ -1,6 +1,5 @@
 import type { LoaderFunctionArgs, MetaFunction } from "react-router";
-import { Link, useFetcher, useLoaderData } from "react-router";
-import { CalendarDateRangeIcon } from "@heroicons/react/24/solid";
+import { useFetcher, useLoaderData } from "react-router";
 import { getAuthenticator } from "~/auth/authenticator.server";
 import { Title } from "~/components/atoms/typography";
 import type { ContentTimelineProps } from "~/components/organisms/content";
@@ -9,7 +8,6 @@ import { ContentFilter, type ContentFilterType } from "~/components/molecules/co
 import { graphql } from "~/graphql";
 import type { FutureContentsQuery } from "~/graphql/graphql";
 import { runQuery } from "~/lib/baql";
-import { sanitizeClassName } from "~/prophandlers";
 import { getUserMemos } from "~/models/content";
 import { getFavoritedCounts, getUserFavoritedStudents } from "~/models/favorite-students";
 import { useState } from "react";
@@ -206,20 +204,6 @@ export default function Futures() {
           <ContentFilter onFilterChange={setContentFilter} />
         </div>
       </div>
-
-      {signedIn && (
-        <Link to="/my?path=futures">
-          <div
-            className={sanitizeClassName(`
-              m-4 md:m-8 px-4 py-2 fixed bottom-safe-b right-0 flex items-center bg-neutral-900 hover:bg-neutral-700
-              text-white shadow-xl rounded-full transition cursor-pointer
-            `)}
-          >
-            <CalendarDateRangeIcon className="size-4 mr-2" />
-            <span>모집 계획</span>
-          </div>
-        </Link>
-      )}
     </>
   );
 }

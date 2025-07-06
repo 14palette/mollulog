@@ -1,10 +1,8 @@
 import type { RaidRankFilters } from "./RaidRanks";
 import { Toggle } from "~/components/atoms/form";
-import { Label } from "~/components/atoms/form";
 import { StudentSearch } from "~/components/molecules/student";
-import { XMarkIcon } from "@heroicons/react/24/outline";
+import { XMarkIcon, MagnifyingGlassIcon } from "@heroicons/react/24/outline";
 import { useSignIn } from "~/contexts/SignInProvider";
-import { MagnifyingGlassIcon } from "@heroicons/react/24/outline";
 
 type RaidRankFilterProps = {
   filters: RaidRankFilters;
@@ -15,9 +13,8 @@ type RaidRankFilterProps = {
     name: string;
   }[];
   signedIn: boolean;
-  onClose: () => void;
+  onClose?: () => void;
 };
-
 
 export default function RaidRankFilter({ filters, setRaidFilters, signedIn, students, onClose }: RaidRankFilterProps) {
   const setRaidFilterAndResetPage = (setter: (prev: RaidRankFilters) => RaidRankFilters) => {
@@ -30,15 +27,27 @@ export default function RaidRankFilter({ filters, setRaidFilters, signedIn, stud
   const { showSignIn } = useSignIn();
 
   return (
-    <div className="h-full bg-white dark:bg-neutral-800 xl:opacity-100 border-t xl:border border-neutral-200 dark:border-neutral-700 rounded-t-xl xl:rounded-xl shadow-lg shadow-neutral-200 dark:shadow-neutral-900">
-      <div className="p-4 rounded-t-xl flex items-center">
-        <MagnifyingGlassIcon className="size-6 mr-2" strokeWidth={2} />
-        <p className="text-xl font-bold grow">편성 찾기</p>
-        <XMarkIcon className="xl:hidden size-6 ml-2" strokeWidth={2} onClick={onClose} />
+    <>
+      <div className="flex items-center justify-between mb-6">
+        <div className="flex items-center gap-3">
+          <div className="flex items-center justify-center size-10 bg-neutral-100 dark:bg-neutral-800 rounded-lg">
+            <MagnifyingGlassIcon className="size-5 text-neutral-600 dark:text-neutral-400" strokeWidth={2} />
+          </div>
+          <p className="font-bold text-lg text-neutral-900 dark:text-white">편성 찾기</p>
+        </div>
+        {onClose && (
+          <button
+            onClick={onClose}
+            className="p-2 hover:bg-neutral-100 dark:hover:bg-neutral-800 rounded-lg transition-colors"
+          >
+            <XMarkIcon className="size-6 text-neutral-600 dark:text-neutral-400" />
+          </button>
+        )}
       </div>
-      <div className="px-4 pb-2">
-        <Label text="포함할 학생" />
-        <p className="text-sm text-neutral-500">선택한 학생을 모두 포함</p>
+
+      <div className="mb-4">
+        <p className="mb-2 font-bold text-neutral-900 dark:text-white">포함할 학생</p>
+        <p className="text-sm text-neutral-500 dark:text-neutral-400 mb-3">선택한 학생을 모두 포함</p>
 
         <StudentFilter
           selectedStudents={filters.includeStudents}
@@ -58,9 +67,12 @@ export default function RaidRankFilter({ filters, setRaidFilters, signedIn, stud
             }));
           }}
         />
+      </div>
 
-        <Label text="제외할 학생" />
-        <p className="text-sm text-neutral-500">선택한 학생이 한 명이라도 포함되면 제외</p>
+      <div>
+        <p className="mb-2 font-bold text-neutral-900 dark:text-white">제외할 학생</p>
+        <p className="text-sm text-neutral-500 dark:text-neutral-400 mb-3">선택한 학생이 한 명이라도 포함되면 제외</p>
+
         <div onClick={() => { !signedIn && showSignIn() }}>
           <Toggle
             label="내가 모집하지 않은 학생"
@@ -68,6 +80,7 @@ export default function RaidRankFilter({ filters, setRaidFilters, signedIn, stud
             onChange={(value) => setRaidFilters((prev) => ({ ...prev, filterNotOwned: value }))}
           />
         </div>
+
         <StudentFilter
           selectedStudents={filters.excludeStudents}
           students={students}
@@ -85,7 +98,7 @@ export default function RaidRankFilter({ filters, setRaidFilters, signedIn, stud
           }}
         />
       </div>
-    </div>
+    </>
   );
 }
 
@@ -114,7 +127,7 @@ function StudentFilter({ selectedStudents, students, onSelect, onRemove }: Stude
         {selectedStudents.map(({ uid }) => (
           <div
             key={`future-student-${uid}`}
-            className="flex items-center shrink-0 rounded-md bg-neutral-100 dark:bg-neutral-900 pl-2 pr-1 py-1"
+            className="flex items-center shrink-0 rounded-md bg-neutral-100 dark:bg-black pl-2 pr-1 py-1"
           >
             <span>
               {students.find(student => student.uid === uid)?.name}

@@ -89,7 +89,7 @@ export default function ContentTimeline({ contents, favoritedStudents, favorited
   if (contents.length === 0) {
     return (
       <div className="flex items-center justify-center h-full">
-        <p className="text-neutral-500 dark:text-neutral-400">필터 조건에 해당하는 컨텐츠가 없어요.</p>
+        <p className="my-24 text-neutral-500 dark:text-neutral-400">필터 조건에 해당하는 컨텐츠가 없어요.</p>
       </div>
     );
   }
