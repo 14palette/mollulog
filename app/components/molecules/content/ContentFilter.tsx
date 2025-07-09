@@ -3,7 +3,6 @@ import { useState } from "react";
 import FilterButtons from "./FilterButtons";
 import type { EventType, RaidType } from "~/models/content.d";
 import { Toggle } from "~/components/atoms/form";
-import { Link } from "react-router";
 
 export type ContentFilter = {
   types: (EventType | RaidType)[];
@@ -11,11 +10,12 @@ export type ContentFilter = {
 };
 
 type ContentFilterProps = {
+  initialFilter: ContentFilter;
   onFilterChange: (filter: ContentFilter) => void;
 };
 
-export default function ContentFilter({ onFilterChange }: ContentFilterProps) {
-  const [filter, setFilter] = useState<ContentFilter>({ types: [], onlyPickups: false });
+export default function ContentFilter({ initialFilter, onFilterChange }: ContentFilterProps) {
+  const [filter, setFilter] = useState<ContentFilter>(initialFilter);
   const [isMobileSheetOpen, setIsMobileSheetOpen] = useState(false);
 
   const onToggleType = (activated: boolean, types: (EventType | RaidType)[]) => {
@@ -88,6 +88,8 @@ function FilterContent({ filter, onToggleType, onToggleOnlyPickups, onClose }: F
     { text: "미니 이벤트", active: filter.types.includes("mini_event"), onToggle: (activated: boolean) => onToggleType(activated, ["mini_event"]) },
     { text: "스토리", active: filter.types.includes("main_story"), onToggle: (activated: boolean) => onToggleType(activated, ["main_story"]) },
     { text: "캠페인", active: filter.types.includes("campaign"), onToggle: (activated: boolean) => onToggleType(activated, ["campaign"]) },
+    { text: "종합전술시험", active: filter.types.includes("exercise"), onToggle: (activated: boolean) => onToggleType(activated, ["exercise"]) },
+    { text: "픽업 모집", active: filter.types.includes("pickup"), onToggle: (activated: boolean) => onToggleType(activated, ["pickup"]) },
   ];
 
   const contentFilterProps = [
@@ -120,10 +122,10 @@ function FilterContent({ filter, onToggleType, onToggleOnlyPickups, onClose }: F
         <FilterButtons buttonProps={eventFilterPorps} />
       </div>
       <div className="mb-8">
-        <p className="mb-2 font-bold">컨텐츠</p>
+        <p className="mb-2 font-bold">레이드</p>
         <FilterButtons buttonProps={contentFilterProps} />
       </div>
-      <Toggle label="픽업 모집만 보기" initialState={filter.onlyPickups} onChange={onToggleOnlyPickups} />
+      <Toggle label="픽업 진행 컨텐츠만 보기" initialState={filter.onlyPickups} onChange={onToggleOnlyPickups} />
     </>
   );
 }

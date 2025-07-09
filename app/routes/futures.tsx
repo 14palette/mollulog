@@ -10,7 +10,7 @@ import type { FutureContentsQuery } from "~/graphql/graphql";
 import { runQuery } from "~/lib/baql";
 import { getUserMemos } from "~/models/content";
 import { getFavoritedCounts, getUserFavoritedStudents } from "~/models/favorite-students";
-import { useState } from "react";
+import { useState, useEffect } from "react";
 import { useSignIn } from "~/contexts/SignInProvider";
 import { ActionData } from "./api.contents";
 
@@ -87,6 +87,8 @@ function equalFavorites(a: { contentUid: string, studentUid: string }, b: { cont
   return a.contentUid === b.contentUid && a.studentUid === b.studentUid;
 }
 
+const futuresContentFilterKey = "futures::content-filter";
+
 export default function Futures() {
   const loaderData = useLoaderData<typeof loader>();
   const { signedIn, contents } = loaderData;
@@ -99,7 +101,27 @@ export default function Futures() {
 
   const [favoritedStudents, setFavoritedStudents] = useState<{ contentUid: string, studentUid: string }[] | undefined>(loaderData.favoritedStudents?.map(f => ({ contentUid: f.contentId, studentUid: f.studentId })) ?? undefined);
   const [favoritedCounts, setFavoritedCounts] = useState(loaderData.favoritedCounts.map(f => ({ contentUid: f.contentId, studentUid: f.studentId, count: f.count })));
-  const [contentFilter, setContentFilter] = useState<ContentFilterType>({ types: [], onlyPickups: false });
+
+  const [contentFilter, setContentFilter] = useState<ContentFilterType>(() => {
+    if (typeof window !== "undefined") {
+      const saved = localStorage.getItem(futuresContentFilterKey);
+      if (saved) {
+        try {
+          return JSON.parse(saved);
+        } catch (e) {
+          console.warn("Failed to parse saved content filter:", e);
+        }
+      }
+    }
+    return { types: [], onlyPickups: false };
+  });
+
+  useEffect(() => {
+    if (typeof window !== "undefined") {
+      localStorage.setItem(futuresContentFilterKey, JSON.stringify(contentFilter));
+    }
+  }, [contentFilter]);
+
   const toggleFavorite = (contentUid: string, studentUid: string, favorited: boolean) => {
     submit({ favorite: { contentUid, studentUid, favorited } });
 
@@ -201,7 +223,7 @@ export default function Futures() {
         </div>
 
         <div className="w-full xl:grow xl:sticky xl:top-4 xl:self-start xl:pl-6">
-          <ContentFilter onFilterChange={setContentFilter} />
+          <ContentFilter initialFilter={contentFilter} onFilterChange={setContentFilter} />
         </div>
       </div>
     </>
