@@ -113,8 +113,10 @@ export default function ContentTimelineItem(
     </div>
   ) : null;
 
-  const isPickupDayDifferent = pickups && pickups.length > 0 &&
-    (pickups[0].since && !dayjs(pickups[0].since).isSame(dayjs(since), "day") || pickups[0].until && !dayjs(pickups[0].until).isSame(dayjs(until), "day"));
+  const pickupSince = pickups?.[0]?.since;
+  const pickupUntil = pickups?.[0]?.until;
+  const isPickupDayDifferent = pickupSince && pickupUntil &&
+    (!dayjs(pickupSince).isSame(dayjs(since), "day") || !dayjs(pickupUntil).isSame(dayjs(until), "day"));
 
   return (
     <div className="my-4 md:my-6">
@@ -200,7 +202,7 @@ export default function ContentTimelineItem(
           <ExclamationTriangleIcon className="shrink-0 size-5 text-amber-600 dark:text-amber-400" />
           <div className="flex flex-wrap gap-x-1">
             <p className="shrink-0 text-amber-700 dark:text-amber-300">
-              이벤트 개최 기간과 픽업 모집 기간이 달라요.
+              {dayjs(pickupUntil).isBefore(dayjs()) ? "픽업 모집은 종료되었어요." : "이벤트 개최 기간과 픽업 모집 기간이 달라요."}
             </p>
             <Link to={link} className="flex-shrink-0 text-amber-600 dark:text-amber-400 underline cursor-pointer hover:text-amber-700 dark:hover:text-amber-300">
               자세히 보기

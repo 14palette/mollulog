@@ -1,6 +1,5 @@
 import { MagnifyingGlassIcon, ShieldCheckIcon } from "@heroicons/react/24/outline";
 import { useState } from "react";
-import { FloatingButton } from "~/components/atoms/button";
 import { Callout } from "~/components/atoms/typography";
 import { FilterButtons } from "~/components/molecules/content";
 import { RaidRankFilter } from "~/components/organisms/raid";
@@ -30,10 +29,10 @@ export default function RaidRanksPage({ raid, signedIn, allStudents }: RaidRanks
     rankBefore: null,
   });
 
-  const [openFilter, setOpenFilter] = useState(false);
+  const [isMobileSheetOpen, setIsMobileSheetOpen] = useState(false);
 
   return (
-    <div className="flex flex-col-reverse xl:flex-row">
+    <div className="flex flex-col-reverse xl:flex-row xl:gap-8">
       <div className="xl:w-3/5 shrink-0">
         {raid.rankVisible && raid.type === "elimination" && (
           <div className="mb-6">
@@ -68,23 +67,46 @@ export default function RaidRanksPage({ raid, signedIn, allStudents }: RaidRanks
 
       {raid.rankVisible && (
         <>
-          <div className={`${openFilter ? "block" : "hidden"} -mx-4 xl:mx-4 xl:block w-full fixed bottom-0 xl:grow xl:sticky xl:top-4 xl:self-start`}>
-            <RaidRankFilter
-              filters={filters}
-              setRaidFilters={setFilters}
-              signedIn={signedIn}
-              students={allStudents}
-              onClose={() => setOpenFilter(false)}
-            />
-          </div>
-          {!openFilter && (
-            <div className="xl:hidden">
-              <FloatingButton
-                Icon={<MagnifyingGlassIcon className="size-4 mr-2" strokeWidth={2} />}
-                text="편성 찾기"
-                onClick={() => setOpenFilter(true)}
+          {/* PC 화면 */}
+          <div className="hidden xl:block xl:grow xl:sticky xl:top-4 xl:self-start">
+            <div className="bg-white dark:bg-neutral-900 rounded-xl xl:shadow-lg p-6">
+              <RaidRankFilter
+                filters={filters}
+                setRaidFilters={setFilters}
+                signedIn={signedIn}
+                students={allStudents}
+                onClose={() => {}}
               />
             </div>
+          </div>
+
+          {/* 모바일 화면 필터 표시 버튼 */}
+          <div className="xl:hidden fixed bottom-6 right-4 z-40">
+            <button
+              onClick={() => setIsMobileSheetOpen(true)}
+              className="flex items-center gap-2 px-4 py-3 bg-white/90 dark:bg-neutral-900/80 backdrop-blur-sm border border-neutral-200 dark:border-neutral-700 text-neutral-700 dark:text-neutral-300 hover:bg-neutral-50 dark:hover:bg-neutral-700 rounded-full shadow-lg transition-colors"
+            >
+              <MagnifyingGlassIcon className="size-5" strokeWidth={2} />
+              <span>편성 찾기</span>
+            </button>
+          </div>
+
+          {/* 모바일 화면 바텀 시트 */}
+          {isMobileSheetOpen && (
+            <>
+              <div className="xl:hidden fixed inset-0 bg-transparent z-50" onClick={() => setIsMobileSheetOpen(false)} />
+              <div className="xl:hidden fixed bottom-0 left-0 right-0 bg-white/90 dark:bg-neutral-900/80 backdrop-blur-sm rounded-t-2xl shadow-2xl z-50 max-h-[80vh] overflow-y-auto border-t border-neutral-200 dark:border-neutral-700">
+                <div className="px-4 py-6">
+                  <RaidRankFilter
+                    filters={filters}
+                    setRaidFilters={setFilters}
+                    signedIn={signedIn}
+                    students={allStudents}
+                    onClose={() => setIsMobileSheetOpen(false)}
+                  />
+                </div>
+              </div>
+            </>
           )}
         </>
       )}

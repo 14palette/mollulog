@@ -1,17 +1,16 @@
 import type { LoaderFunctionArgs, MetaFunction } from "react-router";
-import { Link, useFetcher, useLoaderData } from "react-router";
-import { CalendarDateRangeIcon } from "@heroicons/react/24/solid";
+import { useFetcher, useLoaderData } from "react-router";
 import { getAuthenticator } from "~/auth/authenticator.server";
 import { Title } from "~/components/atoms/typography";
 import type { ContentTimelineProps } from "~/components/organisms/content";
 import { ContentTimeline } from "~/components/organisms/content";
+import { ContentFilter, type ContentFilterType } from "~/components/molecules/content";
 import { graphql } from "~/graphql";
 import type { FutureContentsQuery } from "~/graphql/graphql";
 import { runQuery } from "~/lib/baql";
-import { sanitizeClassName } from "~/prophandlers";
 import { getUserMemos } from "~/models/content";
 import { getFavoritedCounts, getUserFavoritedStudents } from "~/models/favorite-students";
-import { useState } from "react";
+import { useState, useEffect } from "react";
 import { useSignIn } from "~/contexts/SignInProvider";
 import { ActionData } from "./api.contents";
 
@@ -88,6 +87,8 @@ function equalFavorites(a: { contentUid: string, studentUid: string }, b: { cont
   return a.contentUid === b.contentUid && a.studentUid === b.studentUid;
 }
 
+const futuresContentFilterKey = "futures::content-filter";
+
 export default function Futures() {
   const loaderData = useLoaderData<typeof loader>();
   const { signedIn, contents } = loaderData;
@@ -100,6 +101,27 @@ export default function Futures() {
 
   const [favoritedStudents, setFavoritedStudents] = useState<{ contentUid: string, studentUid: string }[] | undefined>(loaderData.favoritedStudents?.map(f => ({ contentUid: f.contentId, studentUid: f.studentId })) ?? undefined);
   const [favoritedCounts, setFavoritedCounts] = useState(loaderData.favoritedCounts.map(f => ({ contentUid: f.contentId, studentUid: f.studentId, count: f.count })));
+
+  const [contentFilter, setContentFilter] = useState<ContentFilterType>(() => {
+    if (typeof window !== "undefined") {
+      const saved = localStorage.getItem(futuresContentFilterKey);
+      if (saved) {
+        try {
+          return JSON.parse(saved);
+        } catch (e) {
+          console.warn("Failed to parse saved content filter:", e);
+        }
+      }
+    }
+    return { types: [], onlyPickups: false };
+  });
+
+  useEffect(() => {
+    if (typeof window !== "undefined") {
+      localStorage.setItem(futuresContentFilterKey, JSON.stringify(contentFilter));
+    }
+  }, [contentFilter]);
+
   const toggleFavorite = (contentUid: string, studentUid: string, favorited: boolean) => {
     submit({ favorite: { contentUid, studentUid, favorited } });
 
@@ -128,68 +150,82 @@ export default function Futures() {
     });
   };
 
+  // Filter contents based on the selected filter
+  const filteredContents = contents.filter((content) => {
+      if (content.__typename === "Event") {
+        if (contentFilter.types.length > 0 && !contentFilter.types.includes(content.eventType)) {
+          return false;
+        } else if (contentFilter.onlyPickups && content.pickups?.length === 0) {
+          return false;
+        }
+        return true;
+      } else if (content.__typename === "Raid") {
+        if (contentFilter.types.length > 0 && !contentFilter.types.includes(content.raidType)) {
+          return false;
+        } else if (contentFilter.onlyPickups) {
+          return false;
+        }
+        return true;
+      }
+      return false;
+    });
+
   return (
     <>
       <Title text="미래시" />
       <p className="text-neutral-500 dark:text-neutral-400 -mt-2 mb-4">미래시는 일본 서버 일정을 바탕으로 추정된 것으로, 실제 일정과 다를 수 있습니다.</p>
 
-      <ContentTimeline
-        contents={contents.map((content) => {
-          const contentAttrs: Partial<ContentTimelineProps["contents"][number]> = {
-            ...content,
-            since: new Date(content.since),
-            until: new Date(content.until),
-          };
+      <div className="flex flex-col xl:flex-row">
+        <div className="w-full xl:max-w-2xl shrink-0">
+          <ContentTimeline
+            contents={filteredContents.map((content) => {
+              const contentAttrs: Partial<ContentTimelineProps["contents"][number]> = {
+                ...content,
+                since: new Date(content.since),
+                until: new Date(content.until),
+              };
 
-          if (content.__typename === "Event") {
-            contentAttrs.contentType = content.eventType;
-            contentAttrs.rerun = content.rerun;
-            contentAttrs.pickups = content.pickups ?? undefined;
-            contentAttrs.link = `/events/${content.uid}`;
-          } else if (content.__typename === "Raid") {
-            contentAttrs.contentType = content.raidType;
-            contentAttrs.rerun = false;
-            contentAttrs.link = `/raids/${content.uid}`;
-            contentAttrs.raidInfo = {
-              uid: content.uid,
-              boss: content.boss,
-              terrain: content.terrain,
-              attackType: content.attackType,
-              defenseType: content.defenseType,
-              rankVisible: content.rankVisible,
-            };
-          }
+              if (content.__typename === "Event") {
+                contentAttrs.contentType = content.eventType;
+                contentAttrs.rerun = content.rerun;
+                contentAttrs.pickups = content.pickups ?? undefined;
+                contentAttrs.link = `/events/${content.uid}`;
+              } else if (content.__typename === "Raid") {
+                contentAttrs.contentType = content.raidType;
+                contentAttrs.rerun = false;
+                contentAttrs.link = `/raids/${content.uid}`;
+                contentAttrs.raidInfo = {
+                  uid: content.uid,
+                  boss: content.boss,
+                  terrain: content.terrain,
+                  attackType: content.attackType,
+                  defenseType: content.defenseType,
+                  rankVisible: content.rankVisible,
+                };
+              }
 
-          return contentAttrs as ContentTimelineProps["contents"][number];
-        })}
+              return contentAttrs as ContentTimelineProps["contents"][number];
+            })}
 
-        favoritedStudents={favoritedStudents}
-        favoritedCounts={favoritedCounts}
-        onFavorite={(contentUid, studentUid, favorited) => {
-          if (!signedIn) {
-            showSignIn();
-            return;
-          }
-          toggleFavorite(contentUid, studentUid, favorited);
-        }}
+            favoritedStudents={favoritedStudents}
+            favoritedCounts={favoritedCounts}
+            onFavorite={(contentUid, studentUid, favorited) => {
+              if (!signedIn) {
+                showSignIn();
+                return;
+              }
+              toggleFavorite(contentUid, studentUid, favorited);
+            }}
 
-        memos={memos.map((memo) => ({ contentUid: memo.contentId, body: memo.body }))}
-        onMemoUpdate={signedIn ? (contentUid, memo) => submit({ memo: { contentUid, body: memo } }) : undefined}
-      />
+            memos={memos.map((memo) => ({ contentUid: memo.contentId, body: memo.body }))}
+            onMemoUpdate={signedIn ? (contentUid, memo) => submit({ memo: { contentUid, body: memo } }) : undefined}
+          />
+        </div>
 
-      {signedIn && (
-        <Link to="/my?path=futures">
-          <div
-            className={sanitizeClassName(`
-              m-4 md:m-8 px-4 py-2 fixed bottom-safe-b right-0 flex items-center bg-neutral-900 hover:bg-neutral-700
-              text-white shadow-xl rounded-full transition cursor-pointer
-            `)}
-          >
-            <CalendarDateRangeIcon className="size-4 mr-2" />
-            <span>모집 계획</span>
-          </div>
-        </Link>
-      )}
+        <div className="w-full xl:grow xl:sticky xl:top-4 xl:self-start xl:pl-6">
+          <ContentFilter initialFilter={contentFilter} onFilterChange={setContentFilter} />
+        </div>
+      </div>
     </>
   );
 }

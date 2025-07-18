@@ -18,7 +18,7 @@ const indexQuery = graphql(`
       nodes {
         name since until uid type rerun
         pickups {
-          type rerun
+          type rerun since until
           student { uid name attackType defenseType role schaleDbId }
         }
       }
@@ -100,16 +100,15 @@ export default function Index() {
               until={new Date(event.until)}
               link={`/events/${event.uid}`}
               showMemo={false}
-              pickups={event.pickups.map((pickup) => ({
-                type: pickup.type,
-                rerun: pickup.rerun,
-                studentName: pickup.student?.name ?? "",
+              pickups={event.pickups.map(({ type, rerun, since, until, student }) => ({
+                type, rerun, since, until,
+                studentName: student?.name ?? "",
                 student: {
-                  uid: pickup.student?.uid ?? "",
-                  attackType: pickup.student?.attackType,
-                  defenseType: pickup.student?.defenseType,
-                  role: pickup.student?.role,
-                  schaleDbId: pickup.student?.schaleDbId,
+                  uid: student?.uid ?? "",
+                  attackType: student?.attackType,
+                  defenseType: student?.defenseType,
+                  role: student?.role,
+                  schaleDbId: student?.schaleDbId,
                 },
               }))}
               favoritedCounts={contentFavoritedCounts}

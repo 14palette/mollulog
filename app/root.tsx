@@ -52,14 +52,14 @@ export const links: LinksFunction = () => [
 ];
 
 export function Layout({ children }: { children: React.ReactNode }) {
-  const { darkMode } = useLoaderData<typeof loader>();
+  const loaderData = useLoaderData<typeof loader>();
   return (
     <html lang="ko">
       <head>
         <meta charSet="utf-8" />
         <meta name="viewport" content="width=device-width,initial-scale=1,maximum-scale=1,user-scalable=0,viewport-fit=cover" />
-        <meta name="theme-color" content={darkMode ? "#262626" : "#ffffff"} />
-        <meta name="background-color" content={darkMode ? "#262626" : "#ffffff"} />
+        <meta name="theme-color" content={loaderData?.darkMode ? "#262626" : "#ffffff"} />
+        <meta name="background-color" content={loaderData?.darkMode ? "#262626" : "#ffffff"} />
         <Meta />
         <Links />
       </head>
@@ -72,7 +72,7 @@ export function Layout({ children }: { children: React.ReactNode }) {
   );
 }
 
-const wideLayout = ["/raids"];
+const wideLayout = ["/raids", "/futures"];
 
 export default function App() {
   const loaderData = useLoaderData<typeof loader>();

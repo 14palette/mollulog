@@ -1,8 +1,7 @@
-import { FunnelIcon } from "@heroicons/react/24/outline";
 import dayjs from "dayjs";
-import { useState } from "react";
+import { useState, useEffect } from "react";
 import type { ContentTimelineItemProps } from "~/components/molecules/content";
-import { ContentTimelineItem, FilterButtons } from "~/components/molecules/content";
+import { ContentTimelineItem } from "~/components/molecules/content";
 import type { EventType, RaidType } from "~/models/content.d";
 
 export type ContentTimelineProps = {
@@ -47,8 +46,6 @@ export const contentOrders: (EventType | RaidType)[] = [
   "guide_mission",
 ];
 
-type ContentFilter = Partial<Record<EventType | RaidType, boolean>> | null;
-
 function groupContents(contents: ContentTimelineProps["contents"]): ContentGroup[] {
   const groups: { groupDate: dayjs.Dayjs | null, contents: ContentTimelineProps["contents"] }[] = [];
 
@@ -76,20 +73,10 @@ function groupContents(contents: ContentTimelineProps["contents"]): ContentGroup
 export default function ContentTimeline({ contents, favoritedStudents, favoritedCounts, memos, onMemoUpdate, onFavorite }: ContentTimelineProps) {
   const [contentGroups, setContentGroups] = useState<ContentGroup[]>(groupContents(contents));
 
-  const [_, setFilter] = useState<ContentFilter>(null);
-  const onToggleFilter = (activated: boolean, types: (EventType | RaidType)[]) => {
-    setFilter((prev) => {
-      const newFilter = { ...prev };
-      types.forEach((type) => { newFilter[type] = activated; });
-      if (Object.values(newFilter).every((value) => !value)) {
-        setContentGroups(groupContents(contents));
-        return null;
-      }
-
-      setContentGroups(groupContents(contents.filter((content) => newFilter[content.contentType])));
-      return newFilter;
-    });
-  };
+  // Update content groups when contents change
+  useEffect(() => {
+    setContentGroups(groupContents(contents));
+  }, [contents]);
 
   const favoriteStudentIdsByContents: Record<string, Record<string, number>> = {};
   favoritedCounts.forEach(({ contentUid, studentUid, count }) => {
@@ -99,21 +86,17 @@ export default function ContentTimeline({ contents, favoritedStudents, favorited
     favoriteStudentIdsByContents[contentUid][studentUid] = count;
   });
 
+  if (contents.length === 0) {
+    return (
+      <div className="flex items-center justify-center h-full">
+        <p className="my-24 text-neutral-500 dark:text-neutral-400">필터 조건에 해당하는 컨텐츠가 없어요.</p>
+      </div>
+    );
+  }
+
   const today = dayjs();
   return (
     <>
-      <div className="my-6">
-        <FilterButtons
-          Icon={FunnelIcon}
-          buttonProps={[
-            { text: "스토리", onToggle: (activated) => { onToggleFilter(activated, ["main_story"]) } },
-            { text: "이벤트", onToggle: (activated) => { onToggleFilter(activated, ["event", "immortal_event", "fes", "collab", "mini_event"]) } },
-            { text: "캠페인", onToggle: (activated) => { onToggleFilter(activated, ["campaign"]) } },
-            { text: "총력전/대결전", onToggle: (activated) => { onToggleFilter(activated, ["total_assault", "elimination", "unlimit"]) } },
-          ]}
-        />
-      </div>
-
       {contentGroups.map((group) => {
         const isCurrent = group.groupDate === null;
         const groupDate = isCurrent ? dayjs() : dayjs(group.groupDate);
