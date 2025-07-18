@@ -83,7 +83,7 @@ type FilterContentProps = {
 };
 
 function FilterContent({ filter, onToggleType, onToggleOnlyPickups, onClose }: FilterContentProps) {
-  const eventFilterPorps = [
+  const eventFilterProps = [
     { text: "메인 이벤트", active: filter.types.some(type => ["event", "immortal_event", "fes", "collab"].includes(type)), onToggle: (activated: boolean) => onToggleType(activated, ["event", "immortal_event", "fes", "collab"]) },
     { text: "미니 이벤트", active: filter.types.includes("mini_event"), onToggle: (activated: boolean) => onToggleType(activated, ["mini_event"]) },
     { text: "스토리", active: filter.types.includes("main_story"), onToggle: (activated: boolean) => onToggleType(activated, ["main_story"]) },
@@ -119,7 +119,7 @@ function FilterContent({ filter, onToggleType, onToggleOnlyPickups, onClose }: F
 
       <div className="mb-4">
         <p className="mb-2 font-bold">이벤트</p>
-        <FilterButtons buttonProps={eventFilterPorps} />
+        <FilterButtons buttonProps={eventFilterProps} />
       </div>
       <div className="mb-8">
         <p className="mb-2 font-bold">레이드</p>
