@@ -67,7 +67,6 @@ export type ContentTimelineItemProps = {
   signedIn: boolean;
 };
 
-
 function ContentTitles({ name, showLink }: { name: string, showLink: boolean }): ReactNode {
   const titles = name.split("\n");
   return (
@@ -87,13 +86,15 @@ function ContentTitles({ name, showLink }: { name: string, showLink: boolean }):
   )
 }
 
+const MEMO_CONTENT_TYPES = ["event", "pickup", "fes", "immortal_event"];
+
 export default function ContentTimelineItem(
   {
     name, contentType, rerun, since, until, link, confirmed, raidInfo, pickups,
     allMemos, myMemo, onUpdateMemo, favoritedStudents, favoritedCounts, onFavorite, signedIn,
   }: ContentTimelineItemProps,
 ) {
-  const showMemo = ["event", "pickup", "fes", "immortal_event"].includes(contentType);
+  const showMemo = MEMO_CONTENT_TYPES.includes(contentType);
   const [memoEditing, setMemoEditing] = useState(false);
 
   let daysLabel = null;

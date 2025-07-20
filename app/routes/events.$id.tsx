@@ -202,9 +202,9 @@ export default function EventDetail() {
       return prev;
     });
     setFavoritedCounts((prev) => {
-      const found = prev.find((favorited) => favorited.studentId === studentUid);
+      const found = prev.find((student) => student.studentId === studentUid);
       if (found) {
-        return prev.map((favorited) => favorited.studentId === studentUid ? { ...favorited, count: favorited.count + (favorited ? 1 : -1) } : favorited);
+        return prev.map((student) => student.studentId === studentUid ? { ...student, count: student.count + (favorited ? 1 : -1) } : student);
       }
       return prev;
     });
