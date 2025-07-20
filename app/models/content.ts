@@ -93,13 +93,6 @@ export async function setMemo(env: Env, userId: number, contentId: string, body:
     });
 }
 
-export async function setMemoVisibility(env: Env, userId: number, contentId: string, visibility: ContentMemoVisibility): Promise<void> {
-  const db = drizzle(env.DB);
-  await db.update(futureContentMemo)
-    .set({ visibility, updatedAt: sql`current_timestamp` })
-    .where(and(eq(futureContentMemo.userId, userId), eq(futureContentMemo.contentId, contentId)));
-}
-
 function visibilityFilter(userId?: number): SQLWrapper[] {
   const filters: SQLWrapper[] = [eq(futureContentMemo.visibility, "public")];
   if (userId) {

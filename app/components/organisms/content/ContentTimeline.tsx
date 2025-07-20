@@ -23,6 +23,7 @@ export type ContentTimelineProps = {
   favoritedStudents?: { contentUid: string, studentUid: string }[];
   favoritedCounts: { contentUid: string, studentUid: string, count: number }[];
 
+  signedIn: boolean;
   onMemoUpdate?: (contentUid: string, body: string, visibility: "private" | "public") => void;
   onFavorite?: (contentUid: string, studentUid: string, favorited: boolean) => void;
 };
@@ -72,7 +73,7 @@ function groupContents(contents: ContentTimelineProps["contents"]): ContentGroup
   }));
 }
 
-export default function ContentTimeline({ contents, favoritedStudents, favoritedCounts, onMemoUpdate, onFavorite }: ContentTimelineProps) {
+export default function ContentTimeline({ contents, favoritedStudents, favoritedCounts, onMemoUpdate, onFavorite, signedIn }: ContentTimelineProps) {
   const [contentGroups, setContentGroups] = useState<ContentGroup[]>(groupContents(contents));
 
   // Update content groups when contents change
@@ -134,7 +135,6 @@ export default function ContentTimeline({ contents, favoritedStudents, favorited
                       key={content.uid}
                       {...content}
 
-                      showMemo={showMemo}
                       allMemos={content.allMemos}
                       myMemo={content.myMemo}
                       onUpdateMemo={showMemo ? ({ body, visibility }) => onMemoUpdate?.(content.uid, body, visibility) : undefined}
@@ -142,6 +142,8 @@ export default function ContentTimeline({ contents, favoritedStudents, favorited
                       favoritedStudents={favoritedStudents?.filter(({ contentUid }) => contentUid === content.uid).map(({ studentUid }) => studentUid)}
                       favoritedCounts={favoriteStudentIdsByContents[content.uid]}
                       onFavorite={(studentUid, favorited) => onFavorite?.(content.uid, studentUid, favorited)}
+
+                      signedIn={signedIn}
                     />
                   );
                 })}

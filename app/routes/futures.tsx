@@ -77,7 +77,7 @@ export const loader = async ({ request, context }: LoaderFunctionArgs) => {
     favoritedStudents: signedIn ? await getUserFavoritedStudents(env, currentUser.id) : null,
     favoritedCounts: await getFavoritedCounts(env, allStudentUids),
     myMemos: signedIn ? await getUserMemos(env, currentUser.id) : [],
-    allMemos: await getContentsMemos(env, data.contents.nodes.map((content) => content.uid)),
+    allMemos: await getContentsMemos(env, data.contents.nodes.map((content) => content.uid), currentUser?.id),
   };
 };
 
@@ -208,10 +208,12 @@ export default function Futures() {
               toggleFavorite(contentUid, studentUid, favorited);
             }}
 
-            onMemoUpdate={signedIn ? (contentUid, body, visibility) => {
+            onMemoUpdate={(contentUid, body, visibility) => {
               const actionData: MemoActionData = { body, visibility };
               fetcher.submit(actionData, { action: `/api/contents/${contentUid}/memos`, method: "post", encType: "application/json" });
-            } : undefined}
+            }}
+
+            signedIn={signedIn}
           />
         </div>
 

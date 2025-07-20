@@ -1,6 +1,8 @@
 import { LockClosedIcon, LockOpenIcon, CheckIcon } from "@heroicons/react/16/solid";
 import { useState } from "react";
 import { Memo } from "~/components/atoms/content";
+import { Callout } from "~/components/atoms/typography";
+import { useSignIn } from "~/contexts/SignInProvider";
 
 type ContentMemoEditorProps = {
   allMemos: {
@@ -17,11 +19,13 @@ type ContentMemoEditorProps = {
     visibility: "private" | "public";
   };
 
+  signedIn: boolean;
   placeholder?: string;
   onUpdate: ({ body, visibility }: { body: string, visibility: "private" | "public" }) => void;
 };
 
-export default function ContentMemoEditor({ allMemos, myMemo, placeholder, onUpdate }: ContentMemoEditorProps) {
+export default function ContentMemoEditor({ allMemos, myMemo, signedIn, placeholder, onUpdate }: ContentMemoEditorProps) {
+  const { showSignIn } = useSignIn();
   const [body, setBody] = useState<string | undefined>(myMemo?.body || undefined);
   const [visibility, setVisibility] = useState(myMemo?.visibility || "private");
 
@@ -37,39 +41,49 @@ export default function ContentMemoEditor({ allMemos, myMemo, placeholder, onUpd
       </div>
       <div className="shrink-0">
         <div className="flex gap-x-2">
-          <div
-            className="flex items-center px-3 py-2 shrink-0 bg-neutral-100 dark:bg-neutral-900 rounded-lg text-neutral-500 dark:text-neutral-400 cursor-pointer transition hover:bg-neutral-200 dark:hover:bg-neutral-800"
-            onClick={() => {
-              setVisibility((prev) => {
-                const newVisibility = prev === "private" ? "public" : "private";
-                body && onUpdate({ body, visibility: newVisibility });
-                return newVisibility;
-              });
-            }}
-          >
-            {visibility === "private" ? <LockClosedIcon className="size-4" /> : <LockOpenIcon className="size-4" />}
-            <span className="ml-1 text-sm">
-              {visibility === "private" ? "나만 보기" : "전체 공개"}
-            </span>
-          </div>
-          <input
-            className="w-full px-3 py-2 bg-neutral-100 dark:bg-neutral-900 rounded-lg"
-            placeholder={placeholder ?? "메모를 남겨보세요"}
-            value={body}
-            onChange={(e) => setBody(e.target.value || undefined)}
-            onKeyDown={(e) => {
-              if (e.key === "Enter") {
-                onUpdate({ body: body ?? "", visibility: visibility ?? "private" });
-              }
-            }}
-            autoFocus
-          />
-          <div
-            className="px-3 flex items-center shrink-0 bg-blue-500 hover:bg-blue-600 dark:bg-blue-600 dark:hover:bg-blue-700 transition text-white rounded-lg cursor-pointer"
-            onClick={() => onUpdate({ body: body ?? "", visibility: visibility ?? "private" })}
-          >
-            <CheckIcon className="size-4" />
-          </div>
+          {signedIn ? (
+            <>
+              <div
+                className="flex items-center px-3 py-2 shrink-0 bg-neutral-100 dark:bg-neutral-900 rounded-lg text-neutral-500 dark:text-neutral-400 cursor-pointer transition hover:bg-neutral-200 dark:hover:bg-neutral-800"
+                onClick={() => {
+                  setVisibility((prev) => {
+                    const newVisibility = prev === "private" ? "public" : "private";
+                    body && onUpdate({ body, visibility: newVisibility });
+                    return newVisibility;
+                  });
+                }}
+              >
+                {visibility === "private" ? <LockClosedIcon className="size-4" /> : <LockOpenIcon className="size-4" />}
+                <span className="ml-1 text-sm">
+                  {visibility === "private" ? "나만 보기" : "전체 공개"}
+                </span>
+              </div>
+              <input
+                className="w-full px-3 py-2 bg-neutral-100 dark:bg-neutral-900 rounded-lg"
+                placeholder={placeholder ?? "메모를 남겨보세요"}
+                value={body}
+                onChange={(e) => setBody(e.target.value || undefined)}
+                onKeyDown={(e) => {
+                  if (e.key === "Enter") {
+                    onUpdate({ body: body ?? "", visibility: visibility ?? "private" });
+                  }
+                }}
+                autoFocus
+              />
+              <div
+                className="px-3 flex items-center shrink-0 bg-blue-500 hover:bg-blue-600 dark:bg-blue-600 dark:hover:bg-blue-700 transition text-white rounded-lg cursor-pointer"
+                onClick={() => onUpdate({ body: body ?? "", visibility: visibility ?? "private" })}
+              >
+                <CheckIcon className="size-4" />
+              </div>
+            </>
+          ) : (
+            <div className="w-full" onClick={() => showSignIn()}>
+              <Callout emoji="💬" className="hover:bg-neutral-200 dark:hover:bg-neutral-900 cursor-pointer transition">
+                <p>로그인 후 이벤트에 대한 메모를 남겨보세요.</p>
+              </Callout>
+            </div>
+          )}
         </div>
       </div>
     </>

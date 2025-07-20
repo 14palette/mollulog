@@ -22,7 +22,6 @@ export type ContentTimelineItemProps = {
   link: string;
   confirmed?: boolean;
 
-  showMemo: boolean;
   allMemos?: {
     uid: string;
     body: string;
@@ -64,6 +63,8 @@ export type ContentTimelineItemProps = {
     defenseType: DefenseType;
     rankVisible: boolean;
   };
+
+  signedIn: boolean;
 };
 
 
@@ -89,9 +90,10 @@ function ContentTitles({ name, showLink }: { name: string, showLink: boolean }):
 export default function ContentTimelineItem(
   {
     name, contentType, rerun, since, until, link, confirmed, raidInfo, pickups,
-    showMemo, allMemos, myMemo, onUpdateMemo, favoritedStudents, favoritedCounts, onFavorite,
+    allMemos, myMemo, onUpdateMemo, favoritedStudents, favoritedCounts, onFavorite, signedIn,
   }: ContentTimelineItemProps,
 ) {
+  const showMemo = ["event", "pickup", "fes", "immortal_event"].includes(contentType);
   const [memoEditing, setMemoEditing] = useState(false);
 
   let daysLabel = null;
@@ -244,7 +246,7 @@ export default function ContentTimelineItem(
 
           {memoEditing && (
             <BottomSheet Icon={ChatBubbleOvalLeftEllipsisIcon} title="이벤트 메모" onClose={() => setMemoEditing(false)}>
-              <ContentMemoEditor allMemos={allMemos ?? []} myMemo={myMemo} onUpdate={onUpdateMemo} />
+              <ContentMemoEditor allMemos={allMemos ?? []} myMemo={myMemo} signedIn={signedIn} onUpdate={onUpdateMemo} />
             </BottomSheet>
           )}
         </>

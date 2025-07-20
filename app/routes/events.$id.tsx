@@ -12,9 +12,9 @@ import {
   useRouteError,
 } from "react-router";
 import dayjs from "dayjs";
-import { Suspense } from "react";
+import { Suspense, useState } from "react";
 import { getAuthenticator } from "~/auth/authenticator.server";
-import { OptionBadge, ProfileImage, StudentCard } from "~/components/atoms/student";
+import { OptionBadge, StudentCard } from "~/components/atoms/student";
 import { SubTitle } from "~/components/atoms/typography";
 import { ContentHeader } from "~/components/organisms/content";
 import { ErrorPage } from "~/components/organisms/error";
@@ -25,10 +25,11 @@ import { graphql } from "~/graphql";
 import type { EventStagesQuery, EventDetailQuery } from "~/graphql/graphql";
 import { runQuery } from "~/lib/baql";
 import { attackTypeColor, attackTypeLocale, defenseTypeColor, defenseTypeLocale, eventTypeLocale, pickupLabelLocale, roleColor, roleLocale } from "~/locales/ko";
-import { getContentMemos, setMemo, setMemoVisibility } from "~/models/content";
+import { getContentMemos, setMemo } from "~/models/content";
 import { favoriteStudent, getFavoritedCounts, getUserFavoritedStudents, unfavoriteStudent } from "~/models/favorite-students";
 import { getRecruitedStudents } from "~/models/recruited-student";
 import { ContentMemoEditor } from "~/components/molecules/content";
+import { sanitizeClassName } from "~/prophandlers";
 
 const eventDetailQuery = graphql(`
   query EventDetail($eventUid: String!) {
@@ -180,12 +181,34 @@ export const ErrorBoundary = () => {
 };
 
 export default function EventDetail() {
-  const { event, stages, signedIn, recruitedStudentUids, favoritedStudents, favoritedCounts, allMemos, myMemo } = useLoaderData<typeof loader>();
-
-  const { showSignIn } = useSignIn();
+  const { event, stages, signedIn, recruitedStudentUids, favoritedStudents: initialFavoritedStudents, favoritedCounts: initialFavoritedCounts, allMemos, myMemo } = useLoaderData<typeof loader>();
 
   const fetcher = useFetcher();
   const submit = (data: ActionData) => fetcher.submit(data, { method: "post", encType: "application/json" });
+
+  const { showSignIn } = useSignIn();
+  const [favoritedStudents, setFavoritedStudents] = useState(initialFavoritedStudents);
+  const [favoritedCounts, setFavoritedCounts] = useState(initialFavoritedCounts);
+
+  const toggleFavorite = (studentUid: string, favorited: boolean) => {
+    submit({ favorite: { studentUid, favorited } });
+    setFavoritedStudents((prev) => {
+      const alreadyFavorited = prev && prev.some((favorited) => favorited.studentId === studentUid);
+      if (favorited && !alreadyFavorited) {
+        return prev && [...prev, { uid: studentUid, contentId: event.uid, studentId: studentUid }];
+      } else if (!favorited && alreadyFavorited) {
+        return prev && prev.filter((favorited) => favorited.studentId !== studentUid);
+      }
+      return prev;
+    });
+    setFavoritedCounts((prev) => {
+      const found = prev.find((favorited) => favorited.studentId === studentUid);
+      if (found) {
+        return prev.map((favorited) => favorited.studentId === studentUid ? { ...favorited, count: favorited.count + (favorited ? 1 : -1) } : favorited);
+      }
+      return prev;
+    });
+  };
 
   const isPickupSinceDifferent = event.pickups.length > 0 && !dayjs(event.pickups[0].since).isSame(dayjs(event.since), "day");
   const isPickupUntilDifferent = event.pickups.length > 0 && !dayjs(event.pickups[0].until).isSame(dayjs(event.until), "day");
@@ -255,12 +278,12 @@ export default function EventDetail() {
                 {studentUid && (
                   <div className="absolute right-4 top-4 md:top-0 h-full flex items-start md:items-center justify-end">
                     <div
-                      className={`group inline-flex items-center gap-2 px-4 py-1 md:py-2 rounded-xl font-medium transition-all duration-200 cursor-pointer ${
+                      className={sanitizeClassName(`group inline-flex items-center gap-2 px-4 py-1 md:py-2 rounded-xl font-medium transition-all duration-200 cursor-pointer ${
                         favorited
                           ? "bg-gradient-to-r from-red-500 to-pink-500 text-white shadow-lg shadow-red-500/25 hover:shadow-red-500/40"
-                        : "bg-white dark:bg-neutral-800 text-neutral-700 dark:text-neutral-300 border border-neutral-200 dark:border-neutral-700 shadow-lg shadow-neutral-200/50 dark:shadow-neutral-700/50 hover:bg-neutral-100 dark:hover:bg-neutral-700"
-                      }`}
-                      onClick={() => signedIn ? submit({ favorite: { studentUid, favorited: !favorited } }) : showSignIn()}
+                          : "bg-white dark:bg-neutral-800 text-neutral-700 dark:text-neutral-300 border border-neutral-200 dark:border-neutral-700 shadow-lg shadow-neutral-200/50 dark:shadow-neutral-700/50 hover:bg-neutral-100 dark:hover:bg-neutral-700"
+                        }`)}
+                      onClick={() => signedIn ? toggleFavorite(studentUid, !favorited) : showSignIn()}
                     >
                       {favorited ? <HeartIconSolid className="size-4" /> : <HeartIconOutline className="size-4" strokeWidth={2} />}
                       <span className="font-semibold">
@@ -281,6 +304,7 @@ export default function EventDetail() {
         allMemos={allMemos}
         myMemo={myMemo}
         onUpdate={({ body, visibility }) => submit({ memo: { body, visibility } })}
+        signedIn={signedIn}
       />
 
       <Suspense fallback={<TimelinePlaceholder />}>
