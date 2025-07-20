@@ -212,6 +212,7 @@ export default function Futures() {
               const actionData: MemoActionData = { body, visibility };
               fetcher.submit(actionData, { action: `/api/contents/${contentUid}/memos`, method: "post", encType: "application/json" });
             }}
+            isSubmittingMemo={fetcher.state !== "idle"}
 
             signedIn={signedIn}
           />

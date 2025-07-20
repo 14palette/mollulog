@@ -3,6 +3,7 @@ import { useState } from "react";
 import { Memo } from "~/components/atoms/content";
 import { Callout } from "~/components/atoms/typography";
 import { useSignIn } from "~/contexts/SignInProvider";
+import { sanitizeClassName } from "~/prophandlers";
 
 type ContentMemoEditorProps = {
   allMemos: {
@@ -22,12 +23,21 @@ type ContentMemoEditorProps = {
   signedIn: boolean;
   placeholder?: string;
   onUpdate: ({ body, visibility }: { body: string, visibility: "private" | "public" }) => void;
+
+  autoFocus?: boolean;
+  isSubmitting?: boolean;
 };
 
-export default function ContentMemoEditor({ allMemos, myMemo, signedIn, placeholder, onUpdate }: ContentMemoEditorProps) {
+export default function ContentMemoEditor({ allMemos, myMemo, signedIn, placeholder, onUpdate, autoFocus = false, isSubmitting }: ContentMemoEditorProps) {
   const { showSignIn } = useSignIn();
   const [body, setBody] = useState<string | undefined>(myMemo?.body || undefined);
   const [visibility, setVisibility] = useState(myMemo?.visibility || "private");
+
+  const handleSubmit = () => {
+    if (!isSubmitting) {
+      onUpdate({ body: body ?? "", visibility });
+    }
+  };
 
   return (
     <>
@@ -44,7 +54,10 @@ export default function ContentMemoEditor({ allMemos, myMemo, signedIn, placehol
           {signedIn ? (
             <>
               <div
-                className="flex items-center px-3 py-2 shrink-0 bg-neutral-100 dark:bg-neutral-900 rounded-lg text-neutral-500 dark:text-neutral-400 cursor-pointer transition hover:bg-neutral-200 dark:hover:bg-neutral-800"
+                className={sanitizeClassName(`
+                  flex items-center px-3 py-2 shrink-0 bg-neutral-100 dark:bg-neutral-900 rounded-lg text-neutral-500 dark:text-neutral-400 transition
+                  ${isSubmitting ? "opacity-50 cursor-not-allowed" : "cursor-pointer hover:bg-neutral-200 dark:hover:bg-neutral-800"}
+                `)}
                 onClick={() => {
                   setVisibility((prev) => {
                     const newVisibility = prev === "private" ? "public" : "private";
@@ -64,17 +77,21 @@ export default function ContentMemoEditor({ allMemos, myMemo, signedIn, placehol
                 value={body}
                 onChange={(e) => setBody(e.target.value || undefined)}
                 onKeyDown={(e) => {
-                  if (e.key === "Enter") {
-                    onUpdate({ body: body ?? "", visibility: visibility ?? "private" });
+                  if (e.key === "Enter" && !isSubmitting) {
+                    handleSubmit();
                   }
                 }}
-                autoFocus
+                disabled={isSubmitting}
+                autoFocus={autoFocus}
               />
               <div
-                className="px-3 flex items-center shrink-0 bg-blue-500 hover:bg-blue-600 dark:bg-blue-600 dark:hover:bg-blue-700 transition text-white rounded-lg cursor-pointer"
-                onClick={() => onUpdate({ body: body ?? "", visibility: visibility ?? "private" })}
+                className={sanitizeClassName(`
+                  px-3 flex items-center shrink-0 rounded-lg transition text-white
+                  ${isSubmitting ? "bg-neutral-400 dark:bg-neutral-600 cursor-not-allowed" : "bg-blue-500 hover:bg-blue-600 dark:bg-blue-600 dark:hover:bg-blue-700 cursor-pointer"}
+                `)}
+                onClick={handleSubmit}
               >
-                <CheckIcon className="size-4" />
+                {isSubmitting ? <div className="size-4 border-2 border-white border-t-transparent rounded-full animate-spin" /> : <CheckIcon className="size-4" />}
               </div>
             </>
           ) : (

@@ -305,6 +305,7 @@ export default function EventDetail() {
         myMemo={myMemo}
         onUpdate={({ body, visibility }) => submit({ memo: { body, visibility } })}
         signedIn={signedIn}
+        isSubmitting={fetcher.state !== "idle"}
       />
 
       <Suspense fallback={<TimelinePlaceholder />}>

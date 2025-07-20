@@ -36,6 +36,7 @@ export type ContentTimelineItemProps = {
     visibility: "private" | "public";
   };
   onUpdateMemo?: ({ body, visibility }: { body: string, visibility: "private" | "public" }) => void;
+  isSubmittingMemo?: boolean;
 
   favoritedStudents?: string[];
   favoritedCounts?: Record<string, number>;
@@ -91,7 +92,7 @@ const MEMO_CONTENT_TYPES = ["event", "pickup", "fes", "immortal_event"];
 export default function ContentTimelineItem(
   {
     name, contentType, rerun, since, until, link, confirmed, raidInfo, pickups,
-    allMemos, myMemo, onUpdateMemo, favoritedStudents, favoritedCounts, onFavorite, signedIn,
+    allMemos, myMemo, onUpdateMemo, isSubmittingMemo, favoritedStudents, favoritedCounts, onFavorite, signedIn,
   }: ContentTimelineItemProps,
 ) {
   const showMemo = MEMO_CONTENT_TYPES.includes(contentType);
@@ -247,7 +248,14 @@ export default function ContentTimelineItem(
 
           {memoEditing && (
             <BottomSheet Icon={ChatBubbleOvalLeftEllipsisIcon} title="이벤트 메모" onClose={() => setMemoEditing(false)}>
-              <ContentMemoEditor allMemos={allMemos ?? []} myMemo={myMemo} signedIn={signedIn} onUpdate={onUpdateMemo} />
+              <ContentMemoEditor
+                allMemos={allMemos ?? []}
+                myMemo={myMemo}
+                onUpdate={onUpdateMemo}
+                isSubmitting={isSubmittingMemo}
+                signedIn={signedIn}
+                autoFocus={true}
+              />
             </BottomSheet>
           )}
         </>

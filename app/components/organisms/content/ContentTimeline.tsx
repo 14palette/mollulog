@@ -25,6 +25,7 @@ export type ContentTimelineProps = {
 
   signedIn: boolean;
   onMemoUpdate?: (contentUid: string, body: string, visibility: "private" | "public") => void;
+  isSubmittingMemo?: boolean;
   onFavorite?: (contentUid: string, studentUid: string, favorited: boolean) => void;
 };
 
@@ -73,7 +74,7 @@ function groupContents(contents: ContentTimelineProps["contents"]): ContentGroup
   }));
 }
 
-export default function ContentTimeline({ contents, favoritedStudents, favoritedCounts, onMemoUpdate, onFavorite, signedIn }: ContentTimelineProps) {
+export default function ContentTimeline({ contents, favoritedStudents, favoritedCounts, onMemoUpdate, onFavorite, isSubmittingMemo, signedIn }: ContentTimelineProps) {
   const [contentGroups, setContentGroups] = useState<ContentGroup[]>(groupContents(contents));
 
   // Update content groups when contents change
@@ -143,6 +144,7 @@ export default function ContentTimeline({ contents, favoritedStudents, favorited
                       favoritedCounts={favoriteStudentIdsByContents[content.uid]}
                       onFavorite={(studentUid, favorited) => onFavorite?.(content.uid, studentUid, favorited)}
 
+                      isSubmittingMemo={isSubmittingMemo}
                       signedIn={signedIn}
                     />
                   );
