@@ -84,13 +84,6 @@ export default function EventStages({ stages, signedIn, ownedStudentUids }: Even
   return (
     <>
       <SubTitle text="스테이지 보상" />
-      {!signedIn && (
-        <Callout className="my-4" emoji="✨">
-          <p>
-            <span className="cursor-pointer underline" onClick={() => showSignIn()}>로그인</span> 후 학생 모집 정보를 등록하면 내 학생 보너스를 계산할 수 있어요.
-          </p>
-        </Callout>
-      )}
       {signedIn && ownedStudentUids.length === 0 && (
         <Callout className="my-4" emoji="✨">
           <span>

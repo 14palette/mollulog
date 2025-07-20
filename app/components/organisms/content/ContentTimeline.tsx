@@ -15,13 +15,17 @@ export type ContentTimelineProps = {
     contentType: EventType | RaidType;
     pickups?: ContentTimelineItemProps["pickups"];
     raidInfo?: ContentTimelineItemProps["raidInfo"];
+
+    allMemos?: ContentTimelineItemProps["allMemos"];
+    myMemo?: ContentTimelineItemProps["myMemo"];
   }[];
 
   favoritedStudents?: { contentUid: string, studentUid: string }[];
   favoritedCounts: { contentUid: string, studentUid: string, count: number }[];
-  memos: { contentUid: string, body: string }[];
 
-  onMemoUpdate?: (contentUid: string, memo: string) => void;
+  signedIn: boolean;
+  onMemoUpdate?: (contentUid: string, body: string, visibility: "private" | "public") => void;
+  isSubmittingMemo?: boolean;
   onFavorite?: (contentUid: string, studentUid: string, favorited: boolean) => void;
 };
 
@@ -70,7 +74,7 @@ function groupContents(contents: ContentTimelineProps["contents"]): ContentGroup
   }));
 }
 
-export default function ContentTimeline({ contents, favoritedStudents, favoritedCounts, memos, onMemoUpdate, onFavorite }: ContentTimelineProps) {
+export default function ContentTimeline({ contents, favoritedStudents, favoritedCounts, onMemoUpdate, onFavorite, isSubmittingMemo, signedIn }: ContentTimelineProps) {
   const [contentGroups, setContentGroups] = useState<ContentGroup[]>(groupContents(contents));
 
   // Update content groups when contents change
@@ -126,20 +130,22 @@ export default function ContentTimeline({ contents, favoritedStudents, favorited
               </div>
               <div className="pl-3 md:pl-5 pb-4 md:pb-8">
                 {group.contents.map((content) => {
-                  const memo = memos.find(({ contentUid }) => contentUid === content.uid)?.body;
                   const showMemo = !!onMemoUpdate && !!content.pickups && content.pickups.length > 0;
                   return (
                     <ContentTimelineItem
                       key={content.uid}
                       {...content}
 
-                      showMemo={showMemo}
-                      initialMemo={showMemo ? memo : undefined}
-                      onUpdateMemo={showMemo ? (newMemo) => onMemoUpdate(content.uid, newMemo) : undefined}
+                      allMemos={content.allMemos}
+                      myMemo={content.myMemo}
+                      onUpdateMemo={showMemo ? ({ body, visibility }) => onMemoUpdate?.(content.uid, body, visibility) : undefined}
 
                       favoritedStudents={favoritedStudents?.filter(({ contentUid }) => contentUid === content.uid).map(({ studentUid }) => studentUid)}
                       favoritedCounts={favoriteStudentIdsByContents[content.uid]}
                       onFavorite={(studentUid, favorited) => onFavorite?.(content.uid, studentUid, favorited)}
+
+                      isSubmittingMemo={isSubmittingMemo}
+                      signedIn={signedIn}
                     />
                   );
                 })}

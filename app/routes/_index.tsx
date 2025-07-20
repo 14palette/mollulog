@@ -93,13 +93,14 @@ export default function Index() {
           return (
             <ContentTimelineItem
               key={event.uid}
+              uid={event.uid}
+              signedIn={signedIn}
               name={event.name}
               contentType={event.type}
               rerun={event.rerun}
               since={new Date(event.since)}
               until={new Date(event.until)}
               link={`/events/${event.uid}`}
-              showMemo={false}
               pickups={event.pickups.map(({ type, rerun, since, until, student }) => ({
                 type, rerun, since, until,
                 studentName: student?.name ?? "",

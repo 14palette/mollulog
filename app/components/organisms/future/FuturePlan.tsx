@@ -1,7 +1,6 @@
 import { Link } from "react-router";
 import dayjs from "dayjs";
 import { MultilineText } from "~/components/atoms/typography";
-import { MemoEditor } from "~/components/molecules/editor";
 import { ResourceCards, StudentCards } from "~/components/molecules/student";
 import { pickupLabelLocale } from "~/locales/ko";
 import { PickupType } from "~/models/content.d";
@@ -11,7 +10,6 @@ type FuturePlanProps = {
     uid: string;
     name: string;
     since: Date;
-    memo: string | null;
     pickups: {
       type: PickupType;
       rerun: boolean;
@@ -108,7 +106,6 @@ export default function FuturePlan({ events }: FuturePlanProps) {
                             ),
                           }))}
                         />
-                        {event.memo && <MemoEditor initialText={event.memo} />}
                       </div>
                     );
                   }) : <p className="my-2 text-neutral-300">(모집 일정 없음)</p>

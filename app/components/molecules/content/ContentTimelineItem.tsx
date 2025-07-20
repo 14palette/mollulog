@@ -1,17 +1,19 @@
-import type { ReactNode } from "react";
+import { useState, type ReactNode } from "react";
 import { Link } from "react-router";
 import dayjs from "dayjs";
-import { ChevronRightIcon, ChartBarIcon, ClockIcon, CheckCircleIcon, ExclamationTriangleIcon } from "@heroicons/react/16/solid";
+import { ChevronRightIcon, ChartBarIcon, ClockIcon, CheckCircleIcon, ExclamationTriangleIcon, ChatBubbleOvalLeftEllipsisIcon } from "@heroicons/react/16/solid";
 import { ArrowTopRightOnSquareIcon, IdentificationIcon, HeartIcon as EmptyHeartIcon } from "@heroicons/react/24/outline";
 import { HeartIcon as FilledHeartIcon } from "@heroicons/react/24/solid";
 import type { AttackType, DefenseType, EventType, PickupType, RaidType, Role, Terrain } from "~/models/content.d";
 import { attackTypeColor, attackTypeLocale, contentTypeLocale, defenseTypeColor, defenseTypeLocale, pickupLabelLocale, terrainLocale } from "~/locales/ko";
 import { bossImageUrl } from "~/models/assets";
-import { MemoEditor } from "~/components/molecules/editor";
 import { StudentCards } from "~/components/molecules/student";
+import { ContentMemoEditor } from "~/components/molecules/content";
 import { OptionBadge } from "~/components/atoms/student";
+import { BottomSheet } from "~/components/atoms/layout";
 
 export type ContentTimelineItemProps = {
+  uid: string;
   name: string;
   contentType: EventType | RaidType;
   rerun: boolean;
@@ -20,9 +22,21 @@ export type ContentTimelineItemProps = {
   link: string;
   confirmed?: boolean;
 
-  showMemo: boolean;
-  initialMemo?: string;
-  onUpdateMemo?: (text: string) => void;
+  allMemos?: {
+    uid: string;
+    body: string;
+    visibility: "private" | "public";
+    sensei: {
+      username: string;
+      profileStudentId: string | null;
+    };
+  }[];
+  myMemo?: {
+    body: string;
+    visibility: "private" | "public";
+  };
+  onUpdateMemo?: ({ body, visibility }: { body: string, visibility: "private" | "public" }) => void;
+  isSubmittingMemo?: boolean;
 
   favoritedStudents?: string[];
   favoritedCounts?: Record<string, number>;
@@ -50,8 +64,9 @@ export type ContentTimelineItemProps = {
     defenseType: DefenseType;
     rankVisible: boolean;
   };
-};
 
+  signedIn: boolean;
+};
 
 function ContentTitles({ name, showLink }: { name: string, showLink: boolean }): ReactNode {
   const titles = name.split("\n");
@@ -72,12 +87,17 @@ function ContentTitles({ name, showLink }: { name: string, showLink: boolean }):
   )
 }
 
+const MEMO_CONTENT_TYPES = ["event", "pickup", "fes", "immortal_event"];
+
 export default function ContentTimelineItem(
   {
     name, contentType, rerun, since, until, link, confirmed, raidInfo, pickups,
-    showMemo, initialMemo, onUpdateMemo, favoritedStudents, favoritedCounts, onFavorite,
+    allMemos, myMemo, onUpdateMemo, isSubmittingMemo, favoritedStudents, favoritedCounts, onFavorite, signedIn,
   }: ContentTimelineItemProps,
 ) {
+  const showMemo = MEMO_CONTENT_TYPES.includes(contentType);
+  const [memoEditing, setMemoEditing] = useState(false);
+
   let daysLabel = null;
   const now = dayjs();
   const sinceDayjs = dayjs(since);
@@ -212,8 +232,33 @@ export default function ContentTimelineItem(
       )}
 
       {/* 메모 */}
-      {showMemo && (
-        <MemoEditor initialText={initialMemo} onUpdate={(text) => onUpdateMemo?.(text)} />
+      {showMemo && onUpdateMemo && (
+        <>
+          <div
+            className="w-full p-2 flex items-center gap-x-1 bg-neutral-100 dark:bg-neutral-900 hover:bg-neutral-200 dark:hover:bg-neutral-800 rounded-lg text-sm cursor-pointer transition"
+            onClick={() => setMemoEditing(true)}
+          >
+            <ChatBubbleOvalLeftEllipsisIcon className="shrink-0 size-4 text-neutral-500 dark:text-neutral-400" />
+            {allMemos?.length !== undefined && <span className="text-neutral-500 dark:text-neutral-400">{allMemos.length}</span>}
+
+            <p className={`ml-1 pl-2 border-l border-neutral-200 dark:border-neutral-700 grow ${myMemo?.body ? "" : "text-neutral-400 dark:text-neutral-600"}`}>
+              {myMemo?.body || "메모를 남겨보세요"}
+            </p>
+          </div>
+
+          {memoEditing && (
+            <BottomSheet Icon={ChatBubbleOvalLeftEllipsisIcon} title="이벤트 메모" onClose={() => setMemoEditing(false)}>
+              <ContentMemoEditor
+                allMemos={allMemos ?? []}
+                myMemo={myMemo}
+                onUpdate={onUpdateMemo}
+                isSubmitting={isSubmittingMemo}
+                signedIn={signedIn}
+                autoFocus={true}
+              />
+            </BottomSheet>
+          )}
+        </>
       )}
     </div>
   );
