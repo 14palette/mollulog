@@ -15,6 +15,7 @@ export type ActionData = {
   };
 };
 
+// @deprecated use api.contents.$uid.memos and api.contents.$uid.favorites instead
 export const action = async ({ request, context }: ActionFunctionArgs) => {
   const env = context.cloudflare.env;
   const currentUser = await getAuthenticator(env).isAuthenticated(request);

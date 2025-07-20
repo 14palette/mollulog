@@ -8,21 +8,18 @@ import { ContentFilter, type ContentFilterType } from "~/components/molecules/co
 import { graphql } from "~/graphql";
 import type { FutureContentsQuery } from "~/graphql/graphql";
 import { runQuery } from "~/lib/baql";
-import { getUserMemos } from "~/models/content";
+import { getContentsMemos, getUserMemos } from "~/models/content";
 import { getFavoritedCounts, getUserFavoritedStudents } from "~/models/favorite-students";
 import { useState, useEffect } from "react";
 import { useSignIn } from "~/contexts/SignInProvider";
 import { ActionData } from "./api.contents";
+import { ActionData as MemoActionData } from "./api.contents.$uid.memos";
 
 export const futureContentsQuery = graphql(`
   query FutureContents($now: ISO8601DateTime!) {
     contents(untilAfter: $now, first: 9999) {
       nodes {
-        name
-        since
-        until
-        confirmed
-        uid
+        uid name since until confirmed
         ... on Event {
           eventType: type
           rerun
@@ -79,7 +76,8 @@ export const loader = async ({ request, context }: LoaderFunctionArgs) => {
     contents: data.contents.nodes,
     favoritedStudents: signedIn ? await getUserFavoritedStudents(env, currentUser.id) : null,
     favoritedCounts: await getFavoritedCounts(env, allStudentUids),
-    memos: signedIn ? await getUserMemos(env, currentUser.id) : [],
+    myMemos: signedIn ? await getUserMemos(env, currentUser.id) : [],
+    allMemos: await getContentsMemos(env, data.contents.nodes.map((content) => content.uid)),
   };
 };
 
@@ -92,8 +90,6 @@ const futuresContentFilterKey = "futures::content-filter";
 export default function Futures() {
   const loaderData = useLoaderData<typeof loader>();
   const { signedIn, contents } = loaderData;
-  const memos = loaderData.memos ?? {};
-
   const { showSignIn } = useSignIn();
 
   const fetcher = useFetcher();
@@ -183,6 +179,8 @@ export default function Futures() {
                 ...content,
                 since: new Date(content.since),
                 until: new Date(content.until),
+                myMemo: loaderData.myMemos.find((memo) => memo.contentId === content.uid) ?? undefined,
+                allMemos: loaderData.allMemos[content.uid] ?? [],
               };
 
               if (content.__typename === "Event") {
@@ -194,14 +192,7 @@ export default function Futures() {
                 contentAttrs.contentType = content.raidType;
                 contentAttrs.rerun = false;
                 contentAttrs.link = `/raids/${content.uid}`;
-                contentAttrs.raidInfo = {
-                  uid: content.uid,
-                  boss: content.boss,
-                  terrain: content.terrain,
-                  attackType: content.attackType,
-                  defenseType: content.defenseType,
-                  rankVisible: content.rankVisible,
-                };
+                contentAttrs.raidInfo = content;
               }
 
               return contentAttrs as ContentTimelineProps["contents"][number];
@@ -217,8 +208,10 @@ export default function Futures() {
               toggleFavorite(contentUid, studentUid, favorited);
             }}
 
-            memos={memos.map((memo) => ({ contentUid: memo.contentId, body: memo.body }))}
-            onMemoUpdate={signedIn ? (contentUid, memo) => submit({ memo: { contentUid, body: memo } }) : undefined}
+            onMemoUpdate={signedIn ? (contentUid, body, visibility) => {
+              const actionData: MemoActionData = { body, visibility };
+              fetcher.submit(actionData, { action: `/api/contents/${contentUid}/memos`, method: "post", encType: "application/json" });
+            } : undefined}
           />
         </div>
 
