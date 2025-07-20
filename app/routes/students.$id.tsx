@@ -94,6 +94,8 @@ export default function StudentDetail() {
   const [raidShowMore, setRaidShowMore] = useState(false);
 
   const statistics = student.raidStatistics.filter(({ slotsCount }) => slotsCount > 100);
+  const filteredStatistics = statistics.slice(0, raidShowMore ? undefined : 5);
+
   return (
     <>
       <Title text="학생부" />
@@ -128,13 +130,13 @@ export default function StudentDetail() {
         </>
       )}
 
-      <SubTitle text="총력전/대결전 통계" />
-      <p className="text-sm text-neutral-500">최근 1년간 개최된 총력전/대결전의 편성 횟수를 제공해요.</p>
+      <SubTitle
+        text="총력전/대결전 통계"
+        description="최근 1년간 개최된 총력전/대결전의 편성 횟수를 제공해요."
+      />
       <div>
-        {statistics.length === 0 && (
-          <EmptyView text="편성된 충력전/대결전 정보가 없어요" />
-        )}
-        {statistics.slice(0, raidShowMore ? undefined : 5).map(({ raid, defenseType, difficulty, slotsByTier, slotsCount, assistsCount, assistsByTier }) => {
+        {filteredStatistics.length === 0 && <EmptyView text="편성된 충력전/대결전 정보가 없어요" />}
+        {filteredStatistics.slice(0, raidShowMore ? undefined : 5).map(({ raid, defenseType, difficulty, slotsByTier, slotsCount, assistsCount, assistsByTier }) => {
           return (
             <SlotCountInfo
               key={`${raid.uid}-${defenseType}`}

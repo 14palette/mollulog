@@ -36,7 +36,7 @@ export default function TierCounts({ tierCounts, visibleTiers, reducePaddings, t
       <div className="grow flex flex-col">
         {visibleTiers.map((tier) => (
           <div key={`tier-ratio-${tier}`} className={`${reducePaddings ? "py-0.5" : "py-1"} flex-1`}>
-            <Progress ratio={totalCount > 0 ? (tierCounts[tier] ?? 0) / totalCount : 0} color={colors[tier]} />
+            <Progress ratio={totalCount > 0 ? Math.min(1, (tierCounts[tier] ?? 0) / totalCount) : 0} color={colors[tier]} />
           </div>
         ))}
       </div>

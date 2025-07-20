@@ -31,10 +31,10 @@ type SlotCountInfoProps = {
   assistsByTier: { tier: number; count: number }[];
 };
 
-export default function SlotCountInfo({ student, raid, slotsCount, assistsCount, slotsByTier, assistsByTier }: SlotCountInfoProps) {
-  const [showSlots, setShowSlots] = useState(true);
+type SlotMode = "total" | "own" | "assist";
 
-  const slotsByTierMap = slotsByTier.reduce((acc, { tier, count }) => {
+export default function SlotCountInfo({ student, raid, slotsCount, assistsCount, slotsByTier, assistsByTier }: SlotCountInfoProps) {
+  const ownedByTierMap = slotsByTier.reduce((acc, { tier, count }) => {
     acc[tier] = count;
     return acc;
   }, {} as { [tier: number]: number });
@@ -43,6 +43,20 @@ export default function SlotCountInfo({ student, raid, slotsCount, assistsCount,
     acc[tier] = count;
     return acc;
   }, {} as { [tier: number]: number });
+
+  // Sum the two tier maps for total slot mode
+  const totalByTierMap = { ...ownedByTierMap };
+  Object.entries(assistsByTierMap).forEach(([tier, count]) => {
+    const tierNum = parseInt(tier);
+    totalByTierMap[tierNum] = (totalByTierMap[tierNum] || 0) + count;
+  });
+
+  const [slotMode, setSlotMode] = useState<SlotMode>("total");
+  const tierCounts = {
+    total: totalByTierMap,
+    own: ownedByTierMap,
+    assist: assistsByTierMap,
+  };
 
   return (
     <div className="my-4 bg-neutral-100 dark:bg-neutral-900 rounded-lg">
@@ -87,8 +101,9 @@ export default function SlotCountInfo({ student, raid, slotsCount, assistsCount,
               </p>
             </Link>
             <KeyValueTable keyPrefix={`${student.uid}-slots-count`} items={[
-              { key: "편성 횟수", value: `${slotsCount} 회 (${formatPercentage(slotsCount / 20000)})` },
-              { key: "조력 횟수", value: `${assistsCount} 회 (${formatPercentage(assistsCount / 20000)})` },
+              { key: "총 편성 횟수", value: `${slotsCount + assistsCount} 회 (${formatPercentage((slotsCount + assistsCount) / 20000)})` },
+              { key: "모집 학생", value: `${slotsCount} 회 (${formatPercentage(slotsCount / 20000)})` },
+              { key: "조력 학생", value: `${assistsCount} 회 (${formatPercentage(assistsCount / 20000)})` },
             ]} />
           </div>
         </div>
@@ -97,8 +112,9 @@ export default function SlotCountInfo({ student, raid, slotsCount, assistsCount,
       {!student && raid && (
         <div className="px-4 xl:px-6">
           <KeyValueTable keyPrefix={`${raid.uid}-slots-count`} items={[
-            { key: "편성 횟수", value: `${slotsCount} 회 (${formatPercentage(slotsCount / 20000)})` },
-            { key: "조력 횟수", value: `${assistsCount} 회 (${formatPercentage(assistsCount / 20000)})` },
+            { key: "총 편성 횟수", value: `${slotsCount + assistsCount} 회 (${formatPercentage((slotsCount + assistsCount) / 20000)})` },
+            { key: "모집 학생", value: `${slotsCount} 회 (${formatPercentage(slotsCount / 20000)})` },
+            { key: "조력 학생", value: `${assistsCount} 회 (${formatPercentage(assistsCount / 20000)})` },
           ]} />
         </div>
       )}
@@ -107,13 +123,19 @@ export default function SlotCountInfo({ student, raid, slotsCount, assistsCount,
         <div className="-mx-1 flex gap-2">
           <FilterButtons
             buttonProps={[
-              { text: "편성 횟수", active: true, onToggle: () => setShowSlots(true) },
-              { text: "조력 횟수", onToggle: () => setShowSlots(false) },
+              { text: "총 편성 횟수", active: slotMode === "total", onToggle: () => setSlotMode("total") },
+              { text: "모집 학생", active: slotMode === "own", onToggle: () => setSlotMode("own") },
+              { text: "조력 학생", active: slotMode === "assist", onToggle: () => setSlotMode("assist") },
             ]}
             exclusive atLeastOne inBlock
           />
         </div>
-        <TierCounts tierCounts={showSlots ? slotsByTierMap : assistsByTierMap} visibleTiers={[8, 7, 6, 5, 4, 3]} reducePaddings totalCount={20000} />
+        <TierCounts
+          tierCounts={tierCounts[slotMode]}
+          visibleTiers={[8, 7, 6, 5, 4, 3]}
+          reducePaddings
+          totalCount={20000}
+        />
       </div>
     </div>
   );
