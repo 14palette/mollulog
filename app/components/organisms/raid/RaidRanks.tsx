@@ -2,10 +2,10 @@ import { StudentCards } from "~/components/molecules/student";
 import { useFetcher } from "react-router";
 import { useEffect } from "react";
 import { EmptyView } from "~/components/atoms/typography";
-import { TimelinePlaceholder } from "~/components/organisms/useractivity";
 import { ActionCard } from "~/components/molecules/editor";
 import type { RaidRanksData } from "~/routes/raids.data.$id.ranks";
 import { Button } from "~/components/atoms/form";
+import { LoadingSkeleton } from "~/components/atoms/layout";
 import type { DefenseType } from "~/models/content.d";
 
 export type RaidRankFilters = {
@@ -81,7 +81,7 @@ export default function RaidRanks({ raidUid, raidSince, filters, setFilters }: R
   return (
     <>
       <div>
-        {(!rankFetcher.data || rankFetcher.state !== "idle") ? <TimelinePlaceholder /> : (
+        {(!rankFetcher.data || rankFetcher.state !== "idle") ? <LoadingSkeleton /> : (
           <>
             {rankFetcher.data?.ranks.length === 0 && <EmptyView text="조건에 맞는 순위 정보가 없어요." />}
             {rankFetcher.data?.ranks.map(({ rank, score, parties }) => (

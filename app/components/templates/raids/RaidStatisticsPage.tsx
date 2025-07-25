@@ -5,11 +5,11 @@ import { useEffect, useState } from "react";
 import type { DefenseType } from "~/models/content.d";
 import { EmptyView } from "~/components/atoms/typography";
 import { ChevronDownIcon, ChevronUpIcon } from "@heroicons/react/16/solid";
-import { TimelinePlaceholder } from "~/components/organisms/useractivity";
 import { SlotCountInfo } from "~/components/organisms/raid";
 import { ShieldCheckIcon } from "@heroicons/react/24/outline";
 import { RaidDetailQuery } from "~/graphql/graphql";
 import { RaidStatisticsData } from "~/routes/raids.data.$id.statistics";
+import { LoadingSkeleton } from "~/components/atoms/layout";
 
 
 export type RaidStatisticsProps = {
@@ -42,7 +42,7 @@ export default function RaidStatisticsPage({ raid }: RaidStatisticsProps) {
           />
         </div>
       )}
-      {(!fetcher.data || fetcher.state !== "idle") && <TimelinePlaceholder />}
+      {(!fetcher.data || fetcher.state !== "idle") && <LoadingSkeleton />}
       {fetcher.state === "idle" && fetcher.data?.statistics && (
         fetcher.data.statistics.length > 0 ? (
           <div className="xl:grid xl:grid-cols-2 xl:gap-4">

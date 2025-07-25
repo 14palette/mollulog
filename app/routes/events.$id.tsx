@@ -16,10 +16,10 @@ import { Suspense, useState } from "react";
 import { getAuthenticator } from "~/auth/authenticator.server";
 import { OptionBadge, StudentCard } from "~/components/atoms/student";
 import { SubTitle } from "~/components/atoms/typography";
+import { LoadingSkeleton } from "~/components/atoms/layout";
 import { ContentHeader } from "~/components/organisms/content";
 import { ErrorPage } from "~/components/organisms/error";
 import { EventStages } from "~/components/organisms/event";
-import { TimelinePlaceholder } from "~/components/organisms/useractivity";
 import { useSignIn } from "~/contexts/SignInProvider";
 import { graphql } from "~/graphql";
 import type { EventStagesQuery, EventDetailQuery } from "~/graphql/graphql";
@@ -310,7 +310,7 @@ export default function EventDetail() {
         isSubmitting={fetcher.state !== "idle"}
       />
 
-      <Suspense fallback={<TimelinePlaceholder />}>
+      <Suspense fallback={<LoadingSkeleton />}>
         <Await resolve={stages}>
           {(stages) => event.type === "event" && stages && stages.length > 0 && (
             <EventStages

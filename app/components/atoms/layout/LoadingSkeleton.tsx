@@ -1,12 +1,10 @@
-import Skeleton from "react-loading-skeleton";
-import "react-loading-skeleton/dist/skeleton.css";
-
 export default function LoadingSkeleton() {
   return (
-    <div className="space-y-4">
-      {[1, 2, 3].map((i) => (
-        <Skeleton className="my-2" key={i} style={{ width: "75%", height: "32px" }} />
-      ))}
+    <div className="my-12 w-full animate-pulse">
+      <div className="my-4 h-4 w-1/2 bg-neutral-200 dark:bg-neutral-700 rounded-lg" />
+      <div className="my-2 h-2 w-2/3 bg-neutral-200 dark:bg-neutral-700 rounded-lg" />
+      <div className="my-2 h-2 w-2/3 bg-neutral-200 dark:bg-neutral-700 rounded-lg" />
+      <div className="my-2 h-2 w-2/3 bg-neutral-200 dark:bg-neutral-700 rounded-lg" />
     </div>
   );
 }
