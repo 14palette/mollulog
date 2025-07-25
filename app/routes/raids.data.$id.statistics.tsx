@@ -1,7 +1,7 @@
 import type { LoaderFunctionArgs } from "react-router";
 import { graphql } from "~/graphql";
 import { runQuery } from "~/lib/baql";
-import type { Defense, RaidStatisticsQuery } from "~/graphql/graphql";
+import type { Defense } from "~/graphql/graphql";
 
 const raidStatisticsQuery = graphql(`
   query RaidStatistics($uid: String!, $defenseType: Defense!) {
@@ -35,7 +35,7 @@ export const loader = async ({ request, params }: LoaderFunctionArgs) => {
 
   const url = new URL(request.url);
   const defenseType = url.searchParams.get("defenseType") as Defense;
-  const { data, error } = await runQuery<RaidStatisticsQuery>(raidStatisticsQuery, { uid, defenseType });
+  const { data, error } = await runQuery(raidStatisticsQuery, { uid, defenseType });
   if (error || !data) {
     throw new Response("Error fetching raid statistics", { status: 500 });
   }

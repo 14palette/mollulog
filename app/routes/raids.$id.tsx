@@ -1,13 +1,12 @@
 import { useState } from "react";
 import type { LoaderFunctionArgs, MetaFunction } from "react-router";
-import { isRouteErrorResponse, Link, Outlet, useLoaderData, useRouteError } from "react-router";
+import { isRouteErrorResponse, useLoaderData, useRouteError } from "react-router";
 import { Bars3Icon } from "@heroicons/react/24/outline";
 import dayjs from "dayjs";
 import { getAuthenticator } from "~/auth/authenticator.server";
 import { EmptyView, SubTitle } from "~/components/atoms/typography";
 import { ContentHeader } from "~/components/organisms/content";
 import { graphql } from "~/graphql";
-import type { RaidDetailQuery } from "~/graphql/graphql";
 import { runQuery } from "~/lib/baql";
 import { raidTypeLocale } from "~/locales/ko";
 import { bossBannerUrl } from "~/models/assets";
@@ -38,7 +37,7 @@ export const loader = async ({ request, context, params }: LoaderFunctionArgs) =
   }
 
   const env = context.cloudflare.env;
-  const { data, error } = await runQuery<RaidDetailQuery>(raidDetailQuery, { uid });
+  const { data, error } = await runQuery(raidDetailQuery, { uid });
   let errorMessage: string | null = null;
   if (error || !data) {
     errorMessage = error?.message ?? "이벤트 정보를 가져오는 중 오류가 발생했어요";

@@ -4,7 +4,6 @@ import { getAuthenticator } from "~/auth/authenticator.server";
 import { AddContentButton } from "~/components/molecules/editor";
 import { PartyView } from "~/components/organisms/party";
 import { graphql } from "~/graphql";
-import type { RaidForPartyQuery } from "~/graphql/graphql";
 import { runQuery } from "~/lib/baql";
 import { getUserParties, removePartyByUid } from "~/models/party";
 import { getAllStudents } from "~/models/student";
@@ -29,7 +28,7 @@ export const meta: MetaFunction = ({ params }) => {
 };
 
 export const loader = async ({ context, request, params }: LoaderFunctionArgs) => {
-  const { data } = await runQuery<RaidForPartyQuery>(raidForPartyQuery, {});
+  const { data } = await runQuery(raidForPartyQuery, {});
   if (!data) {
     throw new Error("failed to load data");
   }

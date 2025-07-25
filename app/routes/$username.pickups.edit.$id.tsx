@@ -6,7 +6,6 @@ import { getAuthenticator } from "~/auth/authenticator.server";
 import { SubTitle, Title } from "~/components/atoms/typography";
 import { PickupHistoryEditor, PickupHistoryImporter } from "~/components/organisms/pickup";
 import { graphql } from "~/graphql";
-import type { PickupEventsQuery } from "~/graphql/graphql";
 import { runQuery } from "~/lib/baql";
 import { createPickupHistory, getPickupHistory, type PickupHistory, updatePickupHistory } from "~/models/pickup-history";
 import { getAllStudents } from "~/models/student";
@@ -45,7 +44,7 @@ export const loader = async ({ context, request, params }: LoaderFunctionArgs) =
     currentPickupHistory = await getPickupHistory(env, sensei.id, params.id, true);
   }
 
-  const { data, error } = await runQuery<PickupEventsQuery>(pickupEventsQuery, {});
+  const { data, error } = await runQuery(pickupEventsQuery, {});
   if (!data) {
     console.error(error);
     throw "failed to load data";

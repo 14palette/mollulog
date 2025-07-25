@@ -42,7 +42,7 @@ export const loader = async ({ context, request }: LoaderFunctionArgs) => {
   const truncatedNow = new Date();
   truncatedNow.setMinutes(0, 0, 0);
 
-  const { data, error } = await runQuery<IndexQuery>(indexQuery, { now: truncatedNow.toISOString() });
+  const { data, error } = await runQuery<IndexQuery, { now: Date }>(indexQuery, { now: truncatedNow });
   if (error || !data) {
     throw error ?? "failed to fetch events";
   }

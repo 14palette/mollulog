@@ -1,5 +1,4 @@
 import type { Env } from "~/env.server";
-import type { AllStudentsQuery } from "~/graphql/graphql";
 import { runQuery } from "~/lib/baql";
 import { fetchCached } from "./base";
 import { graphql } from "~/graphql";
@@ -40,14 +39,14 @@ const allStudentsQuery = graphql(`
 
 export async function getAllStudents(env: Env, includeUnreleased = false): Promise<Student[]> {
   return fetchCached(env, `students::v2::list::includeUnreleased=${includeUnreleased}`, async () => {
-    const { data } = await runQuery<AllStudentsQuery>(allStudentsQuery, {});
+    const { data } = await runQuery(allStudentsQuery, {});
     return (data?.students ?? []).filter(({ released }) => includeUnreleased || released);
   }, 10 * 60);
 };
 
 export async function getAllStudentsMap(env: Env, includeUnreleased = false): Promise<StudentMap> {
   return fetchCached(env, `students::v2::map::includeUnreleased=${includeUnreleased}`, async () => {
-    const { data } = await runQuery<AllStudentsQuery>(allStudentsQuery, {});
+    const { data } = await runQuery(allStudentsQuery, {});
     const students = (data?.students ?? []).filter(({ released }) => includeUnreleased || released);
     return students.reduce((acc, student) => {
       acc[student.uid] = student;

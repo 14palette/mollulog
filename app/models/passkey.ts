@@ -3,6 +3,7 @@ import type {
   PublicKeyCredentialRequestOptionsJSON,
   PublicKeyCredentialCreationOptionsJSON,
   RegistrationResponseJSON,
+  // @ts-ignore
 } from "@simplewebauthn/server/script/deps";
 import { nanoid } from "nanoid/non-secure";
 import type { Env } from "~/env.server";

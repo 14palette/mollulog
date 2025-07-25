@@ -5,7 +5,6 @@ import { getAuthenticator } from "~/auth/authenticator.server";
 import { Title } from "~/components/atoms/typography";
 import { PartyGenerator } from "~/components/organisms/party";
 import { graphql } from "~/graphql";
-import type { RaidForPartyEditQuery } from "~/graphql/graphql";
 import { runQuery } from "~/lib/baql";
 import { updateParty, getUserParties, createParty } from "~/models/party";
 import { getRecruitedStudentTiers } from "~/models/recruited-student";
@@ -35,7 +34,7 @@ export const loader = async ({ context, request, params }: LoaderFunctionArgs) =
     party = (await getUserParties(env, sensei.username)).find((p) => p.uid === params.id) ?? null;
   }
 
-  const { data } = await runQuery<RaidForPartyEditQuery>(raidForPartyEditQuery, {});
+  const { data } = await runQuery(raidForPartyEditQuery, {});
   if (!data) {
     throw "failed to load data";
   }

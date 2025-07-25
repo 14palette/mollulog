@@ -255,7 +255,6 @@ export default function ContentTimelineItem(
                 onUpdate={onUpdateMemo}
                 isSubmitting={isSubmittingMemo}
                 signedIn={signedIn}
-                autoFocus={true}
               />
             </BottomSheet>
           )}

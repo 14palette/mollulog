@@ -1,7 +1,6 @@
 import { ArrowRightIcon } from "@heroicons/react/24/outline";
 import type { LoaderFunctionArgs, MetaFunction } from "react-router";
 import { FuturePlan } from "~/components/organisms/future";
-import type { UserFuturesQuery } from "~/graphql/graphql";
 import { runQuery } from "~/lib/baql";
 import { Link, useLoaderData } from "react-router";
 import { graphql } from "~/graphql";
@@ -38,7 +37,7 @@ export const loader = async ({ context, params }: LoaderFunctionArgs) => {
   const truncatedNow = new Date();
   truncatedNow.setMinutes(0, 0, 0);
 
-  const { data, error } = await runQuery<UserFuturesQuery>(userFuturesQuery, { now: truncatedNow.toISOString() });
+  const { data, error } = await runQuery(userFuturesQuery, { now: truncatedNow });
   if (error || !data) {
     throw error ?? "failed to fetch events";
   }

@@ -1,4 +1,5 @@
 import { type ActionFunctionArgs, type LoaderFunctionArgs, redirect } from "react-router";
+// @ts-ignore
 import type { RegistrationResponseJSON } from "@simplewebauthn/server/script/deps";
 import { getAuthenticator } from "~/auth/authenticator.server";
 import { createPasskeyCreationOptions, verifyAndCreatePasskey } from "~/models/passkey";

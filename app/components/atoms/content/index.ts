@@ -1,3 +1,3 @@
-import Memo from "./memo";
+import Memo from "./Memo";
 
 export { Memo };

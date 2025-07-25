@@ -24,11 +24,10 @@ type ContentMemoEditorProps = {
   placeholder?: string;
   onUpdate: ({ body, visibility }: { body: string, visibility: "private" | "public" }) => void;
 
-  autoFocus?: boolean;
   isSubmitting?: boolean;
 };
 
-export default function ContentMemoEditor({ allMemos, myMemo, signedIn, placeholder, onUpdate, autoFocus = false, isSubmitting }: ContentMemoEditorProps) {
+export default function ContentMemoEditor({ allMemos, myMemo, signedIn, placeholder, onUpdate, isSubmitting }: ContentMemoEditorProps) {
   const { showSignIn } = useSignIn();
   const [body, setBody] = useState<string | undefined>(myMemo?.body || undefined);
   const [visibility, setVisibility] = useState(myMemo?.visibility || "private");
@@ -82,7 +81,6 @@ export default function ContentMemoEditor({ allMemos, myMemo, signedIn, placehol
                   }
                 }}
                 disabled={isSubmitting}
-                autoFocus={autoFocus}
               />
               <div
                 className={sanitizeClassName(`

@@ -6,7 +6,6 @@ import type { ContentTimelineProps } from "~/components/organisms/content";
 import { ContentTimeline } from "~/components/organisms/content";
 import { ContentFilter, type ContentFilterType } from "~/components/molecules/content";
 import { graphql } from "~/graphql";
-import type { FutureContentsQuery } from "~/graphql/graphql";
 import { runQuery } from "~/lib/baql";
 import { getContentsMemos, getUserMemos } from "~/models/content";
 import { getFavoritedCounts, getUserFavoritedStudents } from "~/models/favorite-students";
@@ -56,7 +55,7 @@ export const loader = async ({ request, context }: LoaderFunctionArgs) => {
   const truncatedNow = new Date();
   truncatedNow.setMinutes(0, 0, 0);
 
-  const { data, error } = await runQuery<FutureContentsQuery>(futureContentsQuery, { now: truncatedNow.toISOString() });
+  const { data, error } = await runQuery(futureContentsQuery, { now: truncatedNow });
   if (error || !data) {
     throw error ?? "failed to fetch events";
   }

@@ -3,7 +3,6 @@ import { isRouteErrorResponse, useLoaderData, useRouteError } from "react-router
 import dayjs from "dayjs";
 import { useState } from "react";
 import { graphql } from "~/graphql";
-import type { StudentDetailQuery } from "~/graphql/graphql";
 import { runQuery } from "~/lib/baql";
 import {
   attackTypeColor, attackTypeLocale, defenseTypeColor, defenseTypeLocale,
@@ -41,8 +40,8 @@ const studentDetailQuery = graphql(`
 export const loader = async ({ params }: LoaderFunctionArgs) => {
   const uid = params.id!;
 
-  const raidSince = dayjs().subtract(6, "month").toISOString();
-  const { data, error } = await runQuery<StudentDetailQuery>(studentDetailQuery, { uid, raidSince });
+  const raidSince = dayjs().subtract(6, "month").toDate();
+  const { data, error } = await runQuery(studentDetailQuery, { uid, raidSince });
   let errorMessage: string | null = null;
   if (error || !data) {
     console.error(error);

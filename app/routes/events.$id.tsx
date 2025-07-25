@@ -22,7 +22,7 @@ import { ErrorPage } from "~/components/organisms/error";
 import { EventStages } from "~/components/organisms/event";
 import { useSignIn } from "~/contexts/SignInProvider";
 import { graphql } from "~/graphql";
-import type { EventStagesQuery, EventDetailQuery } from "~/graphql/graphql";
+import type { EventStagesQuery } from "~/graphql/graphql";
 import { runQuery } from "~/lib/baql";
 import { attackTypeColor, attackTypeLocale, defenseTypeColor, defenseTypeLocale, eventTypeLocale, pickupLabelLocale, roleColor, roleLocale } from "~/locales/ko";
 import { getContentMemos, setMemo } from "~/models/content";
@@ -66,7 +66,7 @@ const eventStagesQuery = graphql(`
 `);
 
 async function getEventStages(eventUid: string): Promise<Exclude<EventStagesQuery["event"], null>["stages"] | []> {
-  const { data, error } = await runQuery<EventStagesQuery>(eventStagesQuery, { eventUid });
+  const { data, error } = await runQuery(eventStagesQuery, { eventUid });
   if (error || !data?.event) {
     return [];
   }
@@ -74,7 +74,8 @@ async function getEventStages(eventUid: string): Promise<Exclude<EventStagesQuer
 }
 
 export const loader = async ({ params, context, request }: LoaderFunctionArgs) => {
-  const { data, error } = await runQuery<EventDetailQuery>(eventDetailQuery, { eventUid: params.id });
+  const eventUid = params.id as string;
+  const { data, error } = await runQuery(eventDetailQuery, { eventUid });
   let errorMessage: string | null = null;
   if (error || !data) {
     errorMessage = error?.message ?? "이벤트 정보를 가져오는 중 오류가 발생했어요";
@@ -108,7 +109,7 @@ export const loader = async ({ params, context, request }: LoaderFunctionArgs) =
 
   return {
     event: content,
-    stages: getEventStages(params.id as string),
+    stages: getEventStages(eventUid),
     recruitedStudentUids,
     favoritedStudents: sensei ? await getUserFavoritedStudents(env, sensei.id, content.uid) : [],
     favoritedCounts: (await getFavoritedCounts(env, pickupStudentUids)).filter((favorited) => favorited.contentId === content.uid),

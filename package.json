@@ -22,6 +22,7 @@
   "dependencies": {
     "@cloudflare/kv-asset-handler": "^0.4.0",
     "@graphql-codegen/cli": "^5.0.5",
+    "@graphql-typed-document-node/core": "^3.2.0",
     "@headlessui/react": "^2.2.2",
     "@heroicons/react": "^2.2.0",
     "@react-router/cloudflare": "^7.5.2",

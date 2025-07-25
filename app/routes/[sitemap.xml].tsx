@@ -1,7 +1,6 @@
 import type { Dayjs } from "dayjs";
 import dayjs from "dayjs";
 import { graphql } from "~/graphql";
-import type { SitemapQuery } from "~/graphql/graphql";
 import { runQuery } from "~/lib/baql";
 
 const sitemapQuery = graphql(`
@@ -28,7 +27,7 @@ export const loader = async () => {
     { link: `${HOST}/students`, lastmod: dayjs(), changefreq: "monthly", priority: 0.5 },
   ];
 
-  const { data, error } = await runQuery<SitemapQuery>(sitemapQuery, {});
+  const { data, error } = await runQuery(sitemapQuery, {});
   if (error || !data) {
     throw error ?? "failed to fetch events";
   }

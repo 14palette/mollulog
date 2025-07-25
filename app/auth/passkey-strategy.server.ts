@@ -1,4 +1,5 @@
 import type { SessionStorage } from "react-router";
+// @ts-ignore
 import type { AuthenticationResponseJSON } from "@simplewebauthn/server/script/deps";
 import { type AuthenticateOptions, Strategy } from "remix-auth";
 
