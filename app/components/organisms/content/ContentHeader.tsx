@@ -14,6 +14,7 @@ type ContentHeaderProps = {
   type: string;
   since: Dayjs;
   until: Dayjs;
+  endless?: boolean;
 
   image: string | null;
   videos: {
@@ -24,7 +25,7 @@ type ContentHeaderProps = {
 };
 
 export default function ContentHeader(
-  { name, type, since, until, image, videos }: ContentHeaderProps,
+  { name, type, since, until, endless, image, videos }: ContentHeaderProps,
 ) {
   const [currentVideo, setCurrentVideo] = useState(videos?.[0]);
   const videoListRef = useRef<HTMLDivElement | null>(null);
@@ -87,15 +88,14 @@ export default function ContentHeader(
     dDayText = (daysDiff === 0) ? "오늘" : `D-${daysDiff}`;
   }
 
+  const dateText = `${dayjs(since).format("YYYY-MM-DD")}${endless ? "" : ` ~ ${dayjs(until).format("YYYY-MM-DD")}`}`;
   if (!image) {
     return (
-      <div className="mt-4">
+      <div className="mt-4 mb-12 p-4 md:p-6 border border-neutral-200 dark:border-neutral-700 rounded-xl shadow-xl">
         <p className="text-sm md:text-base text-neutral-500">{type}</p>
         <MultilineText className="text-lg md:text-2xl font-bold" texts={name.split("\n")} />
         <div className="flex items-end">
-          <p className="grow text-sm md:text-base">
-            {dayjs(since).format("YYYY-MM-DD")} ~ {dayjs(until).format("YYYY-MM-DD")}
-          </p>
+          <p className="grow text-sm md:text-base">{dateText}</p>
           <p className="py-1 px-4 flex-none bg-neutral-900 text-white text-xs md:text-sm rounded-full">{dDayText}</p>
         </div>
       </div>
@@ -189,9 +189,7 @@ export default function ContentHeader(
           <p className="text-sm md:text-base text-neutral-300">{type}</p>
           <MultilineText className="text-lg md:text-2xl font-bold" texts={name.split("\n")} />
           <div className="flex items-end">
-            <p className="grow text-sm md:text-base">
-              {dayjs(since).format("YYYY-MM-DD")} ~ {dayjs(until).format("YYYY-MM-DD")}
-            </p>
+            <p className="grow text-sm md:text-base">{dateText}</p>
             <span className="py-1 px-4 bg-neutral-900 text-xs md:text-sm rounded-full">{dDayText}</span>
           </div>
         </div>

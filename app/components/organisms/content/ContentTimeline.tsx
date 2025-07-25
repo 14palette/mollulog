@@ -9,6 +9,7 @@ export type ContentTimelineProps = {
     name: string;
     since: Date;
     until: Date;
+    endless: boolean;
     rerun: boolean;
     uid: string;
     link: string;

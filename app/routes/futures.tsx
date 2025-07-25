@@ -22,7 +22,7 @@ export const futureContentsQuery = graphql(`
         uid name since until confirmed
         ... on Event {
           eventType: type
-          rerun
+          rerun endless
           pickups {
             type rerun since until
             student { uid attackType defenseType role schaleDbId }

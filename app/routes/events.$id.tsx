@@ -1,6 +1,6 @@
 import { ChevronRightIcon, ExclamationTriangleIcon } from "@heroicons/react/16/solid";
 import { HeartIcon as HeartIconOutline } from "@heroicons/react/24/outline";
-import { ClockIcon, HeartIcon as HeartIconSolid, StarIcon, XCircleIcon } from "@heroicons/react/24/solid";
+import { ClockIcon, HeartIcon as HeartIconSolid, StarIcon, XCircleIcon, CursorArrowRippleIcon } from "@heroicons/react/24/solid";
 import type { ActionFunctionArgs, LoaderFunctionArgs, MetaFunction } from "react-router";
 import { redirect } from "react-router";
 import {
@@ -34,7 +34,7 @@ import { sanitizeClassName } from "~/prophandlers";
 const eventDetailQuery = graphql(`
   query EventDetail($eventUid: String!) {
     event(uid: $eventUid) {
-      uid name type since until imageUrl
+      uid name type since until endless imageUrl
       videos { title youtube start }
       pickups {
         type rerun since until
@@ -219,11 +219,13 @@ export default function EventDetail() {
         type={eventTypeLocale[event.type]}
         since={dayjs(event.since)}
         until={dayjs(event.until)}
+        endless={event.endless}
         image={event.imageUrl}
         videos={event.videos}
       />
 
       {event.type === "fes" && <FesInfo />}
+      {event.type === "archive_pickup" && <ArchivePickupInfo />}
 
       {event.pickups.length > 0 && (
         <div className="my-8">
@@ -323,8 +325,8 @@ export default function EventDetail() {
   );
 }
 
-function FesInfo() {
-  const FesInfoCard = ({ Icon, title, description }: { Icon: React.ElementType, title: string, description: string }) => (
+function InfoCard({ Icon, title, description }: { Icon: React.ElementType, title: string, description: string }) {
+  return (
     <div className="my-2 flex items-center gap-3 p-4 bg-white dark:bg-neutral-800 rounded-lg border border-neutral-200 dark:border-neutral-700">
       <div className="flex-shrink-0 p-2 bg-neutral-100 dark:bg-neutral-700 rounded-lg">
         <Icon className="size-5 text-neutral-600 dark:text-neutral-300" />
@@ -335,25 +337,47 @@ function FesInfo() {
       </div>
     </div>
   );
+}
 
+function FesInfo() {
   return (
     <div className="my-8">
       <SubTitle text="페스 모집 소개" />
       <div>
-        <FesInfoCard
+        <InfoCard
           Icon={StarIcon}
           title="모집 확률 상승"
           description="★3 학생 모집 확률이 6%로 상승해요"
         />
-        <FesInfoCard
+        <InfoCard
           Icon={ClockIcon}
           title="기간 한정 모집"
           description={"일부 학생은 페스 기간에만 모집할 수 있어요. 아래 \"페스 신규/복각\" 학생 목록을 확인해주세요."}
         />
-        <FesInfoCard
+        <InfoCard
           Icon={XCircleIcon}
           title="모집 포인트 교환 불가"
           description={"\"페스 복각\" 학생은 모집 포인트(천장)로는 교환할 수 없어요."}
+        />
+      </div>
+    </div>
+  );
+}
+
+function ArchivePickupInfo() {
+  return (
+    <div className="my-8">
+      <SubTitle text="아카이브 모집 소개" />
+      <div>
+        <InfoCard
+          Icon={CursorArrowRippleIcon}
+          title="픽업할 학생을 직접 선택"
+          description="아래 명단에서 픽업할 학생을 직접 선택하여 모집할 수 있어요."
+        />
+        <InfoCard
+          Icon={ClockIcon}
+          title="모집 포인트 유지"
+          description="모집 포인트는 시간이 지나도 유지되고 기동석으로 변환되지 않아요."
         />
       </div>
     </div>

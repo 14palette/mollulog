@@ -16,7 +16,7 @@ const indexQuery = graphql(`
   query Index($now: ISO8601DateTime!) {
     events(untilAfter: $now, sinceBefore: $now) {
       nodes {
-        name since until uid type rerun
+        name since until endless uid type rerun
         pickups {
           type rerun since until
           student { uid name attackType defenseType role schaleDbId }
@@ -98,6 +98,7 @@ export default function Index() {
               name={event.name}
               contentType={event.type}
               rerun={event.rerun}
+              endless={event.endless}
               since={new Date(event.since)}
               until={new Date(event.until)}
               link={`/events/${event.uid}`}

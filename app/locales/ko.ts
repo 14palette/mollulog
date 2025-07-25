@@ -52,7 +52,7 @@ export const difficultyLocale: Record<string, string> = {
 
 export const eventTypeLocale: Record<EventType, string> = {
   event: "이벤트",
-  immortal_event: "상설화 이벤트",
+  immortal_event: "이벤트 상설화",
   mini_event: "미니 이벤트",
   guide_mission: "가이드 미션",
   collab: "콜라보 이벤트",
@@ -61,6 +61,7 @@ export const eventTypeLocale: Record<EventType, string> = {
   campaign: "캠페인",
   exercise: "종합전술시험",
   main_story: "메인 스토리",
+  archive_pickup: "픽업 모집",
 };
 
 export const raidTypeLocale: Record<RaidType, string> = {
@@ -79,27 +80,22 @@ export const pickupTypeLocale: Record<PickupType, string> = {
   limited: "한정",
   given: "배포",
   fes: "페스",
+  archive: "아카이브",
 };
 
 export function pickupLabelLocale({ type, rerun }: { type: PickupType, rerun: boolean }): string {
-  const labelTexts: string[] = [];
-  if (type === "given") {
-    labelTexts.push("배포");
+  if (type === "archive") {
+    return "아카이브";
+  } else if (type === "usual") {
+    return rerun ? "복각" : "신규";
   } else if (type === "limited") {
-    labelTexts.push("한정");
+    return rerun ? "한정 복각" : "한정 신규";
   } else if (type === "fes") {
-    labelTexts.push("페스");
+    return rerun ? "페스 복각" : "페스 신규";
+  } else if (type === "given") {
+    return "배포";
   }
-
-  if (type !== "given") {
-    if (rerun) {
-      labelTexts.push("복각");
-    } else {
-      labelTexts.push("신규");
-    }
-  }
-
-  return labelTexts.join(" ");
+  return "-";
 }
 
 export const schoolNameLocale: Record<string, string> = {

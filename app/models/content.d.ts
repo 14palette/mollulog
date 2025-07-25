@@ -5,9 +5,9 @@ export type Terrain = "indoor" | "outdoor" | "street";
 export type Role = "striker" | "special";
 
 // 컨텐츠 관련
-export type EventType = "event" | "mini_event" | "guide_mission" | "immortal_event" | "pickup" | "fes" | "campaign" | "exercise" | "main_story" | "collab";
+export type EventType = "event" | "mini_event" | "guide_mission" | "immortal_event" | "pickup" | "fes" | "campaign" | "exercise" | "main_story" | "collab" | "archive_pickup";
 export type RaidType = "total_assault" | "elimination" | "unlimit";
-export type PickupType = "usual" | "limited" | "given" | "fes";
+export type PickupType = "usual" | "limited" | "given" | "fes" | "archive";
 
 export const attackTypeColorMap: Record<AttackType, "red" | "yellow" | "blue" | "purple"> = {
   explosive: "red",

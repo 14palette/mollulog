@@ -17,6 +17,7 @@ export type ContentTimelineItemProps = {
   name: string;
   contentType: EventType | RaidType;
   rerun: boolean;
+  endless: boolean;
   since?: Date | null;
   until: Date | null;
   link: string;
@@ -53,8 +54,8 @@ export type ContentTimelineItemProps = {
       schaleDbId?: string | null;
     } | null;
     studentName: string;
-    since?: Date | null;
-    until?: Date | null;
+    since: Date;
+    until: Date | null;
   }[];
   raidInfo?: {
     uid: string;
@@ -91,7 +92,7 @@ const MEMO_CONTENT_TYPES = ["event", "pickup", "fes", "immortal_event"];
 
 export default function ContentTimelineItem(
   {
-    name, contentType, rerun, since, until, link, confirmed, raidInfo, pickups,
+    name, contentType, rerun, endless, since, until, link, confirmed, raidInfo, pickups,
     allMemos, myMemo, onUpdateMemo, isSubmittingMemo, favoritedStudents, favoritedCounts, onFavorite, signedIn,
   }: ContentTimelineItemProps,
 ) {
@@ -146,7 +147,7 @@ export default function ContentTimelineItem(
           <span className="pr-1 py-0.5 text-neutral-500 dark:text-neutral-400">
             {(contentType === "event" || contentType === "pickup") && rerun && "복각 "}{contentTypeLocale[contentType]}
           </span>
-          {daysLabel && (
+          {!endless && daysLabel && (
             <span className={`flex items-center px-2 py-0.5 rounded-full ${finishSoon ? "bg-red-100 text-red-800 dark:bg-red-900 dark:text-red-200" : "bg-neutral-100 dark:bg-neutral-700"}`}>
               <ClockIcon className="inline size-4 mr-1" />
               {daysLabel}
@@ -174,7 +175,7 @@ export default function ContentTimelineItem(
       </Link> 
 
       {/* 픽업 정보 */}
-      {pickups && (
+      {contentType !== "archive_pickup" && pickups && (
         <div className="my-2">
           <StudentCards
             mobileGrid={5}
@@ -214,20 +215,20 @@ export default function ContentTimelineItem(
               };
             })}
           />
-        </div>
-      )}
 
-      {isPickupDayDifferent && (
-        <div className="mb-2 px-2 py-2 flex items-center gap-x-2 bg-gradient-to-r from-amber-50 to-orange-50 dark:from-amber-900/20 dark:to-orange-900/20 rounded-xl text-sm">
-          <ExclamationTriangleIcon className="shrink-0 size-5 text-amber-600 dark:text-amber-400" />
-          <div className="flex flex-wrap gap-x-1">
-            <p className="shrink-0 text-amber-700 dark:text-amber-300">
-              {dayjs(pickupUntil).isBefore(dayjs()) ? "픽업 모집은 종료되었어요." : "이벤트 개최 기간과 픽업 모집 기간이 달라요."}
-            </p>
-            <Link to={link} className="flex-shrink-0 text-amber-600 dark:text-amber-400 underline cursor-pointer hover:text-amber-700 dark:hover:text-amber-300">
-              자세히 보기
-            </Link>
-          </div>
+          {isPickupDayDifferent && (
+            <div className="mb-2 px-2 py-2 flex items-center gap-x-2 bg-gradient-to-r from-amber-50 to-orange-50 dark:from-amber-900/20 dark:to-orange-900/20 rounded-xl text-sm">
+              <ExclamationTriangleIcon className="shrink-0 size-5 text-amber-600 dark:text-amber-400" />
+              <div className="flex flex-wrap gap-x-1">
+                <p className="shrink-0 text-amber-700 dark:text-amber-300">
+                  {dayjs(pickupUntil).isBefore(dayjs()) ? "픽업 모집은 종료되었어요." : "이벤트 개최 기간과 픽업 모집 기간이 달라요."}
+                </p>
+                <Link to={link} className="flex-shrink-0 text-amber-600 dark:text-amber-400 underline cursor-pointer hover:text-amber-700 dark:hover:text-amber-300">
+                  자세히 보기
+                </Link>
+              </div>
+            </div>
+          )}
         </div>
       )}
 
