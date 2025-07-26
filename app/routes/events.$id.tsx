@@ -213,6 +213,7 @@ export default function EventDetail() {
 
   const isPickupSinceDifferent = event.pickups.length > 0 && !dayjs(event.pickups[0].since).isSame(dayjs(event.since), "day");
   const isPickupUntilDifferent = event.pickups.length > 0 && !dayjs(event.pickups[0].until).isSame(dayjs(event.until), "day");
+  const shouldNotifyPickupPeriod = event.pickups.length > 0 && (event.pickups[0].until !== null && (isPickupSinceDifferent || isPickupUntilDifferent));
   return (
     <>
       <ContentHeader
@@ -231,7 +232,7 @@ export default function EventDetail() {
       {event.pickups.length > 0 && (
         <div className="my-8">
           <SubTitle text="픽업 모집 학생" />
-          {isPickupSinceDifferent || isPickupUntilDifferent && (
+          {shouldNotifyPickupPeriod && (
             <div className="mb-4 p-4 bg-gradient-to-r from-amber-50 to-orange-50 dark:from-amber-900/20 dark:to-orange-900/20 border border-amber-200 dark:border-amber-700 rounded-xl">
               <div className="flex items-center gap-3">
                 <div className="flex-shrink-0">

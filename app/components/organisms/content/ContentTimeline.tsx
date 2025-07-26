@@ -41,6 +41,7 @@ export const contentOrders: (EventType | RaidType)[] = [
   "immortal_event",
   "main_story",
   "pickup",
+  "archive_pickup",
   "collab",
   "total_assault",
   "elimination",

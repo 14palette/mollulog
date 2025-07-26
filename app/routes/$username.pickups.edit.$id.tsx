@@ -52,7 +52,9 @@ export const loader = async ({ context, request, params }: LoaderFunctionArgs) =
 
   const now = dayjs();
   return {
-    events: data.events.nodes.filter((event) => event.pickups.length > 0 && dayjs(event.since).isBefore(now)).reverse(),
+    events: data.events.nodes.filter((event) => {
+      return event.type !== "archive_pickup" && event.pickups.length > 0 && dayjs(event.since).isBefore(now);
+    }).reverse(),
     tier3Students: (await getAllStudents(env))
       .filter((student) => student.initialTier === 3)
       .sort((a, b) => b.order - a.order)
