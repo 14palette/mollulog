@@ -1,7 +1,7 @@
 import { useState, type ReactNode } from "react";
 import { Link } from "react-router";
 import dayjs from "dayjs";
-import { ChevronRightIcon, ChartBarIcon, ClockIcon, CheckCircleIcon, ExclamationTriangleIcon, ChatBubbleOvalLeftEllipsisIcon } from "@heroicons/react/16/solid";
+import { ChevronRightIcon, ChartBarIcon, ClockIcon, CheckCircleIcon, ExclamationTriangleIcon, ChatBubbleOvalLeftEllipsisIcon, EyeIcon, EyeSlashIcon } from "@heroicons/react/16/solid";
 import { ArrowTopRightOnSquareIcon, IdentificationIcon, HeartIcon as EmptyHeartIcon } from "@heroicons/react/24/outline";
 import { HeartIcon as FilledHeartIcon } from "@heroicons/react/24/solid";
 import type { AttackType, DefenseType, EventType, PickupType, RaidType, Role, Terrain } from "~/models/content.d";
@@ -88,7 +88,7 @@ function ContentTitles({ name, showLink }: { name: string, showLink: boolean }):
   )
 }
 
-const MEMO_CONTENT_TYPES = ["event", "pickup", "fes", "immortal_event"];
+const MEMO_CONTENT_TYPES = ["event", "pickup", "fes", "immortal_event", "main_story"];
 
 export default function ContentTimelineItem(
   {
@@ -96,7 +96,7 @@ export default function ContentTimelineItem(
     allMemos, myMemo, onUpdateMemo, isSubmittingMemo, favoritedStudents, favoritedCounts, onFavorite, signedIn,
   }: ContentTimelineItemProps,
 ) {
-  const showMemo = MEMO_CONTENT_TYPES.includes(contentType);
+  const showMemo = MEMO_CONTENT_TYPES.includes(contentType) && (pickups && pickups.length > 0);
   const [memoEditing, setMemoEditing] = useState(false);
 
   let daysLabel = null;
@@ -175,45 +175,14 @@ export default function ContentTimelineItem(
       </Link> 
 
       {/* 픽업 정보 */}
-      {contentType !== "archive_pickup" && pickups && (
+      {pickups && pickups.length > 0 && (
         <div className="my-2">
-          <StudentCards
-            mobileGrid={5}
-            students={pickups.map((pickup) => {
-              const student = pickup.student;
-              const colorClass = pickup.rerun ? "text-white" : "text-yellow-500";
-              return {
-                ...student,
-                uid: student?.uid ?? null,
-                name: pickup.studentName,
-                label: <span className={`${colorClass}`}>{pickupLabelLocale(pickup)}</span>,
-                state: student?.uid ? {
-                  favorited: favoritedStudents?.includes(student.uid),
-                  favoritedCount: favoritedCounts?.[student.uid],
-                } : undefined,
-                popups: (student?.uid && student?.schaleDbId) ? [
-                  favoritedStudents?.includes(student.uid) ? {
-                    Icon: FilledHeartIcon,
-                    text: "관심 학생에서 해제",
-                    onClick: () => onFavorite?.(student.uid, false),
-                  } : {
-                    Icon: EmptyHeartIcon,
-                    text: "관심 학생에 등록",
-                    onClick: () => onFavorite?.(student.uid, true),
-                  },
-                  {
-                    Icon: IdentificationIcon,
-                    text: "학생부 보기",
-                    link: `/students/${student?.uid}`,
-                  },
-                  {
-                    Icon: ArrowTopRightOnSquareIcon,
-                    text: "샬레DB에서 학생 정보 보기",
-                    link: `https://schaledb.com/student/${student?.schaleDbId}`,
-                  },
-                ] : undefined,
-              };
-            })}
+          <PickupStudents
+            pickups={pickups}
+            favoritedStudents={favoritedStudents ?? []}
+            favoritedCounts={favoritedCounts ?? {}}
+            onFavorite={onFavorite}
+            showToggle={contentType === "archive_pickup"}
           />
 
           {isPickupDayDifferent && (
@@ -259,6 +228,133 @@ export default function ContentTimelineItem(
             </BottomSheet>
           )}
         </>
+      )}
+    </div>
+  );
+}
+
+type PickupStudentsProps = {
+  pickups: {
+    type: PickupType;
+    rerun: boolean;
+    studentName: string;
+    student: {
+      uid: string;
+      schaleDbId?: string | null;
+    } | null;
+  }[];
+  favoritedStudents: string[];
+  favoritedCounts: Record<string, number>;
+  onFavorite?: (studentUid: string, favorited: boolean) => void;
+  showToggle?: boolean;
+};
+
+function PickupStudents({ pickups, favoritedStudents, favoritedCounts, onFavorite, showToggle = false }: PickupStudentsProps) {
+  const [showCards, setShowCards] = useState(!showToggle);
+
+  if (!showToggle) {
+    return (
+      <StudentCards
+        mobileGrid={5}
+        students={pickups.map((pickup) => {
+          const student = pickup.student;
+          const colorClass = (pickup.rerun || pickup.type === "archive") ? "text-white" : "text-yellow-500";
+          return {
+            ...student,
+            uid: student?.uid ?? null,
+            name: pickup.studentName,
+            label: <span className={`${colorClass}`}>{pickupLabelLocale(pickup)}</span>,
+            state: student?.uid ? {
+              favorited: favoritedStudents?.includes(student.uid),
+              favoritedCount: favoritedCounts?.[student.uid],
+            } : undefined,
+            popups: (student?.uid && student?.schaleDbId) ? [
+              favoritedStudents?.includes(student.uid) ? {
+                Icon: FilledHeartIcon,
+                text: "관심 학생에서 해제",
+                onClick: () => onFavorite?.(student.uid, false),
+              } : {
+                Icon: EmptyHeartIcon,
+                text: "관심 학생에 등록",
+                onClick: () => onFavorite?.(student.uid, true),
+              },
+              {
+                Icon: IdentificationIcon,
+                text: "학생부 보기",
+                link: `/students/${student?.uid}`,
+              },
+              {
+                Icon: ArrowTopRightOnSquareIcon,
+                text: "샬레DB에서 학생 정보 보기",
+                link: `https://schaledb.com/student/${student?.schaleDbId}`,
+              },
+            ] : undefined,
+          };
+        })}
+      />
+    );
+  }
+
+  return (
+    <div>
+      <div className="mb-2">
+        <button
+          onClick={() => setShowCards(!showCards)}
+          className="flex items-center gap-x-1 px-3 py-1.5 text-sm font-medium text-neutral-700 dark:text-neutral-300 hover:text-neutral-900 dark:hover:text-neutral-100 hover:bg-neutral-100 dark:hover:bg-neutral-800 rounded-lg transition border border-neutral-200 dark:border-neutral-700"
+        >
+          {showCards ? (
+            <>
+              <EyeSlashIcon className="size-4" />
+              <span>모집 대상 학생 숨기기</span>
+            </>
+          ) : (
+            <>
+              <EyeIcon className="size-4" />
+              <span>모집 대상 학생 보기</span>
+            </>
+          )}
+        </button>
+      </div>
+
+      {showCards && (
+        <StudentCards
+          mobileGrid={5}
+          students={pickups.map((pickup) => {
+            const student = pickup.student;
+            const colorClass = (pickup.rerun || pickup.type === "archive") ? "text-white" : "text-yellow-500";
+            return {
+              ...student,
+              uid: student?.uid ?? null,
+              name: pickup.studentName,
+              label: <span className={`${colorClass}`}>{pickupLabelLocale(pickup)}</span>,
+              state: student?.uid ? {
+                favorited: favoritedStudents?.includes(student.uid),
+                favoritedCount: favoritedCounts?.[student.uid],
+              } : undefined,
+              popups: (student?.uid && student?.schaleDbId) ? [
+                favoritedStudents?.includes(student.uid) ? {
+                  Icon: FilledHeartIcon,
+                  text: "관심 학생에서 해제",
+                  onClick: () => onFavorite?.(student.uid, false),
+                } : {
+                  Icon: EmptyHeartIcon,
+                  text: "관심 학생에 등록",
+                  onClick: () => onFavorite?.(student.uid, true),
+                },
+                {
+                  Icon: IdentificationIcon,
+                  text: "학생부 보기",
+                  link: `/students/${student?.uid}`,
+                },
+                {
+                  Icon: ArrowTopRightOnSquareIcon,
+                  text: "샬레DB에서 학생 정보 보기",
+                  link: `https://schaledb.com/student/${student?.schaleDbId}`,
+                },
+              ] : undefined,
+            };
+          })}
+        />
       )}
     </div>
   );
