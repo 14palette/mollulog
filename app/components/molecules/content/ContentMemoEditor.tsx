@@ -40,7 +40,7 @@ export default function ContentMemoEditor({ allMemos, myMemo, signedIn, placehol
 
   return (
     <>
-      <div className="flex-1 py-2 overflow-y-auto no-scrollbar">
+      <div className="flex-1 overflow-y-auto no-scrollbar">
         <div className="space-y-4 mb-4">
           {allMemos.length > 0 ?
             allMemos.map((memo) => <Memo key={memo.uid} body={memo.body} visibility={memo.visibility} sensei={memo.sensei} />) :
@@ -71,7 +71,7 @@ export default function ContentMemoEditor({ allMemos, myMemo, signedIn, placehol
                 </span>
               </div>
               <input
-                className="w-full px-3 py-2 bg-neutral-100 dark:bg-neutral-900 rounded-lg"
+                className="w-full px-3 py-2 bg-neutral-100 dark:bg-neutral-900 text-sm xl:text-base rounded-lg"
                 placeholder={placeholder ?? "메모를 남겨보세요"}
                 value={body}
                 onChange={(e) => setBody(e.target.value || undefined)}

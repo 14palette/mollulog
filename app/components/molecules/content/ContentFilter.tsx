@@ -3,6 +3,7 @@ import { useState } from "react";
 import FilterButtons from "./FilterButtons";
 import type { EventType, RaidType } from "~/models/content.d";
 import { Toggle } from "~/components/atoms/form";
+import { BottomSheet } from "~/components/atoms/layout";
 
 export type ContentFilter = {
   types: (EventType | RaidType)[];
@@ -35,7 +36,13 @@ export default function ContentFilter({ initialFilter, onFilterChange }: Content
   return (
     <>
       {/* PC 화면 */}
-      <div className="hidden xl:block bg-white dark:bg-neutral-900 rounded-xl xl:shadow-lg p-6">
+      <div className="hidden xl:block bg-white dark:bg-neutral-900 rounded-xl xl:shadow-lg p-6 border border-neutral-100 dark:border-neutral-900">
+        <div className="flex items-center gap-3 mb-4">
+          <div className="p-3 flex items-center justify-center bg-neutral-100 dark:bg-neutral-800 rounded-lg">
+            <FunnelIcon className="size-5 text-neutral-600 dark:text-neutral-400" strokeWidth={2} />
+          </div>
+          <p className="font-bold text-lg">필터</p>
+        </div>
         <FilterContent
           filter={filter}
           onToggleType={onToggleType}
@@ -56,19 +63,13 @@ export default function ContentFilter({ initialFilter, onFilterChange }: Content
 
       {/* 모바일 화면 바텀 시트 */}
       {isMobileSheetOpen && (
-        <>
-          <div className="xl:hidden fixed inset-0 bg-transparent z-50" onClick={() => setIsMobileSheetOpen(false)} />
-          <div className="xl:hidden fixed bottom-0 left-0 right-0 bg-white/90 dark:bg-neutral-900/80 backdrop-blur-sm rounded-t-2xl shadow-2xl z-50 max-h-[80vh] overflow-y-auto border-t border-neutral-200 dark:border-neutral-700">
-            <div className="px-4 py-6">
-              <FilterContent
-                filter={filter}
-                onToggleType={onToggleType}
-                onToggleOnlyPickups={onToggleOnlyPickups}
-                onClose={() => setIsMobileSheetOpen(false)}
-              />
-            </div>
-          </div>
-        </>
+        <BottomSheet Icon={FunnelIcon} title="필터" onClose={() => setIsMobileSheetOpen(false)}>
+          <FilterContent
+            filter={filter}
+            onToggleType={onToggleType}
+            onToggleOnlyPickups={onToggleOnlyPickups}
+          />
+        </BottomSheet>
       )}
     </>
   );
@@ -79,10 +80,9 @@ type FilterContentProps = {
   filter: ContentFilter;
   onToggleType: (activated: boolean, types: (EventType | RaidType)[]) => void;
   onToggleOnlyPickups: (activated: boolean) => void;
-  onClose?: () => void;
 };
 
-function FilterContent({ filter, onToggleType, onToggleOnlyPickups, onClose }: FilterContentProps) {
+function FilterContent({ filter, onToggleType, onToggleOnlyPickups }: FilterContentProps) {
   const eventFilterProps = [
     { text: "메인 이벤트", active: filter.types.some(type => ["event", "immortal_event", "fes", "collab"].includes(type)), onToggle: (activated: boolean) => onToggleType(activated, ["event", "immortal_event", "fes", "collab"]) },
     { text: "미니 이벤트", active: filter.types.includes("mini_event"), onToggle: (activated: boolean) => onToggleType(activated, ["mini_event"]) },
@@ -100,28 +100,11 @@ function FilterContent({ filter, onToggleType, onToggleOnlyPickups, onClose }: F
 
   return (
     <>
-      <div className="flex items-center justify-between mb-6">
-        <div className="flex items-center gap-3">
-          <div className="flex items-center justify-center size-10 bg-neutral-100 dark:bg-neutral-800 rounded-lg">
-            <FunnelIcon className="size-5 text-neutral-600 dark:text-neutral-400" strokeWidth={2} />
-          </div>
-          <p className="font-bold text-lg">필터</p>
-        </div>
-        {onClose && (
-          <button
-            onClick={onClose}
-            className="p-2 hover:bg-neutral-100 dark:hover:bg-neutral-800 rounded-lg transition-colors"
-          >
-            <XMarkIcon className="size-6 text-neutral-600 dark:text-neutral-400" />
-          </button>
-        )}
-      </div>
-
       <div className="mb-4">
         <p className="mb-2 font-bold">이벤트</p>
         <FilterButtons buttonProps={eventFilterProps} />
       </div>
-      <div className="mb-8">
+      <div className="mb-2 xl:mb-8">
         <p className="mb-2 font-bold">레이드</p>
         <FilterButtons buttonProps={contentFilterProps} />
       </div>

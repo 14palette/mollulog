@@ -1,6 +1,6 @@
 import { Link } from "react-router";
 import { ProfileImage } from "../student";
-import { LockClosedIcon, LockOpenIcon } from "@heroicons/react/16/solid";
+import { LockClosedIcon } from "@heroicons/react/16/solid";
 
 type MemoProps = {
   body: string;
@@ -24,7 +24,7 @@ export default function Memo({ body, visibility, sensei }: MemoProps) {
           </Link>
           {visibility === "private" && <LockClosedIcon className="size-4 mb-0.5" />}
         </div>
-        <p className="mt-0.5 text-neutral-700 dark:text-neutral-300 whitespace-pre-wrap">
+        <p className="mt-0.5 text-sm xl:text-base whitespace-pre-wrap">
           {body}
         </p>
       </div>

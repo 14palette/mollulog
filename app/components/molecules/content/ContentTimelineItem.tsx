@@ -205,7 +205,7 @@ export default function ContentTimelineItem(
       {showMemo && onUpdateMemo && (
         <>
           <div
-            className="w-full p-2 flex items-center gap-x-1 bg-neutral-100 dark:bg-neutral-900 hover:bg-neutral-200 dark:hover:bg-neutral-800 rounded-lg text-sm cursor-pointer transition"
+            className="w-full p-2 flex items-center gap-x-1 bg-neutral-100 dark:bg-neutral-900 hover:bg-neutral-200 dark:hover:bg-neutral-700 rounded-lg text-sm cursor-pointer transition"
             onClick={() => setMemoEditing(true)}
           >
             <ChatBubbleOvalLeftEllipsisIcon className="shrink-0 size-4 text-neutral-500 dark:text-neutral-400" />
