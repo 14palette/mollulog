@@ -13,10 +13,10 @@ type RaidRankFilterProps = {
     name: string;
   }[];
   signedIn: boolean;
-  onClose?: () => void;
+  showTitle?: boolean;
 };
 
-export default function RaidRankFilter({ filters, setRaidFilters, signedIn, students, onClose }: RaidRankFilterProps) {
+export default function RaidRankFilter({ filters, setRaidFilters, signedIn, students, showTitle }: RaidRankFilterProps) {
   const setRaidFilterAndResetPage = (setter: (prev: RaidRankFilters) => RaidRankFilters) => {
     setRaidFilters((prev) => {
       const newFilters = setter(prev);
@@ -28,22 +28,16 @@ export default function RaidRankFilter({ filters, setRaidFilters, signedIn, stud
 
   return (
     <>
-      <div className="flex items-center justify-between mb-6">
-        <div className="flex items-center gap-3">
-          <div className="flex items-center justify-center size-10 bg-neutral-100 dark:bg-neutral-800 rounded-lg">
-            <MagnifyingGlassIcon className="size-5 text-neutral-600 dark:text-neutral-400" strokeWidth={2} />
+      {showTitle && (
+        <div className="flex items-center justify-between mb-6">
+          <div className="flex items-center gap-3">
+            <div className="p-2 flex items-center justify-center bg-neutral-100 dark:bg-neutral-700 rounded-lg">
+              <MagnifyingGlassIcon className="size-5 text-neutral-600 dark:text-neutral-400" strokeWidth={2} />
+            </div>
+            <p className="font-bold text-xl">편성 찾기</p>
           </div>
-          <p className="font-bold text-lg text-neutral-900 dark:text-white">편성 찾기</p>
         </div>
-        {onClose && (
-          <button
-            onClick={onClose}
-            className="p-2 hover:bg-neutral-100 dark:hover:bg-neutral-800 rounded-lg transition-colors"
-          >
-            <XMarkIcon className="size-6 text-neutral-600 dark:text-neutral-400" />
-          </button>
-        )}
-      </div>
+      )}
 
       <div className="mb-4">
         <p className="mb-2 font-bold text-neutral-900 dark:text-white">포함할 학생</p>

@@ -5,8 +5,8 @@ import {
   UserCircleIcon as UserCircleIconOutline,
   PencilSquareIcon as PencilSquareIconOutline,
   IdentificationIcon as IdentificationIconOutline,
+  FireIcon as FireIconOutline,
   Bars3Icon,
-  Cog6ToothIcon as Cog6ToothIconOutline,
 } from "@heroicons/react/24/outline";
 import {
   HomeIcon as HomeIconSolid,
@@ -14,7 +14,7 @@ import {
   UserCircleIcon as UserCircleIconSolid,
   PencilSquareIcon as PencilSquareIconSolid,
   IdentificationIcon as IdentificationIconSolid,
-  Cog6ToothIcon as Cog6ToothIconSolid,
+  FireIcon as FireIconSolid,
 } from "@heroicons/react/24/solid";
 import { Transition } from "@headlessui/react";
 import { Link, useMatches, useSubmit } from "react-router";
@@ -30,24 +30,29 @@ interface MenuItemProps {
   SolidIcon: React.ComponentType<React.ComponentProps<"svg">>;
   isActive: boolean;
   onItemClick?: () => void;
+  showRedDot?: boolean;
 }
 
-function MenuItem({ to, name, OutlineIcon, SolidIcon, isActive, onItemClick }: MenuItemProps) {
+function MenuItem({ to, name, OutlineIcon, SolidIcon, isActive, onItemClick, showRedDot }: MenuItemProps) {
   return (
     <Link
       to={to}
-      className={sanitizeClassName(`my-2 p-2 flex items-center hover:bg-neutral-200 dark:hover:bg-neutral-700 rounded-lg transition ${isActive ? "font-bold drop-shadow-lg" : ""}`)}
+      className={sanitizeClassName(`my-2 p-2 flex items-center hover:bg-neutral-200 dark:hover:bg-neutral-700 rounded-lg transition relative ${isActive ? "font-bold drop-shadow-lg" : ""}`)}
       onClick={() => onItemClick?.()}
     >
       {isActive ? <SolidIcon className="inline-block mr-3 size-6" /> : <OutlineIcon className="inline-block mr-3 size-6" />}
-      <span className="text-lg">{name}</span>
+      <span className="text-lg relative">
+        {name}
+        {showRedDot && (
+          <div className="absolute top-0 -right-3 size-1.5 bg-red-500 rounded-full animate-pulse" />
+        )}
+      </span>
     </Link>
   );
 }
 
 interface MenuContentProps {
   currentUsername: string | null;
-  currentRole: string | null;
   pathname: string;
   onMenuClose: () => void;
   onShowSignIn: () => void;
@@ -55,7 +60,7 @@ interface MenuContentProps {
   hasRecentNews: boolean;
 }
 
-function MenuContent({ currentUsername, currentRole, pathname, onMenuClose, onShowSignIn, onDarkModeToggle, hasRecentNews }: MenuContentProps) {
+function MenuContent({ currentUsername, pathname, onMenuClose, onShowSignIn, onDarkModeToggle, hasRecentNews }: MenuContentProps) {
   const submit = useSubmit();
 
   return (
@@ -73,8 +78,17 @@ function MenuContent({ currentUsername, currentRole, pathname, onMenuClose, onSh
         name="미래시"
         OutlineIcon={CalendarIconOutline}
         SolidIcon={CalendarIconSolid}
-        isActive={pathname.startsWith("/futures") || pathname.startsWith("/events") || pathname.startsWith("/raids")}
+        isActive={pathname.startsWith("/futures") || pathname.startsWith("/events")}
         onItemClick={onMenuClose}
+      />
+      <MenuItem
+        to="/raids"
+        name="총력전 / 대결전"
+        OutlineIcon={FireIconOutline}
+        SolidIcon={FireIconSolid}
+        isActive={pathname.startsWith("/raids")}
+        onItemClick={onMenuClose}
+        showRedDot
       />
       <MenuItem
         to="/students"
@@ -156,13 +170,12 @@ function MenuContent({ currentUsername, currentRole, pathname, onMenuClose, onSh
 
 type SidebarProps = {
   currentUsername: string | null;
-  currentRole: string | null;
   darkMode: boolean;
   setDarkMode: (fn: (prev: boolean) => boolean) => void;
   hasRecentNews: boolean;
 };
 
-export default function Sidebar({ currentUsername, currentRole, darkMode, setDarkMode, hasRecentNews }: SidebarProps) {
+export default function Sidebar({ currentUsername, darkMode, setDarkMode, hasRecentNews }: SidebarProps) {
   const matches = useMatches();
   const pathname = matches[matches.length - 1].pathname;
 
@@ -185,7 +198,6 @@ export default function Sidebar({ currentUsername, currentRole, darkMode, setDar
       <div className="mt-6 hidden xl:block">
         <MenuContent
           currentUsername={currentUsername}
-          currentRole={currentRole}
           pathname={pathname}
           onMenuClose={handleMenuClose}
           onShowSignIn={showSignIn}
@@ -206,7 +218,6 @@ export default function Sidebar({ currentUsername, currentRole, darkMode, setDar
       >
         <MenuContent
           currentUsername={currentUsername}
-          currentRole={currentRole}
           pathname={pathname}
           onMenuClose={handleMenuClose}
           onShowSignIn={showSignIn}

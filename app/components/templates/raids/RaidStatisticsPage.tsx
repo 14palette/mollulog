@@ -2,18 +2,22 @@ import { useFetcher } from "react-router";
 import { defenseTypeColor, defenseTypeLocale } from "~/locales/ko";
 import { FilterButtons } from "~/components/molecules/content";
 import { useEffect, useState } from "react";
-import type { DefenseType } from "~/models/content.d";
+import type { DefenseType, RaidType } from "~/models/content.d";
 import { EmptyView } from "~/components/atoms/typography";
 import { ChevronDownIcon, ChevronUpIcon } from "@heroicons/react/16/solid";
 import { SlotCountInfo } from "~/components/organisms/raid";
 import { ShieldCheckIcon } from "@heroicons/react/24/outline";
-import { RaidDetailQuery } from "~/graphql/graphql";
 import { RaidStatisticsData } from "~/routes/raids.data.$id.statistics";
 import { LoadingSkeleton } from "~/components/atoms/layout";
 
 
 export type RaidStatisticsProps = {
-  raid: NonNullable<RaidDetailQuery["raid"]>;
+  raid: {
+    uid: string;
+    type: RaidType;
+    defenseTypes: { defenseType: DefenseType; difficulty: string | null }[];
+    rankVisible: boolean;
+  };
 };
 
 export default function RaidStatisticsPage({ raid }: RaidStatisticsProps) {
@@ -22,13 +26,14 @@ export default function RaidStatisticsPage({ raid }: RaidStatisticsProps) {
   const fetcher = useFetcher<RaidStatisticsData>();
   useEffect(() => {
     fetcher.load(`/raids/data/${raid.uid}/statistics?defenseType=${defenseType}`);
-  }, [defenseType]);
+  }, [raid.uid, defenseType]);
 
   return (
-    <div className="flex flex-col">
+    <div className="w-full max-w-3xl">
       {raid.rankVisible && raid.type === "elimination" && (
-        <div className="mb-6">
+        <div className="my-4">
           <FilterButtons
+            key={`filters-${raid.uid}`}
             Icon={ShieldCheckIcon}
             buttonProps={
               raid.defenseTypes.map((each) => ({
@@ -42,23 +47,25 @@ export default function RaidStatisticsPage({ raid }: RaidStatisticsProps) {
           />
         </div>
       )}
-      {(!fetcher.data || fetcher.state !== "idle") && <LoadingSkeleton />}
-      {fetcher.state === "idle" && fetcher.data?.statistics && (
-        fetcher.data.statistics.length > 0 ? (
-          <div className="xl:grid xl:grid-cols-2 xl:gap-4">
-            <div>
-              <p className="text-lg font-bold">스트라이커 편성 횟수</p>
-              <SlotCountInfos statistics={fetcher.data.statistics!.filter(({ student }) => student.role === "striker")} />
+      <div className="flex flex-col">
+        {(!fetcher.data || fetcher.state !== "idle") && <LoadingSkeleton />}
+        {fetcher.state === "idle" && fetcher.data?.statistics && (
+          fetcher.data.statistics.length > 0 ? (
+            <div className="xl:grid xl:grid-cols-2 xl:gap-4">
+              <div>
+                <p className="text-lg font-bold">스트라이커 편성 횟수</p>
+                <SlotCountInfos statistics={fetcher.data.statistics!.filter(({ student }) => student.role === "striker")} />
+              </div>
+              <div>
+                <p className="text-lg font-bold">스페셜 편성 횟수</p>
+                <SlotCountInfos statistics={fetcher.data.statistics!.filter(({ student }) => student.role === "special")} />
+              </div>
             </div>
-            <div>
-              <p className="text-lg font-bold">스페셜 편성 횟수</p>
-              <SlotCountInfos statistics={fetcher.data.statistics!.filter(({ student }) => student.role === "special")} />
-            </div>
-          </div>
-        ) : (
-          <EmptyView text="통계 정보를 준비중이에요" />
-        )
-      )}
+          ) : (
+            <EmptyView text="통계 정보를 준비중이에요" />
+          )
+        )}
+      </div>
     </div>
   );
 }

@@ -35,7 +35,6 @@ export const loader = async ({ request, context }: LoaderFunctionArgs) => {
 
   return {
     currentUsername: sensei?.username ?? null,
-    currentRole: sensei?.role ?? null,
     darkMode: preference.darkMode ?? false,
     hasRecentNews: latestNewsTime ? latestNewsTime > threeDaysAgo : false,
   };
@@ -72,11 +71,12 @@ export function Layout({ children }: { children: React.ReactNode }) {
   );
 }
 
-const wideLayout = ["/raids", "/futures"];
+const wideLayout = ["/futures"];
+const fullLayout = ["/raids"]
 
 export default function App() {
   const loaderData = useLoaderData<typeof loader>();
-  const { currentUsername, currentRole, hasRecentNews } = loaderData;
+  const { currentUsername, hasRecentNews } = loaderData;
 
   const [darkMode, setDarkMode] = useState(loaderData.darkMode);
   const loadingBarRef = useRef<LoadingBarRef>(null);
@@ -91,6 +91,12 @@ export default function App() {
   }, [navigate.state]);
 
   const location = useLocation();
+  let widthClass = "max-w-3xl";
+  if (fullLayout.find((path) => location.pathname.startsWith(path))) {
+    widthClass = "w-full";
+  } else if (wideLayout.find((path) => location.pathname.startsWith(path))) {
+    widthClass = "max-w-6xl";
+  }
   return (
     <div className={`${darkMode ? "dark " : ""}text-neutral-900 dark:bg-neutral-800 dark:text-neutral-200 transition`}>
       <LoadingBar
@@ -105,14 +111,13 @@ export default function App() {
             <div className="fixed xl:relative w-full xl:w-96 xl:h-screen bg-white/90 dark:bg-neutral-800/90 backdrop-blur-sm border-b xl:border-b-0 xl:border-r border-neutral-200 dark:border-neutral-700 shadow-xl shadow-neutral-200/30 dark:shadow-neutral-900/30 z-100">
               <Sidebar 
                 currentUsername={currentUsername} 
-                currentRole={currentRole} 
                 darkMode={darkMode} 
                 setDarkMode={setDarkMode}
                 hasRecentNews={hasRecentNews}
               />
             </div>
             <div className="w-full pt-10 xl:pt-0 overflow-y-scroll">
-              <div className={`xl:h-screen mx-auto ${wideLayout.find((path) => location.pathname.startsWith(path)) ? "max-w-6xl" : "max-w-3xl"} px-4 md:px-8 py-6`}>
+              <div className={`xl:h-screen mx-auto ${widthClass} px-4 md:px-8 py-6`}>
                 <div className="pb-32">
                   <Outlet />
                 </div>
