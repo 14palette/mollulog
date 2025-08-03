@@ -1,6 +1,5 @@
 import type { Env } from "~/env.server";
 import { runQuery } from "~/lib/baql";
-import { fetchCached } from "./base";
 import { graphql } from "~/graphql";
 import type { AttackType, DefenseType } from "./content.d";
 
@@ -38,27 +37,41 @@ const allStudentsQuery = graphql(`
 `);
 
 export async function getAllStudents(env: Env, includeUnreleased = false): Promise<Student[]> {
-  return fetchCached(env, `students::v2::list::includeUnreleased=${includeUnreleased}`, async () => {
-    const { data } = await runQuery(allStudentsQuery, {});
-    return (data?.students ?? []).filter(({ released }) => includeUnreleased || released);
-  }, 10 * 60);
+  const rawStudents = await getRawStudents(env);
+  if (includeUnreleased) {
+    return rawStudents;
+  }
+  return rawStudents.filter(({ released }) => released);
 };
 
 export async function getAllStudentsMap(env: Env, includeUnreleased = false): Promise<StudentMap> {
-  return fetchCached(env, `students::v2::map::includeUnreleased=${includeUnreleased}`, async () => {
-    const { data } = await runQuery(allStudentsQuery, {});
-    const students = (data?.students ?? []).filter(({ released }) => includeUnreleased || released);
-    return students.reduce((acc, student) => {
-      acc[student.uid] = student;
-      return acc;
-    }, {} as StudentMap);
-  }, 10 * 60);
-}
-
-export async function getStudentsMap(env: Env, uids: string[]): Promise<StudentMap> {
-  const allStudents = await getAllStudentsMap(env, true);
-  return uids.reduce((acc, uid) => {
-    acc[uid] = allStudents[uid];
+  const rawStudents = await getRawStudents(env);
+  const students = includeUnreleased ? rawStudents : rawStudents.filter(({ released }) => released);
+  return students.reduce((acc, student) => {
+    acc[student.uid] = student;
     return acc;
   }, {} as StudentMap);
+}
+
+const rawStudentsKey = "students::v3";
+
+export async function syncRawStudents(env: Env): Promise<Student[]> {
+  const { data } = await runQuery(allStudentsQuery, {});
+  if (!data?.students) {
+    return [];
+  }
+
+  await env.KV_USERDATA.put(rawStudentsKey, JSON.stringify(data.students satisfies Student[]), {
+    expirationTtl: 60 * 10,
+  });
+  return data.students satisfies Student[];
+}
+
+async function getRawStudents(env: Env): Promise<Student[]> {
+  const cached = await env.KV_USERDATA.get(rawStudentsKey);
+  if (cached) {
+    return JSON.parse(cached) as Student[];
+  } else {
+    return syncRawStudents(env);
+  }
 }

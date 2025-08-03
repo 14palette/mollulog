@@ -1,5 +1,6 @@
 import { createRequestHandler } from "react-router";
 import { Env } from "~/env.server";
+import { syncRawStudents } from "~/models/student";
 
 declare module "react-router" {
   export interface AppLoadContext {
@@ -20,5 +21,11 @@ export default {
     return requestHandler(request, {
       cloudflare: { env, ctx },
     });
+  },
+
+  async scheduled(event, env, ctx) {
+    if (event.cron === "0 0 * * *") {
+      await syncRawStudents(env);
+    }
   },
 } satisfies ExportedHandler<Env>;

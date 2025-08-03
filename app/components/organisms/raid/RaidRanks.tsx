@@ -7,7 +7,6 @@ import type { RaidRanksData } from "~/routes/raids.data.$id.ranks";
 import { Button } from "~/components/atoms/form";
 import { LoadingSkeleton } from "~/components/atoms/layout";
 import type { DefenseType } from "~/models/content.d";
-import { IdentificationIcon } from "@heroicons/react/24/outline";
 
 export type RaidRankFilters = {
   defenseType: DefenseType | null;

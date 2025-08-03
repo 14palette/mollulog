@@ -18,6 +18,12 @@
     "head_sampling_rate": 1
   },
 
+  "triggers": {
+    "crons": [
+      "0 0 * * *"
+    ]
+  },
+
   "kv_namespaces": [
     { "binding": "KV_USERDATA", "id": "local_kv_userdata" },
     { "binding": "KV_SESSION", "id": "local_kv_session" }

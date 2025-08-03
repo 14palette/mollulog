@@ -1,4 +1,4 @@
-import type { LoaderFunctionArgs } from "react-router";
+import { data as routeData, type LoaderFunctionArgs } from "react-router";
 import { graphql } from "~/graphql";
 import { runQuery } from "~/lib/baql";
 import type { Defense } from "~/graphql/graphql";
@@ -40,7 +40,9 @@ export const loader = async ({ request, params }: LoaderFunctionArgs) => {
     throw new Response("Error fetching raid statistics", { status: 500 });
   }
 
-  return {
+  return routeData({
     statistics: data.raid?.statistics?.filter(({ slotsCount, assistsCount }) => slotsCount + assistsCount > 100),
-  };
+  }, {
+    headers: { "Cache-Control": "max-age=86400, public" },
+  });
 }

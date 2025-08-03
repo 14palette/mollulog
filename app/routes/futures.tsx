@@ -18,7 +18,7 @@ export const futureContentsQuery = graphql(`
   query FutureContents($now: ISO8601DateTime!) {
     contents(untilAfter: $now, first: 9999) {
       nodes {
-        uid name since until confirmed
+        __typename uid name since until confirmed
         ... on Event {
           eventType: type
           rerun endless

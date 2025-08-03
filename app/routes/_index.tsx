@@ -16,7 +16,7 @@ const indexQuery = graphql(`
   query Index($now: ISO8601DateTime!) {
     events(untilAfter: $now, sinceBefore: $now) {
       nodes {
-        name since until endless uid type rerun
+        __typename name since until endless uid type rerun
         pickups {
           type rerun since until
           student { uid name attackType defenseType role schaleDbId }
