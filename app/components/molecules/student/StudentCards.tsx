@@ -50,11 +50,11 @@ export default function StudentCards({ students, mobileGrid, pcGrid, onSelect, o
 
   return (
     <div className={`relative grid ${gridClass} ${pcGridClass} gap-1 sm:gap-2`}>
-      {students && students.map((student) => {
+      {students && students.map((student, index) => {
         const { uid } = student;
         return (
           <div
-            key={`student-card-${student.name ?? uid}`}
+            key={`student-card-${student.name ?? uid}-${index}`}
             ref={(ref) => uid && onRef?.(uid, ref)}
             className="scroll-mt-20 md:scroll-mt-4"
           >

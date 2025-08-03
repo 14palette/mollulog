@@ -1,5 +1,4 @@
-import { ChevronLeftIcon } from "@heroicons/react/20/solid";
-import { Link, type MetaFunction, Outlet, useLocation } from "react-router";
+import { type MetaFunction, Outlet, useLocation } from "react-router";
 import { Title } from "~/components/atoms/typography";
 
 export const meta: MetaFunction = () => [
@@ -11,12 +10,7 @@ export default function EditPasskey() {
   const parentPath = location.pathname.split("/").slice(0, -1).join("/");
   return (
     <>
-      <div className="flex items-center gap-x-2">
-        <Link to={parentPath}>
-          <ChevronLeftIcon className="size-8 md:size-10 hover:text-neutral-500 transition cursor-pointer" />
-        </Link>
-        <Title text="Passkey 관리" />
-      </div>
+      <Title text="Passkey 관리" parentPath={parentPath} />
       <Outlet />
     </>
   )

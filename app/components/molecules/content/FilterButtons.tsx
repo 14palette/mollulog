@@ -1,8 +1,9 @@
-import { useState } from "react";
+import { useState, useEffect } from "react";
 import { sanitizeClassName } from "~/prophandlers";
 
 // === FilterButtons
 type FilterButtonsProps = {
+  key?: string;
   Icon?: React.ElementType,
   buttonProps: FilterButtonProps[],
   exclusive?: boolean;
@@ -10,8 +11,11 @@ type FilterButtonsProps = {
   inBlock?: boolean;
 }
 
-export default function FilterButtons({ Icon, buttonProps, exclusive, atLeastOne, inBlock }: FilterButtonsProps) {
+export default function FilterButtons({ key, Icon, buttonProps, exclusive, atLeastOne, inBlock }: FilterButtonsProps) {
   const [actives, setActives] = useState(buttonProps.map((prop) => prop.active ?? false));
+  useEffect(() => {
+    setActives(buttonProps.map((prop) => prop.active ?? false));
+  }, [key]);
 
   return (
     <div className="my-2 flex flex-wrap items-center gap-1 md:gap-1.5">

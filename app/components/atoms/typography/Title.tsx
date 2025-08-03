@@ -1,7 +1,23 @@
-export default function Title({ text, className }: { text: string, className?: string }) {
+import { ChevronLeftIcon } from "@heroicons/react/24/solid";
+import { Link } from "react-router";
+
+type TitleProps = {
+  text: string;
+  className?: string;
+  parentPath?: string;
+}
+
+export default function Title({ text, className, parentPath }: TitleProps) {
   return (
-    <h1 className={`mt-8 mb-8 font-black text-3xl md:text-4xl drop-shadow-xl drop-shadow-neutral-300/50 dark:drop-shadow-neutral-700/50 ${className ?? ""}`}>
-      {text}
-    </h1>
+    <div className={`mt-8 mb-8 flex items-center gap-x-2 ${className ?? ""}`}>
+      {parentPath && (
+        <Link to={parentPath}>
+          <ChevronLeftIcon className="mx-1 size-8 hover:text-neutral-500 transition cursor-pointer" strokeWidth={2} />
+        </Link>
+      )}
+      <h1 className="font-black text-3xl md:text-4xl drop-shadow-xl drop-shadow-neutral-300/50 dark:drop-shadow-neutral-700/50">
+        {text}
+      </h1>
+    </div>
   );
 }
