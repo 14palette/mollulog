@@ -1,4 +1,5 @@
-import { ClockIcon, FunnelIcon, XMarkIcon } from "@heroicons/react/16/solid";
+import { ClockIcon, XMarkIcon } from "@heroicons/react/16/solid";
+import { FunnelIcon } from "@heroicons/react/24/outline";
 import { Transition } from "@headlessui/react";
 import dayjs from "dayjs";
 import { useEffect, useState } from "react";
@@ -15,23 +16,33 @@ import { Terrain, DefenseType, AttackType, RaidType } from "~/models/content.d";
 import { sanitizeClassName } from "~/prophandlers";
 import RaidStatisticsPage from "~/components/templates/raids/RaidStatisticsPage";
 import RaidRanksPage from "~/components/templates/raids/RaidRanksPage";
+import RaidVideosPage from "~/components/templates/raids/RaidVideosPage";
 import { getAllStudents } from "~/models/student";
 import { getAuthenticator } from "~/auth/authenticator.server";
 import { RaidRankFilter } from "~/components/organisms/raid";
 import { RaidRankFilters } from "~/components/organisms/raid/RaidRanks";
-import BottomSheet from "~/components/atoms/layout/BottomSheet";
+import { BottomSheet } from "~/components/atoms/layout";
 
 const allRaidQuery = graphql(`
   query AllRaid {
     raids {
       nodes {
-        defenseTypes { defenseType difficulty }
         uid type name boss since until terrain attackType rankVisible
+        defenseTypes { defenseType difficulty }
+        videos(first: 1) {
+          pageInfo { hasNextPage }
+        }
       }
     }
   }
 `);
 
+type Screen = "ranks" | "statistics" | "videos";
+const screenTitles: Record<Screen, string> = {
+  "ranks":      "상위권 순위",
+  "statistics": "학생 편성 통계",
+  "videos":     "공략 영상 (베타)",
+};
 
 export const loader = async ({ request, context, params }: LoaderFunctionArgs) => {
   const { data, error } = await runQuery(allRaidQuery, {});
@@ -74,7 +85,7 @@ export const meta: MetaFunction<typeof loader> = ({ data }) => {
   const { currentRaid } = data;
   const since = dayjs(currentRaid.since);
   const title = `${raidTypeLocale[currentRaid.type]} ${currentRaid.name}(${since.year()}년 ${since.month() + 1}월) 정보`;
-  const description = `${since.year()}년 ${since.month() + 1}월에 진행${dayjs(currentRaid.until).isAfter(dayjs()) ? "될" : "된"} ${raidTypeLocale[currentRaid.type]} ${currentRaid.name}의 토먼트/루나틱 랭킹, 파티, 학생 통계 정보 등을 확인해보세요.`;
+  const description = `${since.year()}년 ${since.month() + 1}월에 진행${dayjs(currentRaid.until).isAfter(dayjs()) ? "될" : "된"} ${raidTypeLocale[currentRaid.type]} ${currentRaid.name}의 상위권 순위, 학생 통계, 공략 영상 정보 등을 확인해보세요.`;
   return [
     { title: `${title} | 몰루로그` },
     { name: "description", content: description },
@@ -110,7 +121,7 @@ export default function RaidDetail() {
   const { currentRaid, allRaids, signedIn, allStudents } = useLoaderData<typeof loader>();
   const raidType = currentRaid?.type ?? "total_assault";
 
-  const [screen, setScreen] = useState<"statistics" | "ranks">("ranks");
+  const [screen, setScreen] = useState<Screen>("ranks");
   const [filters, setFilters] = useState<RaidRankFilters>({
     defenseType: currentRaid.type === "elimination" ? currentRaid.defenseTypes[0].defenseType : null,
     filterNotOwned: false,
@@ -128,6 +139,7 @@ export default function RaidDetail() {
     }
   }, [currentRaid.uid, currentRaid.defenseTypes]);
 
+  const videoAvailable = currentRaid.videos.pageInfo.hasNextPage;
   return (
     <div className="flex flex-col xl:flex-row">
       <div className="w-full xl:max-w-sm xl:mr-8">
@@ -140,8 +152,15 @@ export default function RaidDetail() {
         {currentRaid.rankVisible && (
           <>
             <div className="mt-6 xl:mt-8">
-              <ScreenSelector text="상위권 편성" description="상위 2만명의 편성 정보를 찾아볼 수 있어요" active={screen === "ranks"} onClick={() => setScreen("ranks")} />
-              <ScreenSelector text="학생 편성 통계" description="학생들이 편성된 횟수 통계를 확인할 수 있어요" active={screen === "statistics"} onClick={() => setScreen("statistics")} />
+              <ScreenSelector text={screenTitles.ranks} description="일본 서버 상위 2만명의 편성 정보를 찾아볼 수 있어요" active={screen === "ranks"} onClick={() => setScreen("ranks")} />
+              <ScreenSelector text={screenTitles.statistics} description="학생들이 편성된 횟수의 통계를 확인할 수 있어요" active={screen === "statistics"} onClick={() => setScreen("statistics")} />
+              <ScreenSelector
+                text={screenTitles.videos}
+                description={videoAvailable ? "공략 영상 목록을 확인할 수 있어요" : "공략 영상을 준비중이에요"}
+                active={screen === "videos"}
+                onClick={() => setScreen("videos")}
+                disabled={!videoAvailable}
+              />
             </div>
             {screen === "ranks" && (
               <>
@@ -164,11 +183,10 @@ export default function RaidDetail() {
       <div className="grow mt-6 xl:mt-0 xl:p-8 relative">
         {currentRaid.rankVisible ?
           <>
-            <p className="mb-4 text-xl xl:text-2xl font-bold">
-              {screen === "ranks" ? "상위권 편성" : "학생 편성 통계"}
-            </p>
+            <p className="mb-4 text-xl xl:text-2xl font-bold">{screenTitles[screen]}</p>
             {screen === "ranks" && <RaidRanksPage filters={filters} setFilters={setFilters} raid={currentRaid} signedIn={signedIn} allStudents={allStudents} />}
             {screen === "statistics" && <RaidStatisticsPage raid={currentRaid} />}
+            {screen === "videos" && <RaidVideosPage raid={currentRaid} />}
           </> :
           <div className="my-16 md:my-48 w-full flex flex-col items-center justify-center">
             <ClockIcon className="my-2 w-16 h-16" strokeWidth={2} />
@@ -215,25 +233,26 @@ type ScreenSelectorProps = {
   text: string;
   description: string;
   active: boolean;
+  disabled?: boolean;
   onClick: () => void;
 }
 
-function ScreenSelector({ text, description, active, onClick }: ScreenSelectorProps) {
+function ScreenSelector({ text, description, active, disabled, onClick }: ScreenSelectorProps) {
+  const classNames = ["my-2 w-full py-3 px-4 rounded-lg transition-all duration-200 border"];
+  if (disabled) {
+    classNames.push("bg-neutral-100 dark:bg-neutral-800/50 border-neutral-200 dark:border-neutral-700 cursor-not-allowed opacity-60");
+  } else if (active) {
+    classNames.push("bg-blue-50 dark:bg-blue-900/20 border-blue-200 dark:border-blue-700 cursor-pointer");
+  } else {
+    classNames.push("bg-white dark:bg-neutral-800 border-neutral-200 dark:border-neutral-700 hover:bg-neutral-100 dark:hover:bg-neutral-700 cursor-pointer");
+  }
+
   return (
-    <div
-      className={sanitizeClassName(`
-        my-2 w-full py-3 px-4 rounded-lg cursor-pointer transition-all duration-200 border
-        ${active
-          ? "bg-blue-50 dark:bg-blue-900/20 border-blue-200 dark:border-blue-700"
-          : "bg-white dark:bg-neutral-800 border-neutral-200 dark:border-neutral-700 hover:bg-neutral-100 dark:hover:bg-neutral-700"
-        }
-      `)}
-      onClick={onClick}
-    >
-      <p className={`font-bold transition-colors ${active ? "text-blue-700 dark:text-blue-300" : "text-neutral-700 dark:text-neutral-300"}`}>
+    <div className={classNames.join(" ")} onClick={disabled ? undefined : onClick}>
+      <p className={`font-bold transition-colors ${disabled ? "text-neutral-400 dark:text-neutral-500" : active ? "text-blue-700 dark:text-blue-300" : "text-neutral-700 dark:text-neutral-300"}`}>
         {text}
       </p>
-      <p className={`text-sm ${active ? "text-blue-500 dark:text-blue-400" : "text-neutral-500 dark:text-neutral-400"}`}>
+      <p className={`text-sm ${disabled ? "text-neutral-400 dark:text-neutral-500" : active ? "text-blue-500 dark:text-blue-400" : "text-neutral-500 dark:text-neutral-400"}`}>
         {description}
       </p>
     </div>

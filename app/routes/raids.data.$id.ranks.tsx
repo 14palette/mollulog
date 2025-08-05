@@ -19,6 +19,7 @@ const raidRanksQuery = graphql(`
             student { uid name }
           }
         }
+        video { youtubeId }
       }
     }
   }

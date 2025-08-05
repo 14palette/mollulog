@@ -81,7 +81,7 @@ function ActionButton({ action, setRemindDangerAction }: ActionButtonProps) {
   if (action.danger && setRemindDangerAction) {
     return button;
   } else if (action.link) {
-    return <Link to={action.link}>{button}</Link>;
+    return <Link to={action.link} target={action.link.startsWith("http") ? "_blank" : undefined}>{button}</Link>;
   } else if (action.form) {
     return (
       <Form method={action.form.method}>

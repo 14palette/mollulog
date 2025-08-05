@@ -84,8 +84,15 @@ export default function RaidRanks({ raidUid, raidSince, filters, setFilters }: R
         {(!rankFetcher.data || rankFetcher.state !== "idle") ? <LoadingSkeleton /> : (
           <>
             {rankFetcher.data?.ranks.length === 0 && <EmptyView text="조건에 맞는 순위 정보가 없어요." />}
-            {rankFetcher.data?.ranks.map(({ rank, score, parties }) => (
-              <ActionCard key={`rank-${rank}`} actions={[]}>
+            {rankFetcher.data?.ranks.map(({ rank, score, parties, video }) => (
+              <ActionCard
+                key={`rank-${rank}`}
+                actions={video ? [{
+                  text: "공략 영상",
+                  color: "red",
+                  link: `https://www.youtube.com/watch?v=${video.youtubeId}`,
+                }] : []}
+              >
                 <div>
                   <p className="text-lg mb-4">
                     <span className="font-bold">{rank}위</span> ({score.toLocaleString()}점)
