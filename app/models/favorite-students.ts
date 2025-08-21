@@ -45,14 +45,35 @@ type FavoritedCount = {
 }
 
 export async function getFavoritedCounts(env: Env, studentIds: string[]): Promise<FavoritedCount[]> {
+  if (studentIds.length === 0) {
+    return [];
+  }
+
   const db = drizzle(env.DB);
-  return db.select({
-    studentId: contentFavoriteCountsTable.studentId,
-    contentId: contentFavoriteCountsTable.contentId,
-    count: contentFavoriteCountsTable.count,
-  }).from(contentFavoriteCountsTable)
-    .where(inArray(contentFavoriteCountsTable.studentId, studentIds))
-    .all();
+
+  // Cloudflare D1/SQLite has a limit on the number of SQL variables per statement.
+  // Use a conservative batch size to avoid hitting the limit.
+  const BATCH_SIZE = 90;
+
+  const batches: string[][] = [];
+  for (let start = 0; start < studentIds.length; start += BATCH_SIZE) {
+    batches.push(studentIds.slice(start, start + BATCH_SIZE));
+  }
+
+  const batchResults = await Promise.all(
+    batches.map((batch) =>
+      db.select({
+        studentId: contentFavoriteCountsTable.studentId,
+        contentId: contentFavoriteCountsTable.contentId,
+        count: contentFavoriteCountsTable.count,
+      })
+      .from(contentFavoriteCountsTable)
+      .where(inArray(contentFavoriteCountsTable.studentId, batch))
+      .all(),
+    ),
+  );
+
+  return batchResults.flat();
 }
 
 // Add new table definition
