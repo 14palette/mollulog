@@ -9,7 +9,7 @@ import { SlotCountInfo } from "~/components/organisms/raid";
 import { ShieldCheckIcon } from "@heroicons/react/24/outline";
 import { RaidStatisticsData } from "~/routes/raids.data.$id.statistics";
 import { LoadingSkeleton } from "~/components/atoms/layout";
-
+import { getMaxTierAt } from "~/models/student";
 
 export type RaidStatisticsProps = {
   raid: {
@@ -17,11 +17,13 @@ export type RaidStatisticsProps = {
     type: RaidType;
     defenseTypes: { defenseType: DefenseType; difficulty: string | null }[];
     rankVisible: boolean;
+    since: Date;
   };
 };
 
 export default function RaidStatisticsPage({ raid }: RaidStatisticsProps) {
   const [defenseType, setDefenseType] = useState<DefenseType>(raid.defenseTypes[0].defenseType);
+  const maxTier = getMaxTierAt(raid.since);
 
   const fetcher = useFetcher<RaidStatisticsData>();
   useEffect(() => {
@@ -54,11 +56,11 @@ export default function RaidStatisticsPage({ raid }: RaidStatisticsProps) {
             <div className="xl:grid xl:grid-cols-2 xl:gap-4">
               <div>
                 <p className="text-lg font-bold">스트라이커 편성 횟수</p>
-                <SlotCountInfos statistics={fetcher.data.statistics!.filter(({ student }) => student.role === "striker")} />
+                <SlotCountInfos statistics={fetcher.data.statistics!.filter(({ student }) => student.role === "striker")} maxTier={maxTier} />
               </div>
               <div>
                 <p className="text-lg font-bold">스페셜 편성 횟수</p>
-                <SlotCountInfos statistics={fetcher.data.statistics!.filter(({ student }) => student.role === "special")} />
+                <SlotCountInfos statistics={fetcher.data.statistics!.filter(({ student }) => student.role === "special")} maxTier={maxTier} />
               </div>
             </div>
           ) : (
@@ -70,7 +72,7 @@ export default function RaidStatisticsPage({ raid }: RaidStatisticsProps) {
   );
 }
 
-function SlotCountInfos({ statistics }: { statistics: Exclude<RaidStatisticsData["statistics"], undefined> }) {
+function SlotCountInfos({ statistics, maxTier }: { statistics: Exclude<RaidStatisticsData["statistics"], undefined>, maxTier?: number }) {
   const [showMore, setShowMore] = useState(false);
 
   return (
@@ -83,6 +85,7 @@ function SlotCountInfos({ statistics }: { statistics: Exclude<RaidStatisticsData
           slotsByTier={slotsByTier}
           assistsCount={assistsCount}
           assistsByTier={assistsByTier}
+          maxTier={maxTier}
         />
       ))}
       {statistics.length > 5 && (

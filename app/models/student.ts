@@ -75,3 +75,17 @@ async function getRawStudents(env: Env): Promise<Student[]> {
     return syncRawStudents(env);
   }
 }
+
+const maximumTiers: Record<string, number> = {
+  "2025-12-22": 9,
+};
+
+export function getMaxTierAt(date: Date): number {
+  const dates = Object.keys(maximumTiers).sort();
+  for (let i = dates.length - 1; i >= 0; i--) {
+    if (new Date(date) >= new Date(dates[i])) {
+      return maximumTiers[dates[i]];
+    }
+  }
+  return 8;
+}

@@ -1,7 +1,7 @@
 import type { MetaFunction, LoaderFunctionArgs } from "react-router";
 import { isRouteErrorResponse, useLoaderData, useRouteError } from "react-router";
 import dayjs from "dayjs";
-import { useState } from "react";
+import { useState, useMemo } from "react";
 import { graphql } from "~/graphql";
 import { runQuery } from "~/lib/baql";
 import {
@@ -15,6 +15,9 @@ import { ErrorPage } from "~/components/organisms/error";
 import { SlotCountInfo } from "~/components/organisms/raid";
 import { PickupHistories } from "~/components/organisms/student";
 import { studentStandingImageUrl } from "~/models/assets";
+import { getMaxTierAt } from "~/models/student";
+import { FilterButtons } from "~/components/molecules/content";
+import { BarsArrowDownIcon } from "@heroicons/react/24/outline";
 
 const studentDetailQuery = graphql(`
   query StudentDetail($uid: String!, $raidSince: ISO8601DateTime!) {
@@ -91,9 +94,25 @@ export default function StudentDetail() {
   const { student } = useLoaderData<typeof loader>();
 
   const [raidShowMore, setRaidShowMore] = useState(false);
+  const [sort, setSort] = useState<"recent" | "old">("recent");
 
-  const statistics = student.raidStatistics.filter(({ slotsCount }) => slotsCount > 100);
-  const filteredStatistics = statistics.slice(0, raidShowMore ? undefined : 5);
+  // Memoize the filtered statistics to prevent re-computation on every render
+  const statistics = useMemo(() => 
+    student.raidStatistics.filter(({ slotsCount }) => slotsCount > 100),
+    [student.raidStatistics]
+  );
+
+  // Memoize the sorted and sliced statistics
+  const filteredStatistics = useMemo(() => {
+    const sorted = statistics.sort((a, b) => {
+      if (sort === "recent") {
+        return new Date(b.raid.since).getTime() - new Date(a.raid.since).getTime();
+      } else {
+        return new Date(a.raid.since).getTime() - new Date(b.raid.since).getTime();
+      }
+    });
+    return raidShowMore ? sorted : sorted.slice(0, 5);
+  }, [statistics, sort, raidShowMore]);
 
   return (
     <>
@@ -134,8 +153,18 @@ export default function StudentDetail() {
         description="최근 1년간 개최된 총력전/대결전의 편성 횟수를 제공해요."
       />
       <div>
-        {filteredStatistics.length === 0 && <EmptyView text="편성된 충력전/대결전 정보가 없어요" />}
-        {filteredStatistics.slice(0, raidShowMore ? undefined : 5).map(({ raid, defenseType, difficulty, slotsByTier, slotsCount, assistsCount, assistsByTier }) => {
+        {filteredStatistics.length === 0 ?
+          <EmptyView text="편성된 충력전/대결전 정보가 없어요" /> :
+          <FilterButtons
+            Icon={BarsArrowDownIcon}
+            buttonProps={[
+              { text: "최신순", onToggle: () => setSort("recent"), active: sort === "recent" },
+              { text: "과거순", onToggle: () => setSort("old"), active: sort === "old" },
+            ]}
+            exclusive atLeastOne
+          />
+        }
+        {filteredStatistics.map(({ raid, defenseType, difficulty, slotsByTier, slotsCount, assistsCount, assistsByTier }) => {
           return (
             <SlotCountInfo
               key={`${raid.uid}-${defenseType}`}
@@ -150,6 +179,7 @@ export default function StudentDetail() {
               slotsByTier={slotsByTier}
               assistsCount={assistsCount}
               assistsByTier={assistsByTier}
+              maxTier={getMaxTierAt(new Date(raid.since))}
             />
           );
         })}

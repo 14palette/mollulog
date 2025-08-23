@@ -29,11 +29,13 @@ type SlotCountInfoProps = {
   slotsByTier: { tier: number; count: number }[];
   assistsCount: number;
   assistsByTier: { tier: number; count: number }[];
+
+  maxTier?: number;
 };
 
 type SlotMode = "total" | "own" | "assist";
 
-export default function SlotCountInfo({ student, raid, slotsCount, assistsCount, slotsByTier, assistsByTier }: SlotCountInfoProps) {
+export default function SlotCountInfo({ student, raid, slotsCount, assistsCount, slotsByTier, assistsByTier, maxTier = 8 }: SlotCountInfoProps) {
   const ownedByTierMap = slotsByTier.reduce((acc, { tier, count }) => {
     acc[tier] = count;
     return acc;
@@ -132,7 +134,8 @@ export default function SlotCountInfo({ student, raid, slotsCount, assistsCount,
         </div>
         <TierCounts
           tierCounts={tierCounts[slotMode]}
-          visibleTiers={[8, 7, 6, 5, 4, 3]}
+          // From maxTier to 3
+          visibleTiers={Array.from({ length: maxTier - 2 }, (_, i) => maxTier - i)}
           reducePaddings
           totalCount={20000}
         />

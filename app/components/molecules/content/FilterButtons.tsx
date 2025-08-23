@@ -17,6 +17,7 @@ export default function FilterButtons({ Icon, buttonProps, exclusive, atLeastOne
       {Icon && <Icon className="h-5 w-5 mr-1" strokeWidth={2} />}
       {buttonProps.map((prop, index) => (
         <FilterButton
+          key={`${prop.text}-${index}`}
           text={prop.text}
           color={prop.color}
           active={actives[index]}

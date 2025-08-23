@@ -1,6 +1,6 @@
 export type ProgressProps = {
   ratio: number;
-  color: "red" | "orange" | "yellow" | "green" | "cyan" | "blue" | "purple" | "fuchsia";
+  color: "red" | "orange" | "yellow" | "green" | "cyan" | "blue" | "purple" | "fuchsia" | "pink";
 }
 
 export default function Progress({ ratio, color }: ProgressProps) {
@@ -14,6 +14,7 @@ export default function Progress({ ratio, color }: ProgressProps) {
     case "blue":    colorClass = "bg-linear-to-r from-blue-500 to-indigo-300";    break;
     case "purple":  colorClass = "bg-linear-to-r from-purple-500 to-fuchsia-300"; break;
     case "fuchsia": colorClass = "bg-linear-to-r from-fuchsia-500 to-pink-300";   break;
+    case "pink":    colorClass = "bg-linear-to-r from-pink-500 to-rose-300";       break;
   }
 
   return (

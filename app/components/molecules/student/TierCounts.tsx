@@ -7,7 +7,7 @@ type TierCountsProps = {
   reducePaddings?: boolean;
 };
 
-const colors: { [tier: number]: "red" | "orange" | "yellow" | "green" | "cyan" | "blue" | "purple" | "fuchsia" } = {
+const colors: { [tier: number]: "red" | "orange" | "yellow" | "green" | "cyan" | "blue" | "purple" | "fuchsia" | "pink" } = {
   1: "red",
   2: "orange",
   3: "yellow",
@@ -16,6 +16,7 @@ const colors: { [tier: number]: "red" | "orange" | "yellow" | "green" | "cyan" |
   6: "blue",
   7: "purple",
   8: "fuchsia",
+  9: "pink",
 };
 
 export default function TierCounts({ tierCounts, visibleTiers, reducePaddings, totalCount: providedTotalCount }: TierCountsProps) {
