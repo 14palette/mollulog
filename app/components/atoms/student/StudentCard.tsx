@@ -93,20 +93,20 @@ export default function StudentCard({
               />
               {/* 우측 상단 */}
               <div className="absolute top-0 right-0 text-xs font-bold">
-                {level && <span className="px-1.5 bg-black/90 rounded-lg text-neutral-100">Lv. {level}</span>}
+                {level && <span className="px-1.5 bg-neutral-900/90 rounded-lg text-neutral-100">Lv. {level}</span>}
               </div>
 
               {(favoritedCount || favorited) && (
-                <div className={`px-1 absolute top-0.5 right-0.5 text-white border rounded-lg flex items-center transition ${(favorited === undefined || favorited === true) ? "bg-red-500/90" : "bg-neutral-500/90"}`}>
+                <div className={`px-1 absolute top-0.5 right-0.5 text-white border rounded-lg flex items-center transition ${(favorited === undefined || favorited === true) ? "bg-red-500/90" : "bg-neutral-900/80"}`}>
                   <HeartIcon className="size-3.5" />
                   {favoritedCount && <span className="text-xs font-bold">{favoritedCount}</span>}
                 </div>
               )}
 
               {/* 하단 */}
-              <div className="absolute bottom-0 w-full flex justify-center text-xs font-bold bg-black/90 rounded-b-sm">
+              <div className="absolute bottom-0 w-full flex justify-center text-xs font-bold bg-black/90">
                 {isAssist && (
-                  <div className="px-1 md:px-1.5 text-xs font-bold bg-linear-to-br from-cyan-300 to-sky-500 dark:from-cyan-400 dark:to-sky-600 text-white rounded-bl-lg text-center">A</div>
+                  <div className="px-1 md:px-1.5 text-xs font-bold bg-linear-to-br from-cyan-300 to-sky-500 dark:from-cyan-400 dark:to-sky-600 text-white text-center">A</div>
                 )}
                 {label}
                 {!label && tier && (
@@ -175,7 +175,7 @@ export function StudentCardPopup({ student, popups, onClose }: StudentCardPopupP
   const { name, attackType, defenseType, role } = student;
 
   return (
-    <div className="m-4 md:m-0 bg-neutral-100/75 dark:bg-black/75 backdrop-blur-sm text-black dark:text-white rounded-xl border border-neutral-200 dark:border-neutral-800 shadow-lg">
+    <div className="m-4 md:m-0 bg-white/90 dark:bg-neutral-900/80 backdrop-blur-sm text-black dark:text-white rounded-xl border border-neutral-200 dark:border-neutral-800 shadow-lg">
       <div className="px-4 pt-4 pb-2">
         <p className="text-lg font-bold">{name}</p>
         {attackType && defenseType && role && (
