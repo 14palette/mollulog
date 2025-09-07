@@ -71,6 +71,7 @@ export const loader = async ({ request, context, params }: LoaderFunctionArgs) =
     const { data: allRaidsData, error: allRaidsError } = await runQuery(allRaidQuery, {});
     if (allRaidsError || !allRaidsData) {
       resolve([]);
+      return;
     }
     resolve(allRaidsData!.raids.nodes);
   });

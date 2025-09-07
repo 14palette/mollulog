@@ -53,8 +53,8 @@ export default function RaidRanks({ raidUid, raidSince, filters, setFilters }: R
   const memoizedFilters = useMemo(() => filters, [
     filters.defenseType,
     filters.filterNotOwned,
-    filters.includeStudents,
-    filters.excludeStudents,
+    JSON.stringify(filters.includeStudents),
+    JSON.stringify(filters.excludeStudents),
     filters.rankAfter,
     filters.rankBefore,
   ]);
