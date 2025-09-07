@@ -1,6 +1,6 @@
 import { StudentCards } from "~/components/molecules/student";
 import { useFetcher } from "react-router";
-import { useEffect } from "react";
+import { useEffect, useMemo } from "react";
 import { EmptyView } from "~/components/atoms/typography";
 import { ActionCard } from "~/components/molecules/editor";
 import type { RaidRanksData } from "~/routes/raids.data.$id.ranks";
@@ -11,8 +11,8 @@ import type { DefenseType } from "~/models/content.d";
 export type RaidRankFilters = {
   defenseType: DefenseType | null;
   filterNotOwned: boolean;
-  includeStudents: { uid: string; tier: number }[];
-  excludeStudents: { uid: string; tier: number }[];
+  includeStudents: { uid: string; tiers: number[] }[];
+  excludeStudents: { uid: string; tiers: number[] }[];
   rankAfter: number | null;
   rankBefore: number | null;
 };
@@ -48,26 +48,24 @@ function getMaxLevelAt(date: Date): number {
 
 export default function RaidRanks({ raidUid, raidSince, filters, setFilters }: RaidRanksProps) {
   const rankFetcher = useFetcher<RaidRanksData>();
+  
+  // Memoize the filters object to prevent infinite re-renders
+  const memoizedFilters = useMemo(() => filters, [
+    filters.defenseType,
+    filters.filterNotOwned,
+    JSON.stringify(filters.includeStudents),
+    JSON.stringify(filters.excludeStudents),
+    filters.rankAfter,
+    filters.rankBefore,
+  ]);
+
   useEffect(() => {
-    const query = new URLSearchParams();
-    query.set("filterNotOwned", filters.filterNotOwned.toString());
-    if (filters.includeStudents.length > 0) {
-      query.set("includeStudentIds", filters.includeStudents.map(({ uid }) => uid).join(","));
-    }
-    if (filters.excludeStudents.length > 0) {
-      query.set("excludeStudentIds", filters.excludeStudents.map(({ uid }) => uid).join(","));
-    }
-    if (filters.rankAfter) {
-      query.set("rankAfter", filters.rankAfter.toString());
-    }
-    if (filters.rankBefore) {
-      query.set("rankBefore", filters.rankBefore.toString());
-    }
-    if (filters.defenseType) {
-      query.set("defenseType", filters.defenseType);
-    }
-    rankFetcher.load(`/raids/data/${raidUid}/ranks?${query.toString()}`);
-  }, [raidUid, filters]);
+    rankFetcher.submit(JSON.stringify(memoizedFilters), {
+      method: "POST",
+      action: `/raids/data/${raidUid}/ranks`,
+      encType: "application/json",
+    });
+  }, [raidUid, memoizedFilters]);
 
   if (rankFetcher.data && !rankFetcher.data.rankVisible) {
     return null;

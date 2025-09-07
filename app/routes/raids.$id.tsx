@@ -2,8 +2,8 @@ import { ClockIcon, XMarkIcon } from "@heroicons/react/16/solid";
 import { FunnelIcon } from "@heroicons/react/24/outline";
 import { Transition } from "@headlessui/react";
 import dayjs from "dayjs";
-import { useEffect, useState } from "react";
-import { isRouteErrorResponse, Link, MetaFunction, data as routeData, useLoaderData, useRouteError, type LoaderFunctionArgs } from "react-router";
+import { Suspense, useEffect, useMemo, useState } from "react";
+import { Await, isRouteErrorResponse, Link, MetaFunction, data as routeData, useLoaderData, useRouteError, type LoaderFunctionArgs } from "react-router";
 import { OptionBadge } from "~/components/atoms/student";
 import { Title } from "~/components/atoms/typography";
 import { FilterButtons } from "~/components/molecules/content";
@@ -21,7 +21,7 @@ import { getAllStudents } from "~/models/student";
 import { getAuthenticator } from "~/auth/authenticator.server";
 import { RaidRankFilter } from "~/components/organisms/raid";
 import { RaidRankFilters } from "~/components/organisms/raid/RaidRanks";
-import { BottomSheet } from "~/components/atoms/layout";
+import { BottomSheet, LoadingSkeleton } from "~/components/atoms/layout";
 
 const allRaidQuery = graphql(`
   query AllRaid {
@@ -29,9 +29,23 @@ const allRaidQuery = graphql(`
       nodes {
         uid type name boss since until terrain attackType rankVisible
         defenseTypes { defenseType difficulty }
-        videos(first: 1) {
-          pageInfo { hasNextPage }
-        }
+      }
+    }
+  }
+`);
+
+const raidDetailQuery = graphql(`
+  query RaidDetail($uid: String!) {
+    raid(uid: $uid) {
+      uid type name boss since until terrain attackType rankVisible
+      defenseTypes { defenseType difficulty }
+      videos(first: 1) {
+        pageInfo { hasNextPage }
+      }
+      statistics {
+        student { uid name }
+        slotsByTier { tier }
+        assistsByTier { tier }
       }
     }
   }
@@ -45,35 +59,29 @@ const screenTitles: Record<Screen, string> = {
 };
 
 export const loader = async ({ request, context, params }: LoaderFunctionArgs) => {
-  const { data, error } = await runQuery(allRaidQuery, {});
-  if (error || !data) {
+  const { data, error } = await runQuery(raidDetailQuery, { uid: params.id! });
+  if (error || !data?.raid) {
     throw routeData(
       { error: { message: "총력전/대결전 정보를 찾을 수 없어요" } },
       { status: 404 },
     );
   }
 
-  const uid = params.id;
-  const currentRaid = data.raids.nodes.find((raid) => raid.uid === uid);
-  if (!currentRaid) {
-    throw routeData(
-      { error: { message: "총력전/대결전 정보를 찾을 수 없어요" } },
-      { status: 404 },
-    );
-  }
+  const allRaidsPromise = new Promise<SelectorRaid[]>(async (resolve) => {
+    const { data: allRaidsData, error: allRaidsError } = await runQuery(allRaidQuery, {});
+    if (allRaidsError || !allRaidsData) {
+      resolve([]);
+      return;
+    }
+    resolve(allRaidsData!.raids.nodes);
+  });
 
   const { env } = context.cloudflare;
   const sensei = await getAuthenticator(env).isAuthenticated(request);
-  const allStudents = await getAllStudents(env, true);
-
   return {
-    currentRaid,
-    allRaids: data.raids.nodes.filter((raid) => raid.rankVisible).sort((a, b) => dayjs(b.since).diff(dayjs(a.since))),
+    currentRaid: data.raid,
+    allRaids: allRaidsPromise,
     signedIn: sensei !== null,
-    allStudents: allStudents.map((student) => ({
-      uid: student.uid,
-      name: student.name,
-    })),
   };
 };
 
@@ -105,20 +113,8 @@ export const ErrorBoundary = () => {
   }
 };
 
-type Raid = {
-  uid: string;
-  name: string;
-  type: RaidType;
-  boss: string;
-  since: Date;
-  until: Date;
-  terrain: Terrain;
-  attackType: AttackType;
-  defenseTypes: { defenseType: DefenseType; difficulty: string | null }[];
-}
-
 export default function RaidDetail() {
-  const { currentRaid, allRaids, signedIn, allStudents } = useLoaderData<typeof loader>();
+  const { currentRaid, allRaids, signedIn } = useLoaderData<typeof loader>();
   const raidType = currentRaid?.type ?? "total_assault";
 
   const [screen, setScreen] = useState<Screen>("ranks");
@@ -135,9 +131,24 @@ export default function RaidDetail() {
   useEffect(() => {
     setScreen("ranks");
     if (currentRaid.defenseTypes.length > 0) {
-      setFilters((prev) => ({ ...prev, defenseType: currentRaid.defenseTypes[0].defenseType }));
+      setFilters((prev) => ({
+        ...prev,
+        defenseType: currentRaid.defenseTypes[0].defenseType,
+        includeStudents: [],
+        excludeStudents: [],
+        rankAfter: null,
+        rankBefore: null,
+      }));
     }
-  }, [currentRaid.uid, currentRaid.defenseTypes]);
+  }, [currentRaid.uid]);
+
+  const filterStudents = useMemo(() => {
+    return currentRaid.statistics.map(({ student, slotsByTier, assistsByTier }) => ({
+      uid: student.uid,
+      name: student.name,
+      tiers: Array.from(new Set([...slotsByTier.map((tier) => tier.tier), ...assistsByTier.map((tier) => tier.tier)])),
+    }));
+  }, [currentRaid.uid]);
 
   const videoAvailable = currentRaid.videos.pageInfo.hasNextPage;
   return (
@@ -145,7 +156,7 @@ export default function RaidDetail() {
       <div className="w-full xl:max-w-sm xl:mr-8">
         <Title text={`${raidTypeLocale[raidType]} 정보`} />
         <RaidSelector
-          raids={allRaids.filter((r) => r.rankVisible).sort((a, b) => dayjs(b.since).diff(dayjs(a.since)))}
+          raids={allRaids}
           currentRaid={currentRaid ?? null}
         />
 
@@ -170,7 +181,7 @@ export default function RaidDetail() {
                     filters={filters}
                     setRaidFilters={setFilters}
                     signedIn={signedIn}
-                    students={allStudents}
+                    students={filterStudents}
                     showTitle
                   />
                 </div>
@@ -184,7 +195,7 @@ export default function RaidDetail() {
         {currentRaid.rankVisible ?
           <>
             <p className="mb-4 text-xl xl:text-2xl font-bold">{screenTitles[screen]}</p>
-            {screen === "ranks" && <RaidRanksPage filters={filters} setFilters={setFilters} raid={currentRaid} signedIn={signedIn} allStudents={allStudents} />}
+            {screen === "ranks" && <RaidRanksPage filters={filters} setFilters={setFilters} raid={currentRaid} signedIn={signedIn} allStudents={filterStudents} />}
             {screen === "statistics" && <RaidStatisticsPage raid={currentRaid} />}
             {screen === "videos" && <RaidVideosPage raid={currentRaid} />}
           </> :
@@ -221,7 +232,7 @@ export default function RaidDetail() {
             filters={filters}
             setRaidFilters={setFilters}
             signedIn={signedIn}
-            students={allStudents}
+            students={filterStudents}
           />
         </BottomSheet>
       )}
@@ -259,9 +270,22 @@ function ScreenSelector({ text, description, active, disabled, onClick }: Screen
   );
 }
 
+type SelectorRaid = {
+  uid: string;
+  type: RaidType;
+  name: string;
+  boss: string;
+  since: Date;
+  until: Date;
+  terrain: Terrain;
+  attackType: AttackType;
+  rankVisible: boolean;
+  defenseTypes: { defenseType: DefenseType; difficulty: string | null }[];
+};
+
 type RaidSelectorProps = {
-  raids: Raid[];
-  currentRaid: Raid | null;
+  raids: Promise<SelectorRaid[]>;
+  currentRaid: SelectorRaid | null;
 };
 
 function RaidSelector({ raids, currentRaid }: RaidSelectorProps) {
@@ -302,19 +326,29 @@ function RaidSelector({ raids, currentRaid }: RaidSelectorProps) {
           />
           <XMarkIcon className="size-6 cursor-pointer" strokeWidth={2} onClick={() => setIsOpen(false)} />
         </div>
-        <div className="max-h-64 xl:max-h-96 overflow-y-auto no-scrollbar mt-2 bg-white dark:bg-neutral-900 border border-neutral-200 dark:border-neutral-700 rounded-lg shadow-lg">
-          {raids.filter((raid) => raid.type === raidType).map((raid) => (
-            <Link to={`/raids/${raid.uid}`} key={raid.uid} onClick={() => setIsOpen(false)}>
-              <RaidSelectorItem raid={raid} />
-            </Link>
-          ))}
-        </div>
+        <Suspense fallback={
+          <div className="p-4 bg-white dark:bg-neutral-900 border border-neutral-200 dark:border-neutral-700 rounded-lg shadow-lg">
+            <LoadingSkeleton />
+          </div>
+        }>
+          <Await resolve={raids}>
+            {(raids) => (
+              <div className="max-h-64 xl:max-h-96 overflow-y-auto no-scrollbar mt-2 bg-white dark:bg-neutral-900 border border-neutral-200 dark:border-neutral-700 rounded-lg shadow-lg">
+                {raids.sort((a, b) => dayjs(b.since).diff(dayjs(a.since))).filter((raid) => raid.type === raidType && raid.rankVisible).map((raid) => (
+                  <Link to={`/raids/${raid.uid}`} key={raid.uid} onClick={() => setIsOpen(false)}>
+                    <RaidSelectorItem raid={raid} />
+                  </Link>
+                ))}
+              </div>
+            )}
+          </Await>
+        </Suspense>
       </Transition>
     </div>
   );
 }
 
-function RaidSelectorItem({ raid }: { raid: Raid }) {
+function RaidSelectorItem({ raid }: { raid: SelectorRaid }) {
   return (
     <div className="relative cursor-pointer bg-white dark:bg-neutral-900 hover:bg-neutral-100 dark:hover:bg-neutral-800 first:rounded-t-lg last:rounded-b-lg group">
       <img src={bossImageUrl(raid.boss)} alt="보스 이미지" className="absolute top-0 right-0 h-full object-cover" />
