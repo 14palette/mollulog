@@ -18,6 +18,7 @@ export type RaidRanksProps = {
   allStudents: {
     uid: string;
     name: string;
+    tiers: number[];
   }[];
 
   filters: RaidRankFilters;
