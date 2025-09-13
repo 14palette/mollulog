@@ -7,7 +7,11 @@ import type { ActionData } from "./api.followerships";
 import { getAuthenticator } from "~/auth/authenticator.server";
 import { getRouteSensei } from "./$username";
 import { useSignIn } from "~/contexts/SignInProvider";
+import { StudentGradingComments } from "~/components/molecules/student";
+import { SubTitle } from "~/components/atoms/typography";
 import { getRecruitedStudents } from "~/models/recruited-student";
+import { getStudentGradingsByUser } from "~/models/student-grading";
+import { getAllStudentsMap } from "~/models/student";
 
 export const loader = async ({ context, request, params }: LoaderFunctionArgs) => {
   const env = context.cloudflare.env;
@@ -31,6 +35,9 @@ export const loader = async ({ context, request, params }: LoaderFunctionArgs) =
     tierCounts[tier] = (tierCounts[tier] ?? 0) + 1;
   });
 
+  // Get all gradings by this user
+  const gradings = await getStudentGradingsByUser(env, sensei.id);
+  const allStudentsMap = await getAllStudentsMap(env, true);
   return {
     currentUsername: currentUser?.username ?? null,
     sensei: {
@@ -43,6 +50,10 @@ export const loader = async ({ context, request, params }: LoaderFunctionArgs) =
     followingCount: followingIds.length,
     followerCount: followerIds.length,
     tierCounts,
+    gradings: gradings.map((grading) => ({
+      ...grading,
+      studentName: allStudentsMap[grading.studentUid]!.name,
+    })),
   };
 };
 
@@ -57,7 +68,7 @@ export const meta: MetaFunction = ({ params }) => {
 
 export default function UserIndex() {
   const loaderData = useLoaderData<typeof loader>();
-  const { sensei, currentUsername, tierCounts } = loaderData;
+  const { sensei, currentUsername, tierCounts, gradings } = loaderData;
 
   let followability: ProfileCardProps["followability"] = loaderData.relationship.following ? "following" : "followable";
   if (currentUsername === sensei.username) {
@@ -82,6 +93,22 @@ export default function UserIndex() {
           onUnfollow={() => currentUsername ? fetcher.submit({ username: sensei.username }, { method: "delete", action: "/api/followerships" }) : showSignIn()}
         />
       </div>
+
+      {/* Grading Comments Section */}
+      {gradings.length > 0 && (
+        <div className="my-8">
+          <SubTitle text="학생 평가 내역" />
+          <StudentGradingComments
+            gradings={gradings.map((grading) => ({
+              ...grading,
+              student: {
+                uid: grading.studentUid,
+                name: grading.studentName,
+              },
+            }))}
+          />
+        </div>
+      )}
     </div>
   );
 }

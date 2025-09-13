@@ -5,18 +5,17 @@ import { useState, useMemo } from "react";
 import { graphql } from "~/graphql";
 import { runQuery } from "~/lib/baql";
 import { EmptyView, SubTitle, Title } from "~/components/atoms/typography";
-import { ChevronDownIcon, ChevronUpIcon, PlusCircleIcon, PencilSquareIcon } from "@heroicons/react/16/solid";
+import { ChevronDownIcon, ChevronUpIcon } from "@heroicons/react/16/solid";
 import { ErrorPage } from "~/components/organisms/error";
 import { SlotCountInfo } from "~/components/organisms/raid";
 import { PickupHistories } from "~/components/organisms/student";
-import { StudentInfo } from "~/components/molecules/student";
+import { StudentInfo, StudentGradingComments } from "~/components/molecules/student";
 import { getMaxTierAt } from "~/models/student";
 import { FilterButtons } from "~/components/molecules/content";
 import { BarsArrowDownIcon } from "@heroicons/react/24/outline";
-import { getTagCountsByStudent, STUDENT_GRADING_TAG_CONSTANTS, type StudentGradingTagValue } from "~/models/student-grading-tag";
+import { getTagCountsByStudent, type StudentGradingTagValue } from "~/models/student-grading-tag";
 import { getStudentGradingsByStudentWithUsers } from "~/models/student-grading";
 import { getAuthenticator } from "~/auth/authenticator.server";
-import ProfileImage from "~/components/atoms/student/ProfileImage";
 import TagIcon from "~/components/atoms/student/TagIcon";
 import { useSignIn } from "~/contexts/SignInProvider";
 
@@ -262,104 +261,3 @@ function StudentGradingChart({ student, tagCounts, noGrading, signedIn }: Studen
   );
 }
 
-// Reusable CommentCard component
-type CommentCardProps = {
-  grading: { uid: string; studentUid: string; comment: string | null; tags?: StudentGradingTagValue[]; user: { username: string; profileStudentId: string | null } };
-  isCurrentUser: boolean;
-};
-
-function CommentCard({ grading, isCurrentUser }: CommentCardProps) {
-  const cardClasses = "flex-shrink-0 w-64 p-3 bg-neutral-100 dark:bg-neutral-900 rounded-lg";
-
-  return (
-    <div key={grading.uid} className={cardClasses}>
-      <div className="space-y-2">
-        {/* User Info */}
-        {isCurrentUser ?
-          <div className="flex items-center justify-between">
-            <p className="text-sm font-bold text-neutral-700 dark:text-neutral-300">내가 작성한 평가</p>
-            <Link 
-              to={`/students/${grading.studentUid}/grade`}
-              className="px-2 py-1 -mr-2 flex items-center rounded-full hover:bg-neutral-200 dark:hover:bg-neutral-700 transition-colors text-neutral-500 dark:text-neutral-400"
-            >
-              <PencilSquareIcon className="size-4 mr-0.5" />
-              <span className="text-sm">수정</span>
-            </Link>
-          </div> :
-          <Link to={`/@${grading.user.username}`} className="py-1 flex items-center gap-2">
-            <ProfileImage studentUid={grading.user.profileStudentId} imageSize={6} />
-            <span className="text-sm font-medium text-neutral-600 dark:text-neutral-400 hover:underline">
-              {grading.user.username}
-            </span>
-          </Link>
-        }
-
-        {/* Tags */}
-        {grading.tags && grading.tags.length > 0 && (
-          <div className="flex flex-wrap gap-1">
-            {grading.tags
-              .sort((a, b) => {
-                // Sort tags according to the declaration order
-                const order = Object.values(STUDENT_GRADING_TAG_CONSTANTS);
-                return order.indexOf(a) - order.indexOf(b);
-              })
-              .map((tag) => (
-                <div key={tag} className="p-1 items-center justify-center rounded-full bg-neutral-200 dark:bg-neutral-700">
-                  <TagIcon tag={tag} size="sm" />
-                </div>
-              ))}
-          </div>
-        )}
-
-        {/* Comment */}
-        <p className="text-sm text-neutral-700 dark:text-neutral-300 leading-relaxed">
-          {grading.comment}
-        </p>
-      </div>
-    </div>
-  );
-}
-
-// StudentGradingComments component for displaying comments horizontally
-type StudentGradingCommentsProps = {
-  student: { uid: string; name: string };
-  gradings: Array<{ uid: string; studentUid: string; comment: string | null; tags?: StudentGradingTagValue[]; user: { username: string; profileStudentId: string | null } }>;
-  currentUser: { username: string } | null;
-};
-
-function StudentGradingComments({ student, gradings, currentUser }: StudentGradingCommentsProps) {
-  const currentUserGrading = gradings.find((grading) => grading.user.username === currentUser?.username);
-  const otherComments = gradings.filter((grading) => grading.uid !== currentUserGrading?.uid);
-
-  // If no comments at all, don't show anything
-  if (gradings.length === 0) {
-    return null;
-  }
-
-  return (
-    <div className="mt-4">
-      <div className="overflow-x-auto">
-        <div className="flex gap-3 pb-2" style={{ width: 'max-content' }}>
-          {/* Current user's comment or link button */}
-           {currentUserGrading ? <CommentCard grading={currentUserGrading} isCurrentUser={true} /> :
-             currentUser ?
-                <Link to={`/students/${student.uid}/grade`} className="flex-shrink-0 w-32 text-neutral-500">
-                  <div className="bg-neutral-100 dark:bg-neutral-900 hover:bg-neutral-200 dark:hover:bg-neutral-800 transition rounded-lg cursor-pointer p-3 h-full">
-                    <div className="flex flex-col items-center justify-center h-full text-center">
-                      <PlusCircleIcon className="size-6 mb-2" />
-                      <p className="text-sm">내 평가 작성하기</p>
-                    </div>
-                  </div>
-                </Link>
-             : null
-           }
-
-          {/* Other users' comments */}
-          {otherComments.map((grading) => (
-            <CommentCard key={grading.uid} grading={grading} isCurrentUser={false} />
-          ))}
-        </div>
-      </div>
-    </div>
-  );
-}

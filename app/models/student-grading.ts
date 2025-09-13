@@ -138,3 +138,27 @@ export async function getStudentGradingsByStudentWithUsers(env: Env, studentUid:
   }
   return result;
 }
+
+export async function getStudentGradingsByUser(env: Env, userId: number): Promise<StudentGrading[]> {
+  const db = drizzle(env.DB);
+  const gradings = await db.select({
+    uid: studentGradingsTable.uid,
+    studentUid: studentGradingsTable.studentUid,
+    comment: studentGradingsTable.comment,
+  })
+    .from(studentGradingsTable)
+    .where(eq(studentGradingsTable.userId, userId));
+
+  const result: StudentGrading[] = gradings.map((grading) => ({
+    uid: grading.uid,
+    studentUid: grading.studentUid,
+    comment: grading.comment,
+  }));
+
+  const gradingUids = result.map(g => g.uid);
+  const tagsMap = await getGradingTagsByGradingUids(env, gradingUids);
+  result.forEach((grading) => {
+    grading.tags = tagsMap[grading.uid]?.map((tag) => tag.tagValue) || [];
+  });
+  return result;
+}
