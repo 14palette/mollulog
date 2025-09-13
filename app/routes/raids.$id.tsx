@@ -143,11 +143,22 @@ export default function RaidDetail() {
   }, [currentRaid.uid]);
 
   const filterStudents = useMemo(() => {
-    return currentRaid.statistics.map(({ student, slotsByTier, assistsByTier }) => ({
-      uid: student.uid,
-      name: student.name,
-      tiers: Array.from(new Set([...slotsByTier.map((tier) => tier.tier), ...assistsByTier.map((tier) => tier.tier)])),
-    }));
+    const studentMap = new Map();
+    for (const { student, slotsByTier, assistsByTier } of currentRaid.statistics) {
+      const tiers = Array.from(new Set([...slotsByTier.map((tier) => tier.tier), ...assistsByTier.map((tier) => tier.tier)]));
+      if (studentMap.has(student.uid)) {
+        const existing = studentMap.get(student.uid);
+        existing.tiers = Array.from(new Set([...existing.tiers, ...tiers]));
+      } else {
+        studentMap.set(student.uid, {
+          uid: student.uid,
+          name: student.name,
+          tiers: tiers,
+        });
+      }
+    }
+
+    return Array.from(studentMap.values());
   }, [currentRaid.uid]);
 
   const videoAvailable = currentRaid.videos.pageInfo.hasNextPage;
