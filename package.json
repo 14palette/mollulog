@@ -14,7 +14,7 @@
     "assets:plan": "tofu -chdir=deploy/assets plan",
     "assets:deploy": "tofu -chdir=deploy/assets apply",
     "dev:db:migrate": "wrangler d1 migrations apply --local DB",
-    "prod:db:migrate": "wrangler d1 migrations apply --remote DB",
+    "prod:db:migrate": "wrangler d1 migrations apply --remote DB --env production",
     "test": "jest",
     "typecheck": "react-router typegen && tsc",
     "lint": "biome lint --write"
@@ -51,8 +51,8 @@
   "devDependencies": {
     "@babel/preset-typescript": "^7.27.1",
     "@biomejs/biome": "^1.9.4",
-    "@cloudflare/vite-plugin": "^1.11.0",
-    "@cloudflare/workers-types": "^4.20250803.0",
+    "@cloudflare/vite-plugin": "^1.13.0",
+    "@cloudflare/workers-types": "^4.20250913.0",
     "@eslint/eslintrc": "^3.3.1",
     "@eslint/js": "^9.32.0",
     "@jest/globals": "^29.7.0",
@@ -69,9 +69,9 @@
     "ts-jest": "^29.4.0",
     "ts-node": "^10.9.2",
     "typescript": "^5.9.2",
-    "vite": "^6.3.5",
+    "vite": "^6.3.6",
     "vite-tsconfig-paths": "^5.1.4",
-    "wrangler": "^4.27.0"
+    "wrangler": "^4.36.0"
   },
   "engines": {
     "node": ">=22.14.0"

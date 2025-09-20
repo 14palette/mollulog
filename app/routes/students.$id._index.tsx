@@ -1,23 +1,23 @@
 import type { MetaFunction, LoaderFunctionArgs } from "react-router";
-import { isRouteErrorResponse, useLoaderData, useRouteError } from "react-router";
+import { isRouteErrorResponse, useLoaderData, useRouteError, Link } from "react-router";
 import dayjs from "dayjs";
 import { useState, useMemo } from "react";
 import { graphql } from "~/graphql";
 import { runQuery } from "~/lib/baql";
-import {
-  attackTypeColor, attackTypeLocale, defenseTypeColor, defenseTypeLocale,
-  roleColor, roleLocale, schoolNameLocale,
-} from "~/locales/ko";
 import { EmptyView, SubTitle, Title } from "~/components/atoms/typography";
-import { ArrowTopRightOnSquareIcon, ChevronDownIcon, ChevronUpIcon } from "@heroicons/react/16/solid";
-import { OptionBadge } from "~/components/atoms/student";
+import { ChevronDownIcon, ChevronUpIcon } from "@heroicons/react/16/solid";
 import { ErrorPage } from "~/components/organisms/error";
 import { SlotCountInfo } from "~/components/organisms/raid";
 import { PickupHistories } from "~/components/organisms/student";
-import { studentStandingImageUrl } from "~/models/assets";
+import { StudentInfo, StudentGradingComments } from "~/components/molecules/student";
 import { getMaxTierAt } from "~/models/student";
 import { FilterButtons } from "~/components/molecules/content";
 import { BarsArrowDownIcon } from "@heroicons/react/24/outline";
+import { getTagCountsByStudent, type StudentGradingTagValue } from "~/models/student-grading-tag";
+import { getStudentGradingsByStudentWithUsers } from "~/models/student-grading";
+import { getAuthenticator } from "~/auth/authenticator.server";
+import TagIcon from "~/components/atoms/student/TagIcon";
+import { useSignIn } from "~/contexts/SignInProvider";
 
 const studentDetailQuery = graphql(`
   query StudentDetail($uid: String!, $raidSince: ISO8601DateTime!) {
@@ -40,8 +40,9 @@ const studentDetailQuery = graphql(`
   }
 `);
 
-export const loader = async ({ params }: LoaderFunctionArgs) => {
+export const loader = async ({ params, context, request }: LoaderFunctionArgs) => {
   const uid = params.id!;
+  const { env } = context.cloudflare;
 
   const raidSince = dayjs().subtract(6, "month").toDate();
   const { data, error } = await runQuery(studentDetailQuery, { uid, raidSince });
@@ -60,7 +61,15 @@ export const loader = async ({ params }: LoaderFunctionArgs) => {
     });
   }
 
-  return { student: data!.student! };
+  // Get current user
+  const currentUser = await getAuthenticator(env).isAuthenticated(request);
+
+  // Get grading tag counts for this student
+  const tagCounts = await getTagCountsByStudent(env, uid);
+
+  // Get all gradings with comments and user information for this student
+  const allGradings = await getStudentGradingsByStudentWithUsers(env, uid, true);
+  return { student: data!.student!, tagCounts, allGradings, currentUser };
 };
 
 export const meta: MetaFunction<typeof loader> = ({ data }) => {
@@ -70,7 +79,7 @@ export const meta: MetaFunction<typeof loader> = ({ data }) => {
 
   const { student } = data;
   const title = `${student.name} - 학생 정보`;
-  const description = `블루 아카이브 ${student.name} - 학생의 프로필과 통계 정보를 확인해보세요.`;
+  const description = `블루 아카이브 ${student.name} - 학생의 총력전/대결전 통계 정보, 선생님들의 성능 평가를 확인해보세요.`;
   return [
     { title: `${title} | 몰루로그` },
     { name: "description", content: description },
@@ -91,7 +100,7 @@ export const ErrorBoundary = () => {
 };
 
 export default function StudentDetail() {
-  const { student } = useLoaderData<typeof loader>();
+  const { student, tagCounts, allGradings, currentUser } = useLoaderData<typeof loader>();
 
   const [raidShowMore, setRaidShowMore] = useState(false);
   const [sort, setSort] = useState<"recent" | "old">("recent");
@@ -117,36 +126,12 @@ export default function StudentDetail() {
   return (
     <>
       <Title text="학생부" />
-      <div className="w-full aspect-16/9 flex rounded-xl bg-neutral-100 dark:bg-neutral-900">
-        <div className="p-4 md:p-8 grow flex flex-col justify-center z-10">
-          <p className="text-xl md:text-2xl font-bold">{student.name}</p>
-          <p className="my-1 md:my-2">{schoolNameLocale[student.school]}</p>
-          <div className="flex gap-2">
-            <OptionBadge text={attackTypeLocale[student.attackType]} color={attackTypeColor[student.attackType]} />
-            <OptionBadge text={defenseTypeLocale[student.defenseType]} color={defenseTypeColor[student.defenseType]} />
-            <OptionBadge text={roleLocale[student.role]} color={roleColor[student.role]} />
-          </div>
-          <a href={`https://schaledb.com/student/${student.schaleDbId}`} target="_blank" rel="noreferrer" className="pt-4 hover:underline">
-            <ArrowTopRightOnSquareIcon className="size-3 text-neutral-500 inline" />
-            <span className="text-sm text-neutral-500">샬레DB</span>
-          </a>
-        </div>
-        <div className="relative w-1/3 h-full overflow-hidden rounded-r-xl">
-          <img
-            src={studentStandingImageUrl(student.uid)}
-            alt={student.name}
-            className="absolute w-full h-full object-cover object-top scale-125 translate-y-1/20 transform-gpu origin-top"
-          />
-          <div className="absolute w-full h-full bg-linear-to-r from-neutral-100 dark:from-neutral-900 to-transparent to-15%" />
-        </div>
-      </div>
+      <StudentInfo student={student} />
 
-      {student.pickups.length > 0 && (
-        <>
-          <SubTitle text="픽업 정보" />
-          <PickupHistories pickups={student.pickups} />
-        </>
-      )}
+      {/* Grading Section */}
+      <SubTitle text="학생 평가" />
+      <StudentGradingChart student={student} tagCounts={tagCounts} noGrading={allGradings.length === 0} signedIn={currentUser !== null} />
+      <StudentGradingComments student={student} gradings={allGradings} currentUser={currentUser} />
 
       <SubTitle
         text="총력전/대결전 통계"
@@ -193,6 +178,86 @@ export default function StudentDetail() {
           </div>
         )}
       </div>
+
+      {student.pickups.length > 0 && (
+        <>
+          <SubTitle text="픽업 일정 정보" />
+          <PickupHistories pickups={student.pickups} />
+        </>
+      )}
     </>
   );
 }
+
+// StudentGradingChart component for displaying tag counts
+type StudentGradingChartProps = {
+  student: { uid: string; name: string };
+  tagCounts: Array<{ tag: StudentGradingTagValue; displayName: string; count: number }>;
+  noGrading: boolean;
+  signedIn: boolean;
+};
+
+function StudentGradingChart({ student, tagCounts, noGrading, signedIn }: StudentGradingChartProps) {
+  const { showSignIn } = useSignIn();
+
+  // Get the maximum count for scaling the bars
+  const maxCount = Math.max(...tagCounts.map(tc => tc.count), 1);
+
+  // Show all tags, even with 0 count, and sort by count (descending)
+  const allTagsWithCounts = tagCounts;
+
+  const noGradingView = (
+    <div className="mb-4 p-4 text-center text-neutral-500 dark:text-neutral-400 hover:bg-neutral-50 dark:hover:bg-neutral-900/50 bg-neutral-100 dark:bg-neutral-900 transition rounded-lg cursor-pointer">
+      <p className="text-sm">아직 평가가 없어요</p>
+      <p className="text-xs mt-1 text-blue-600 dark:text-blue-400 group-hover:underline">
+        {signedIn ? "첫 번째 평가를 작성해보세요!" : "로그인 후 첫 번째 평가를 작성해보세요!"}
+      </p>
+    </div>
+  );
+
+  return (
+    <div className="border border-neutral-200 dark:border-neutral-700 rounded-lg p-4 bg-white dark:bg-neutral-800/50">
+      <div className="space-y-3">
+        {noGrading && (
+          signedIn ?
+            <Link to={`/students/${student.uid}/grade`} className="group">
+              {noGradingView}
+            </Link> :
+            <div onClick={() => showSignIn()}>
+              {noGradingView}
+            </div>
+        )}
+
+        {allTagsWithCounts.map(({ tag, displayName, count }) => (
+          <div key={tag} className="flex items-center gap-2">
+            {/* Icon */}
+            <div className="flex-shrink-0">
+              <TagIcon tag={tag} />
+            </div>
+
+            {/* Text */}
+            <div className="flex-shrink-0 w-32">
+              <span className="text-sm font-medium text-neutral-700 dark:text-neutral-300">
+                {displayName}
+              </span>
+            </div>
+
+            {/* Bar */}
+            <div className="flex-1 flex items-center gap-2">
+              <div className="flex-1 bg-neutral-200 dark:bg-neutral-700 rounded-full h-2 relative">
+                <div 
+                  className="bg-neutral-700 dark:bg-neutral-50 h-2 rounded-full transition-all duration-300 absolute left-0 top-0 min-w-0"
+                  style={{ width: `${(count / maxCount) * 100}%` }}
+                />
+              </div>
+              <span className="ml-2 text-sm font-medium text-neutral-500 dark:text-neutral-400 min-w-0 flex-shrink-0">
+                {count}
+              </span>
+            </div>
+          </div>
+        ))}
+      </div>
+    </div>
+  );
+}
+

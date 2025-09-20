@@ -32,6 +32,7 @@ type Documents = {
     "\n  query RaidStatistics($uid: String!, $defenseType: Defense!) {\n    raid(uid: $uid) {\n      statistics(defenseType: $defenseType) {\n        student { uid name role }\n        slotsCount\n        slotsByTier { tier count }\n        assistsCount\n        assistsByTier { tier count }\n      }\n    }\n  }\n": typeof types.RaidStatisticsDocument,
     "\n  query RaidVideos($uid: String!, $first: Int, $after: String, $sort: VideoSortEnum) {\n    raid(uid: $uid) {\n      videos(first: $first, after: $after, sort: $sort) {\n        pageInfo { hasNextPage hasPreviousPage startCursor endCursor }\n        edges {\n          node { id title score youtubeId thumbnailUrl publishedAt }\n        }\n      }\n    }\n  }\n": typeof types.RaidVideosDocument,
     "\n  query StudentDetail($uid: String!, $raidSince: ISO8601DateTime!) {\n    student(uid: $uid) {\n      name uid attackType defenseType role school schaleDbId\n      pickups {\n        since until\n        event { type uid name rerun imageUrl }\n      }\n      raidStatistics(raidSince: $raidSince) {\n        raid { uid name boss type since until terrain }\n        difficulty\n        defenseType\n        slotsCount\n        slotsByTier { tier count }\n        assistsCount\n        assistsByTier { tier count }\n      }\n    }\n  }\n": typeof types.StudentDetailDocument,
+    "\n  query StudentGradeDetail($uid: String!) {\n    student(uid: $uid) {\n      name uid attackType defenseType role school schaleDbId\n    }\n  }\n": typeof types.StudentGradeDetailDocument,
 };
 const documents: Documents = {
     "\n  query AllStudents {\n    students {\n      uid\n      name\n      school\n      initialTier\n      order\n      attackType\n      defenseType\n      role\n      equipments\n      released\n    }\n  }\n": types.AllStudentsDocument,
@@ -52,6 +53,7 @@ const documents: Documents = {
     "\n  query RaidStatistics($uid: String!, $defenseType: Defense!) {\n    raid(uid: $uid) {\n      statistics(defenseType: $defenseType) {\n        student { uid name role }\n        slotsCount\n        slotsByTier { tier count }\n        assistsCount\n        assistsByTier { tier count }\n      }\n    }\n  }\n": types.RaidStatisticsDocument,
     "\n  query RaidVideos($uid: String!, $first: Int, $after: String, $sort: VideoSortEnum) {\n    raid(uid: $uid) {\n      videos(first: $first, after: $after, sort: $sort) {\n        pageInfo { hasNextPage hasPreviousPage startCursor endCursor }\n        edges {\n          node { id title score youtubeId thumbnailUrl publishedAt }\n        }\n      }\n    }\n  }\n": types.RaidVideosDocument,
     "\n  query StudentDetail($uid: String!, $raidSince: ISO8601DateTime!) {\n    student(uid: $uid) {\n      name uid attackType defenseType role school schaleDbId\n      pickups {\n        since until\n        event { type uid name rerun imageUrl }\n      }\n      raidStatistics(raidSince: $raidSince) {\n        raid { uid name boss type since until terrain }\n        difficulty\n        defenseType\n        slotsCount\n        slotsByTier { tier count }\n        assistsCount\n        assistsByTier { tier count }\n      }\n    }\n  }\n": types.StudentDetailDocument,
+    "\n  query StudentGradeDetail($uid: String!) {\n    student(uid: $uid) {\n      name uid attackType defenseType role school schaleDbId\n    }\n  }\n": types.StudentGradeDetailDocument,
 };
 
 /**
@@ -140,6 +142,10 @@ export function graphql(source: "\n  query RaidVideos($uid: String!, $first: Int
  * The graphql function is used to parse GraphQL queries into a document that can be used by GraphQL clients.
  */
 export function graphql(source: "\n  query StudentDetail($uid: String!, $raidSince: ISO8601DateTime!) {\n    student(uid: $uid) {\n      name uid attackType defenseType role school schaleDbId\n      pickups {\n        since until\n        event { type uid name rerun imageUrl }\n      }\n      raidStatistics(raidSince: $raidSince) {\n        raid { uid name boss type since until terrain }\n        difficulty\n        defenseType\n        slotsCount\n        slotsByTier { tier count }\n        assistsCount\n        assistsByTier { tier count }\n      }\n    }\n  }\n"): (typeof documents)["\n  query StudentDetail($uid: String!, $raidSince: ISO8601DateTime!) {\n    student(uid: $uid) {\n      name uid attackType defenseType role school schaleDbId\n      pickups {\n        since until\n        event { type uid name rerun imageUrl }\n      }\n      raidStatistics(raidSince: $raidSince) {\n        raid { uid name boss type since until terrain }\n        difficulty\n        defenseType\n        slotsCount\n        slotsByTier { tier count }\n        assistsCount\n        assistsByTier { tier count }\n      }\n    }\n  }\n"];
+/**
+ * The graphql function is used to parse GraphQL queries into a document that can be used by GraphQL clients.
+ */
+export function graphql(source: "\n  query StudentGradeDetail($uid: String!) {\n    student(uid: $uid) {\n      name uid attackType defenseType role school schaleDbId\n    }\n  }\n"): (typeof documents)["\n  query StudentGradeDetail($uid: String!) {\n    student(uid: $uid) {\n      name uid attackType defenseType role school schaleDbId\n    }\n  }\n"];
 
 export function graphql(source: string) {
   return (documents as any)[source] ?? {};

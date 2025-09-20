@@ -280,12 +280,12 @@ function PickupStudents({ pickups, favoritedStudents, favoritedCounts, onFavorit
               },
               {
                 Icon: IdentificationIcon,
-                text: "학생부 보기",
+                text: "학생부 보기 (평가/통계)",
                 link: `/students/${student?.uid}`,
               },
               {
                 Icon: ArrowTopRightOnSquareIcon,
-                text: "샬레DB에서 학생 정보 보기",
+                text: "샬레DB 정보 보기",
                 link: `https://schaledb.com/student/${student?.schaleDbId}`,
               },
             ] : undefined,
