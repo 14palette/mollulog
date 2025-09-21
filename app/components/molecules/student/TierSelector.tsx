@@ -22,7 +22,7 @@ export default function TierSelector({ initialTier, currentTier, onTierChange }:
 
   return (
     <div className="flex items-center gap-x-0.5">
-      {[1, 2, 3, 4, 5, 6, 7, 8].map((eachTier) => {
+      {[1, 2, 3, 4, 5, 6, 7, 8, 9].map((eachTier) => {
         const Icon = eachTier <= tier ? StarIconSolid : StarIconOutline;
 
         const selectable = eachTier >= initialTier;

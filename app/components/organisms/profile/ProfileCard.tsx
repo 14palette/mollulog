@@ -24,7 +24,7 @@ export default function ProfileCard(props: ProfileCardProps) {
       <ProfileUsername {...props} />
 
       <div className="m-4 md:m-6">
-        <TierCounts tierCounts={tierCounts} visibleTiers={[1, 2, 3, 4, 5, 6, 7, 8]} />
+        <TierCounts tierCounts={tierCounts} visibleTiers={[1, 2, 3, 4, 5, 6, 7, 8, 9]} />
       </div>
 
       <Link to={`/@${username}/students`}>

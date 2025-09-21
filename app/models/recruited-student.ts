@@ -43,7 +43,7 @@ export async function getRecruitedStudentTiers(env: Env, senseiId: number): Prom
 }
 
 export async function upsertRecruitedStudent(env: Env, senseiId: number, studentUid: string, tier: number) {
-  if (tier < 1 || tier > 8) {
+  if (tier < 1 || tier > 9) {
     throw new Error(`Invalid tier: ${tier}`);
   }
 
