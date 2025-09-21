@@ -11,12 +11,12 @@ type RaidCardProps = {
   boss: string;
   type: RaidType;
   attackType: AttackType;
-  defenseType: DefenseType;
+  defenseTypes: { defenseType: DefenseType; difficulty: string | null }[];
   terrain: Terrain;
 };
 
 export default function RaidCard({
-  name, since: sinceDate, until: untilDate, boss, type, attackType, defenseType, terrain,
+  name, since: sinceDate, until: untilDate, boss, type, attackType, defenseTypes, terrain,
 }: RaidCardProps,
 ) {
   const since = dayjs(sinceDate);
@@ -38,10 +38,19 @@ export default function RaidCard({
             </span>
           </div>
         )}
-        <div className="absolute bottom-0 right-0 flex gap-x-1 p-1 text-white text-sm">
-          <OptionBadge dark text={terrainLocale[terrain]} />
-          <OptionBadge dark text={attackTypeLocale[attackType]} color={attackTypeColor[attackType]} />
-          <OptionBadge dark text={defenseTypeLocale[defenseType]} color={defenseTypeColor[defenseType]} />
+        <div className="absolute bottom-0 right-0 flex flex-col items-end gap-y-1 p-1 text-white text-sm">
+          <div className="flex gap-x-1">
+            <OptionBadge dark text={terrainLocale[terrain]} />
+            <OptionBadge dark text={attackTypeLocale[attackType]} color={attackTypeColor[attackType]} />
+            {defenseTypes.length === 1 && <OptionBadge dark text={defenseTypeLocale[defenseTypes[0].defenseType]} color={defenseTypeColor[defenseTypes[0].defenseType]} />}
+          </div>
+          {defenseTypes.length > 1 && (
+            <div className="flex gap-x-1">
+              {defenseTypes.map(({ defenseType }) => (
+                <OptionBadge dark text={defenseTypeLocale[defenseType]} color={defenseTypeColor[defenseType]} />
+              ))}
+            </div>
+          )}
         </div>
       </div>
       <div className="p-4 border rounded-b-lg border-neutral-200 dark:border-neutral-700">

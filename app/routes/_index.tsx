@@ -25,7 +25,8 @@ const indexQuery = graphql(`
     }
     raids(untilAfter: $now, types: [total_assault, elimination], first: 2) {
       nodes {
-        name since until uid type boss attackType defenseType terrain
+        name since until uid type boss attackType terrain
+        defenseTypes { defenseType difficulty }
       }
     }
   }

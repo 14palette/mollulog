@@ -23,15 +23,14 @@ export const futureContentsQuery = graphql(`
           eventType: type
           rerun endless
           pickups {
-            type rerun since until
+            type rerun since until studentName
             student { uid attackType defenseType role schaleDbId }
-            studentName
           }
         }
         ... on Raid {
           raidType: type
-          rankVisible
-          boss terrain attackType defenseType
+          rankVisible boss terrain attackType
+          defenseTypes { defenseType difficulty }
         }
       }
     }

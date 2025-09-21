@@ -10,14 +10,13 @@ import { FilterButtons } from "~/components/molecules/content";
 import { ErrorPage } from "~/components/organisms/error";
 import { graphql } from "~/graphql";
 import { runQuery } from "~/lib/baql";
-import { defenseTypeColor, defenseTypeLocale, raidTypeLocale, terrainLocale } from "~/locales/ko";
+import { defenseTypeColor, defenseTypeLocale, difficultyLocale, raidTypeLocale, terrainLocale } from "~/locales/ko";
 import { bossImageUrl } from "~/models/assets";
 import { Terrain, DefenseType, AttackType, RaidType } from "~/models/content.d";
 import { sanitizeClassName } from "~/prophandlers";
 import RaidStatisticsPage from "~/components/templates/raids/RaidStatisticsPage";
 import RaidRanksPage from "~/components/templates/raids/RaidRanksPage";
 import RaidVideosPage from "~/components/templates/raids/RaidVideosPage";
-import { getAllStudents } from "~/models/student";
 import { getAuthenticator } from "~/auth/authenticator.server";
 import { RaidRankFilter } from "~/components/organisms/raid";
 import { RaidRankFilters } from "~/components/organisms/raid/RaidRanks";
@@ -376,10 +375,10 @@ function RaidSelectorItem({ raid }: { raid: SelectorRaid }) {
 
         <div className="mt-2 flex gap-1 flex-wrap">
           <OptionBadge text={terrainLocale[raid.terrain]} />
-          {raid.defenseTypes.map(({ defenseType }) => (
+          {raid.defenseTypes.map(({ defenseType, difficulty }) => (
             <OptionBadge
               key={defenseType}
-              text={defenseTypeLocale[defenseType]}
+              text={`${defenseTypeLocale[defenseType].substring(0, raid.type === "elimination" ? 2 : undefined)}${difficulty ? ` · ${difficultyLocale[difficulty].substring(0, raid.type === "elimination" ? 1 : undefined)}` : ""}`}
               color={defenseTypeColor[defenseType]}
             />
           ))}

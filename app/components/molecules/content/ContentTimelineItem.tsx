@@ -5,7 +5,7 @@ import { ChevronRightIcon, ChartBarIcon, ClockIcon, CheckCircleIcon, Exclamation
 import { ArrowTopRightOnSquareIcon, IdentificationIcon, HeartIcon as EmptyHeartIcon } from "@heroicons/react/24/outline";
 import { HeartIcon as FilledHeartIcon } from "@heroicons/react/24/solid";
 import type { AttackType, DefenseType, EventType, PickupType, RaidType, Role, Terrain } from "~/models/content.d";
-import { attackTypeColor, attackTypeLocale, contentTypeLocale, defenseTypeColor, defenseTypeLocale, pickupLabelLocale, terrainLocale } from "~/locales/ko";
+import { attackTypeColor, attackTypeLocale, contentTypeLocale, defenseTypeColor, defenseTypeLocale, difficultyLocale, pickupLabelLocale, terrainLocale } from "~/locales/ko";
 import { bossImageUrl } from "~/models/assets";
 import { StudentCards } from "~/components/molecules/student";
 import { ContentMemoEditor } from "~/components/molecules/content";
@@ -62,7 +62,10 @@ export type ContentTimelineItemProps = {
     boss: string;
     terrain: Terrain;
     attackType: AttackType;
-    defenseType: DefenseType;
+    defenseTypes: {
+      defenseType: DefenseType;
+      difficulty: string | null;
+    }[];
     rankVisible: boolean;
   };
 
@@ -126,11 +129,27 @@ export default function ContentTimelineItem(
         className="md:w-96 rounded-lg bg-linear-to-br from-neutral-50 to-neutral-300 dark:from-neutral-600 dark:to-neutral-800"
         src={bossImageUrl(raidInfo.boss)} alt={`총력전 보스 ${name}`} loading="lazy"
       />
-      <div className="absolute bottom-0 right-0 flex gap-x-1 p-1 text-white text-sm">
-        <OptionBadge dark text={terrainLocale[raidInfo.terrain]} />
-        <OptionBadge dark text={attackTypeLocale[raidInfo.attackType]} color={attackTypeColor[raidInfo.attackType]} />
-        <OptionBadge dark text={defenseTypeLocale[raidInfo.defenseType]} color={defenseTypeColor[raidInfo.defenseType]} />
+      <div className="absolute bottom-0 right-0 flex flex-col items-end gap-y-1 p-1 text-white text-sm">
+        <div className="flex gap-x-1">
+          <OptionBadge dark text={terrainLocale[raidInfo.terrain]} />
+          <OptionBadge dark text={attackTypeLocale[raidInfo.attackType]} color={attackTypeColor[raidInfo.attackType]} />
+          {raidInfo.defenseTypes.length === 1 && (
+            <OptionBadge
+              text={defenseTypeLocale[raidInfo.defenseTypes[0].defenseType]}
+              color={defenseTypeColor[raidInfo.defenseTypes[0].defenseType]}
+              dark
+            />
+          )}
+        </div>
+        {raidInfo.defenseTypes.length > 1 && (
+          <div className="flex gap-x-1">
+            {raidInfo.defenseTypes.map(({ defenseType }) => (
+              <OptionBadge text={defenseTypeLocale[defenseType]} color={defenseTypeColor[defenseType]} dark />
+            ))}
+          </div>
+        )}
       </div>
+      
     </div>
   ) : null;
 
