@@ -211,9 +211,29 @@ export default function EventDetail() {
     });
   };
 
-  const isPickupSinceDifferent = event.pickups.length > 0 && !dayjs(event.pickups[0].since).isSame(dayjs(event.since), "day");
-  const isPickupUntilDifferent = event.pickups.length > 0 && !dayjs(event.pickups[0].until).isSame(dayjs(event.until), "day");
-  const shouldNotifyPickupPeriod = event.pickups.length > 0 && (event.pickups[0].until !== null && (isPickupSinceDifferent || isPickupUntilDifferent));
+  // Group pickups by their date ranges
+  const pickupDateGroups = event.pickups.reduce((groups, pickup) => {
+    const key = `${pickup.since}-${pickup.until}`;
+    if (!groups[key]) {
+      groups[key] = {
+        since: pickup.since,
+        until: pickup.until,
+        pickups: []
+      };
+    }
+    groups[key].pickups.push(pickup);
+    return groups;
+  }, {} as Record<string, { since: Date; until: Date | null; pickups: typeof event.pickups }>);
+
+  const pickupDateGroupsArray = Object.values(pickupDateGroups);
+  const hasMultipleDateRanges = pickupDateGroupsArray.length > 1;
+  
+  // Check if any pickup group has different dates from event
+  const shouldNotifyPickupPeriod = event.pickups.length > 0 && pickupDateGroupsArray.some(group => {
+    const isSinceDifferent = !dayjs(group.since).isSame(dayjs(event.since), "day");
+    const isUntilDifferent = !dayjs(group.until).isSame(dayjs(event.until), "day");
+    return group.until !== null && (isSinceDifferent || isUntilDifferent);
+  });
   return (
     <>
       <ContentHeader
@@ -243,9 +263,31 @@ export default function EventDetail() {
                     이벤트 개최 기간과 픽업 모집 기간이 달라요
                   </p>
                   <div className="text-sm text-amber-600 dark:text-amber-400">
-                    픽업 모집은&nbsp;
-                    <span className={isPickupSinceDifferent ? "font-semibold" : ""}>{dayjs(event.pickups[0].since).format("M월 D일")}</span>부터&nbsp;
-                    <span className={isPickupUntilDifferent ? "font-semibold" : ""}>{dayjs(event.pickups[0].until).format("M월 D일")}</span>까지만 진행해요.
+                    {hasMultipleDateRanges ? (
+                      <>
+                        {pickupDateGroupsArray.map((group, index) => {
+                          const studentNames = group.pickups.map(pickup => pickup.studentName).join(", ");
+                          const isSinceDifferent = !dayjs(group.since).isSame(dayjs(event.since), "day");
+                          const isUntilDifferent = !dayjs(group.until).isSame(dayjs(event.until), "day");
+                          
+                          return (
+                            <span key={`group-${index}`}>
+                              {studentNames}의 픽업은&nbsp;
+                              <span className={isSinceDifferent ? "font-semibold" : ""}>{dayjs(group.since).format("M월 D일")}</span>부터&nbsp;
+                              <span className={isUntilDifferent ? "font-semibold" : ""}>{dayjs(group.until).format("M월 D일")}</span>까지
+                              {index < pickupDateGroupsArray.length - 1 ? ", " : " "}
+                            </span>
+                          );
+                        })}
+                        진행해요.
+                      </>
+                    ) : (
+                      <>
+                        픽업 모집은&nbsp;
+                        <span className={!dayjs(pickupDateGroupsArray[0].since).isSame(dayjs(event.since), "day") ? "font-semibold" : ""}>{dayjs(pickupDateGroupsArray[0].since).format("M월 D일")}</span>부터&nbsp;
+                        <span className={!dayjs(pickupDateGroupsArray[0].until).isSame(dayjs(event.until), "day") ? "font-semibold" : ""}>{dayjs(pickupDateGroupsArray[0].until).format("M월 D일")}</span>까지 진행해요.
+                      </>
+                    )}
                   </div>
                 </div>
               </div>
