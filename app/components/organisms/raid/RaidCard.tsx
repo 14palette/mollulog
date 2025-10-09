@@ -40,14 +40,14 @@ export default function RaidCard({
         )}
         <div className="absolute bottom-0 right-0 flex flex-col items-end gap-y-1 p-1 text-white text-sm">
           <div className="flex gap-x-1">
-            <OptionBadge dark text={terrainLocale[terrain]} />
-            <OptionBadge dark text={attackTypeLocale[attackType]} color={attackTypeColor[attackType]} />
-            {defenseTypes.length === 1 && <OptionBadge dark text={defenseTypeLocale[defenseTypes[0].defenseType]} color={defenseTypeColor[defenseTypes[0].defenseType]} />}
+            <OptionBadge text={terrainLocale[terrain]} bgColor="dark" />
+            <OptionBadge text={attackTypeLocale[attackType]} color={attackTypeColor[attackType]} bgColor="dark" />
+            {defenseTypes.length === 1 && <OptionBadge text={defenseTypeLocale[defenseTypes[0].defenseType]} color={defenseTypeColor[defenseTypes[0].defenseType]} bgColor="dark" />}
           </div>
           {defenseTypes.length > 1 && (
             <div className="flex gap-x-1">
               {defenseTypes.map(({ defenseType }) => (
-                <OptionBadge dark text={defenseTypeLocale[defenseType]} color={defenseTypeColor[defenseType]} />
+                <OptionBadge text={defenseTypeLocale[defenseType]} color={defenseTypeColor[defenseType]} bgColor="dark" />
               ))}
             </div>
           )}

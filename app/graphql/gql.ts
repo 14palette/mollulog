@@ -15,7 +15,7 @@ import type { TypedDocumentNode as DocumentNode } from '@graphql-typed-document-
  */
 type Documents = {
     "\n  query AllStudents {\n    students {\n      uid\n      name\n      school\n      initialTier\n      order\n      attackType\n      defenseType\n      role\n      equipments\n      released\n    }\n  }\n": typeof types.AllStudentsDocument,
-    "\n  query UserFutures($now: ISO8601DateTime!) {\n    events(first: 999, untilAfter: $now) {\n      nodes {\n        uid name since\n        pickups {\n          type rerun\n          student { uid schaleDbId name school equipments }\n        }\n      }\n    }\n  }\n": typeof types.UserFuturesDocument,
+    "\n  query UserFutures($now: ISO8601DateTime!) {\n    events(first: 999, untilAfter: $now) {\n      nodes {\n        uid name since until\n        pickups {\n          type rerun\n          student {\n            uid attackType defenseType role schaleDbId name school equipments\n            skillItems(skillType: ex, skillLevel: 5) {\n              item { uid subCategory rarity }\n            }\n          }\n        }\n      }\n    }\n  }\n": typeof types.UserFuturesDocument,
     "\n  query RaidForParty {\n    raids {\n      nodes { uid name type boss terrain since }\n    }\n  }\n": typeof types.RaidForPartyDocument,
     "\n  query RaidForPartyEdit {\n    raids {\n      nodes { uid name type boss terrain since until }\n    }\n  }\n": typeof types.RaidForPartyEditDocument,
     "\n  query UserPickupEvents($eventUids: [String!]!) {\n    events(uids: $eventUids) {\n      nodes {\n        uid name type since\n        pickups {\n          student { uid }\n        }\n      }\n    }\n  }\n": typeof types.UserPickupEventsDocument,
@@ -36,7 +36,7 @@ type Documents = {
 };
 const documents: Documents = {
     "\n  query AllStudents {\n    students {\n      uid\n      name\n      school\n      initialTier\n      order\n      attackType\n      defenseType\n      role\n      equipments\n      released\n    }\n  }\n": types.AllStudentsDocument,
-    "\n  query UserFutures($now: ISO8601DateTime!) {\n    events(first: 999, untilAfter: $now) {\n      nodes {\n        uid name since\n        pickups {\n          type rerun\n          student { uid schaleDbId name school equipments }\n        }\n      }\n    }\n  }\n": types.UserFuturesDocument,
+    "\n  query UserFutures($now: ISO8601DateTime!) {\n    events(first: 999, untilAfter: $now) {\n      nodes {\n        uid name since until\n        pickups {\n          type rerun\n          student {\n            uid attackType defenseType role schaleDbId name school equipments\n            skillItems(skillType: ex, skillLevel: 5) {\n              item { uid subCategory rarity }\n            }\n          }\n        }\n      }\n    }\n  }\n": types.UserFuturesDocument,
     "\n  query RaidForParty {\n    raids {\n      nodes { uid name type boss terrain since }\n    }\n  }\n": types.RaidForPartyDocument,
     "\n  query RaidForPartyEdit {\n    raids {\n      nodes { uid name type boss terrain since until }\n    }\n  }\n": types.RaidForPartyEditDocument,
     "\n  query UserPickupEvents($eventUids: [String!]!) {\n    events(uids: $eventUids) {\n      nodes {\n        uid name type since\n        pickups {\n          student { uid }\n        }\n      }\n    }\n  }\n": types.UserPickupEventsDocument,
@@ -77,7 +77,7 @@ export function graphql(source: "\n  query AllStudents {\n    students {\n      
 /**
  * The graphql function is used to parse GraphQL queries into a document that can be used by GraphQL clients.
  */
-export function graphql(source: "\n  query UserFutures($now: ISO8601DateTime!) {\n    events(first: 999, untilAfter: $now) {\n      nodes {\n        uid name since\n        pickups {\n          type rerun\n          student { uid schaleDbId name school equipments }\n        }\n      }\n    }\n  }\n"): (typeof documents)["\n  query UserFutures($now: ISO8601DateTime!) {\n    events(first: 999, untilAfter: $now) {\n      nodes {\n        uid name since\n        pickups {\n          type rerun\n          student { uid schaleDbId name school equipments }\n        }\n      }\n    }\n  }\n"];
+export function graphql(source: "\n  query UserFutures($now: ISO8601DateTime!) {\n    events(first: 999, untilAfter: $now) {\n      nodes {\n        uid name since until\n        pickups {\n          type rerun\n          student {\n            uid attackType defenseType role schaleDbId name school equipments\n            skillItems(skillType: ex, skillLevel: 5) {\n              item { uid subCategory rarity }\n            }\n          }\n        }\n      }\n    }\n  }\n"): (typeof documents)["\n  query UserFutures($now: ISO8601DateTime!) {\n    events(first: 999, untilAfter: $now) {\n      nodes {\n        uid name since until\n        pickups {\n          type rerun\n          student {\n            uid attackType defenseType role schaleDbId name school equipments\n            skillItems(skillType: ex, skillLevel: 5) {\n              item { uid subCategory rarity }\n            }\n          }\n        }\n      }\n    }\n  }\n"];
 /**
  * The graphql function is used to parse GraphQL queries into a document that can be used by GraphQL clients.
  */
