@@ -1,146 +1,272 @@
 import { Link } from "react-router";
 import dayjs from "dayjs";
+import { ChatBubbleOvalLeftEllipsisIcon, ChevronRightIcon, LockClosedIcon, LockOpenIcon } from "@heroicons/react/16/solid";
 import { MultilineText } from "~/components/atoms/typography";
-import { ResourceCards, StudentCards } from "~/components/molecules/student";
-import { pickupLabelLocale } from "~/locales/ko";
-import { PickupType } from "~/models/content.d";
+import { OptionBadge, StudentCard } from "~/components/atoms/student";
+import { ResourceCards } from "~/components/molecules/student";
+import { attackTypeColor, attackTypeLocale, defenseTypeColor, defenseTypeLocale, pickupLabelLocale, roleColor, roleLocale, schoolNameLocale } from "~/locales/ko";
+import type { AttackType, DefenseType, PickupType, Role } from "~/models/content.d";
+import { useState, useEffect, useRef } from "react";
 
-type FuturePlanProps = {
-  events: {
-    uid: string;
-    name: string;
-    since: Date;
-    pickups: {
-      type: PickupType;
-      rerun: boolean;
-      student: {
-        uid: string;
-        name: string;
-        school: string;
-        schaleDbId: string | null;
-        equipments: string[];
-      };
-    }[];
+type FuturePlanStudents = {
+  uid: string;
+  name: string;
+  school: string;
+  attackType: AttackType;
+  defenseType: DefenseType;
+  role: Role;
+  schaleDbId: string | null;
+  equipments: string[];
+  skillItems: {
+    item: {
+      uid: string;
+      subCategory: string | null;
+      rarity: number;
+    };
   }[];
 };
 
-type MonthSummary = {
-  month: dayjs.Dayjs;
-  events: FuturePlanProps["events"];
-  equipments: { [_: string]: number };
-  schools: { [_: string]: number };
+type FuturePlanProps = {
+  event: {
+    uid: string;
+    name: string;
+    since: Date;
+    until: Date;
+    pickups: {
+      type: PickupType;
+      rerun: boolean;
+      student: FuturePlanStudents | null;
+    }[];
+  };
+  favoritedStudents: {
+    studentId: string;
+  }[];
+  memo?: {
+    body: string;
+    visibility: "private" | "public";
+  };
+  isMe: boolean;
 };
 
-function toMonthString(month: dayjs.Dayjs): string {
-  return month.format("YY/MM");
-}
+export default function FuturePlan({ event, favoritedStudents, memo, isMe }: FuturePlanProps) {
+  const [body, setBody] = useState(memo?.body || "");
+  const [visibility, setVisibility] = useState<"private" | "public">(memo?.visibility || "private");
+  const [isSaving, setIsSaving] = useState(false);
+  const timeoutRef = useRef<NodeJS.Timeout>();
+  const textareaRef = useRef<HTMLTextAreaElement>(null);
 
-export default function FuturePlan({ events }: FuturePlanProps) {
-  const beginMonth = dayjs().startOf("month");
-  const endMonth = dayjs(events[events.length - 1].since).endOf("month");
-  const months = Array.from({ length: endMonth.diff(beginMonth, "month") + 1 }, (_, i) => beginMonth.add(i, "month"));
+  // Auto-save with debounce
+  useEffect(() => {
+    if (timeoutRef.current) {
+      clearTimeout(timeoutRef.current);
+    }
 
-  const monthSummaries: MonthSummary[] = months.map((month) => {
-    const equipments: { [_: string]: number } = {};
-    const schools: { [_: string]: number } = {};
-
-    const monthEvents = events.filter((event) => dayjs(event.since).isSame(month, "month"));
-    monthEvents.forEach((event) => {
-      event.pickups.forEach(({ student }) => {
-        student.equipments.forEach((equipment) => {
-          if (!equipments[equipment]) {
-            equipments[equipment] = 0;
-          }
-          equipments[equipment] += 1;
-        });
-
-        if (!schools[student.school]) {
-          schools[student.school] = 0;
+    timeoutRef.current = setTimeout(async () => {
+      if (body !== (memo?.body || "") || visibility !== (memo?.visibility || "private")) {
+        setIsSaving(true);
+        try {
+          await fetch(`/api/contents/${event.uid}/memos`, {
+            method: "POST",
+            body: JSON.stringify({ body, visibility }),
+            headers: { "Content-Type": "application/json" },
+          });
+        } catch (error) {
+          console.error("Failed to save memo:", error);
+        } finally {
+          setIsSaving(false);
         }
-        schools[student.school] += 1;
-      });
-    });
+      }
+    }, 500);
 
-    return {
-      month,
-      events: monthEvents,
-      equipments,
-      schools,
+    return () => {
+      if (timeoutRef.current) {
+        clearTimeout(timeoutRef.current);
+      }
     };
+  }, [body, visibility, event.uid, memo?.body, memo?.visibility]);
+
+  // Resize textarea on initial load
+  useEffect(() => {
+    if (textareaRef.current) {
+      textareaRef.current.style.height = "auto";
+      textareaRef.current.style.height = Math.min(textareaRef.current.scrollHeight, 128) + "px";
+    }
+  }, []);
+
+  if (favoritedStudents.length === 0) {
+    return null;
+  }
+
+  // Assert non-null for `student`
+  const favoritedPickups: {
+    student: FuturePlanStudents;
+    type: PickupType;
+    rerun: boolean;
+  }[] = event.pickups.filter(({ student }) => favoritedStudents.some(({ studentId }) => studentId === student?.uid)).map(({ student, ...rest }) => ({
+    student: student!,
+    ...rest,
+  }));
+
+  const since = dayjs(event.since);
+  const until = dayjs(event.until);
+  const dDay = since.startOf("day").diff(dayjs().startOf("day"), "day");
+
+  // Group resources by student instead of aggregating
+  const studentResources: Record<string, {
+    equipments: string[];
+    mainSkillItems: string[];
+    subSkillItems: string[];
+  }> = {};
+
+  favoritedPickups.forEach(({ student }) => {
+    if (!studentResources[student.uid]) {
+      studentResources[student.uid] = {
+        equipments: [],
+        mainSkillItems: [],
+        subSkillItems: [],
+      };
+    }
+
+    if (student.equipments) {
+      studentResources[student.uid].equipments.push(...student.equipments);
+    }
+
+    if (student.skillItems) {
+      student.skillItems.filter(({ item }) => item.subCategory === "artifact").forEach(({ item }) => {
+        if (item.rarity === 4) {
+          studentResources[student.uid].mainSkillItems.push(item.uid);
+        } else {
+          studentResources[student.uid].subSkillItems.push(item.uid);
+        }
+      });
+    }
   });
 
   return (
-    <table className="w-full md:mx-auto my-4 table-auto">
-      <thead className="bg-neutral-100 dark:bg-neutral-900 text-left">
-        <tr>
-          <th className="p-2">일자</th>
-          <th className="p-2">이벤트</th>
-        </tr>
-      </thead>
-      <tbody>
-        {monthSummaries.map(({ month, events, equipments, schools }) => {
+    <div className="my-4 p-3 md:p-4 bg-neutral-100 dark:bg-neutral-900 rounded-lg">
+      {/* Title */}
+      <div className="px-1 py-2 mb-2 flex items-begin justify-between gap-4">
+        <div className="grow">
+          <Link to={`/events/${event.uid}`} className="hover:underline">
+            <MultilineText className="text-lg md:text-xl font-bold leading-snug" texts={event.name.split("\n")} />
+          </Link>
+          <p className="mt-1 text-xs text-neutral-500 dark:text-neutral-400">{since.format("YYYY-MM-DD")} ~ {until.format("YYYY-MM-DD")}</p>
+        </div>
+        <div className="shrink-0">
+          <div className="inline-flex items-center justify-center rounded-md border border-neutral-300 dark:border-neutral-700 px-2 py-1">
+            <p className="text-base font-bold">D-{dDay}</p>
+          </div>
+        </div>
+      </div>
+
+      {/* Students */}
+      <div className="px-3 md:px-4 py-4 grow bg-white dark:bg-neutral-800 rounded-lg">
+        {/* Display each student with their info and resources */}
+        {favoritedPickups.map(({ student, type, rerun }) => {
+          const resources = studentResources[student.uid];
+          const hasEquipments = resources?.equipments.length > 0;
+          const hasOoparts = resources?.mainSkillItems.length > 0 || resources?.subSkillItems.length > 0;
+
           return (
-            <tr key={toMonthString(month)}>
-              <td className="md:px-2 py-2 align-text-top">
-                <p className="my-4">{toMonthString(month)}</p>
-              </td>
-              <td className="px-2 py-4 border-b border-neutral-100 dark:border-neutral-700">
-                {(events.length > 0) ? 
-                  events.map((event) => {
-                    return (
-                      <div key={event.uid} className="my-1.5">
-                        <Link to={`/events/${event.uid}`} className="hover:underline">
-                          <MultilineText className="text-lg font-bold" texts={event.name.split("\n")} />
-                          {/* <p className="font-bold text-lg">{event.name}</p> */}
-                        </Link>
-                        <p className="mb-2 text-neutral-500 text-sm">{dayjs(event.since).format("YYYY-MM-DD")}</p>
-                        <StudentCards
-                          mobileGrid={4}
-                          students={event.pickups.map(({ student, type, rerun }) => ({
-                            uid: student.uid,
-                            name: student.name,
-                            label: (
-                              <span className={rerun ? "text-white" : "text-yellow-500"}>
-                                {pickupLabelLocale({ type, rerun })}
-                              </span>
-                            ),
-                          }))}
-                        />
-                      </div>
-                    );
-                  }) : <p className="my-2 text-neutral-300">(모집 일정 없음)</p>
-                }
-                {Object.keys(schools).length > 0 && (
-                  <>
-                    <p className="mt-4 font-bold">학원</p>
+            <div key={student.uid} className="mb-6 last:mb-0">
+              {/* Student Info */}
+              <div className="flex items-start gap-4">
+                <div className="flex-shrink-0 w-12 md:w-16">
+                  <StudentCard
+                    uid={student.uid}
+                    attackType={student.attackType}
+                    defenseType={student.defenseType}
+                    role={student.role}
+                  />
+                </div>
+
+                <div className="flex-grow">
+                  <Link to={`/students/${student.uid}`} className="text-lg font-bold hover:underline flex items-center gap-1">
+                    <p>{student.name}</p>
+                    <ChevronRightIcon className="size-4 inline" />
+                  </Link>
+
+                  <div className="mb-2">
+                    <p className="text-sm text-neutral-500 dark:text-neutral-400">
+                      {pickupLabelLocale({ type, rerun })} &middot; {schoolNameLocale[student.school]}
+                    </p>
+                    <div className="py-2 flex text-sm gap-x-1">
+                      <OptionBadge text={attackTypeLocale[student.attackType]} color={attackTypeColor[student.attackType]} bgColor="light" />
+                      <OptionBadge text={defenseTypeLocale[student.defenseType]} color={defenseTypeColor[student.defenseType]} bgColor="light"/>
+                      <OptionBadge text={roleLocale[student.role]} color={roleColor[student.role]} bgColor="light"/>
+                    </div>
+                  </div>
+
+                  {(hasEquipments || hasOoparts) && (
                     <ResourceCards
                       mobileGrid={5}
-                      cardProps={Object.entries(schools).map(([school, count]) => ({
-                        id: `school-${school}`,
-                        imageUrl: `https://assets.mollulog.net/assets/images/schools/${school}`,
-                        count,
-                      }))}
+                      cardProps={[
+                        ...resources.equipments.map((equipment) => ({
+                          id: `equipment-${student.uid}-${equipment}`,
+                          imageUrl: `https://assets.mollulog.net/assets/images/equipments/${equipment}`,
+                        })),
+                        ...resources.mainSkillItems.map((itemUid) => ({
+                          id: `skillItem-${student.uid}-${itemUid}`,
+                          itemUid,
+                          backgroundColor: "purple" as const,
+                        })),
+                        ...resources.subSkillItems.map((itemUid) => ({
+                          id: `skillItem-${student.uid}-${itemUid}`,
+                          itemUid,
+                          backgroundColor: "orange" as const,
+                        })),
+                      ]}
                     />
-                  </>
-                )}
-                {Object.keys(equipments).length > 0 && (
-                  <>
-                    <p className="mt-4 font-bold">장비</p>
-                    <ResourceCards
-                      mobileGrid={5}
-                      cardProps={Object.entries(equipments).map(([equipment, count]) => ({
-                        id: `equipment-${equipment}`,
-                        imageUrl: `https://assets.mollulog.net/assets/images/equipments/${equipment}`,
-                        count,
-                      }))}
-                    />
-                  </>
-                )}
-              </td>
-            </tr>
+                  )}
+                </div>
+              </div>
+            </div>
           );
         })}
-      </tbody>
-    </table>
-  );
+      </div>
+
+      {/* Memo */}
+      {isMe && (
+        <div className="px-1 mt-4 -mb-2 flex items-center justify-between">
+          <p className="text-lg font-bold">이벤트 메모</p>
+          {body && (
+            <div
+              className="flex items-center px-2 py-1 border border-neutral-300 dark:border-neutral-600 rounded text-neutral-600 dark:text-neutral-300 transition cursor-pointer hover:bg-neutral-50 dark:hover:bg-neutral-700"
+              onClick={() => setVisibility(visibility === "private" ? "public" : "private")}
+            >
+              {visibility === "private" ? <LockClosedIcon className="size-3" /> : <LockOpenIcon className="size-3" />}
+              <span className="ml-1 text-xs">
+                {visibility === "private" ? "나만 보기" : "전체 공개"}
+              </span>
+            </div>
+          )}
+        </div>
+      )}
+      {(memo?.body || isMe) && (
+        <div className="mt-4 px-3 md:px-4 py-2 md:py-3 flex items-center gap-x-2 bg-white dark:bg-neutral-800 rounded-lg">
+          <ChatBubbleOvalLeftEllipsisIcon className="size-4 shrink-0 text-neutral-500 dark:text-neutral-400" />
+          {isMe ?
+            <textarea
+              ref={textareaRef}
+              className="grow text-sm xl:text-base bg-transparent text-neutral-700 dark:text-neutral-300 placeholder:text-neutral-500 dark:placeholder:text-neutral-400 resize-none min-h-[1.5rem] max-h-32 overflow-y-auto"
+              value={body}
+              onChange={(e) => {
+                setBody(e.target.value);
+                // Auto-resize textarea
+                e.target.style.height = "auto";
+                e.target.style.height = Math.min(e.target.scrollHeight, 128) + "px";
+              }}
+              placeholder="메모를 남겨보세요"
+              rows={1}
+              style={{ wordWrap: "break-word", whiteSpace: "pre-wrap", overflowWrap: "break-word" }}
+            /> :
+            <p className="text-sm xl:text-base text-neutral-500 dark:text-neutral-400">{body}</p>
+          }
+          {isSaving && (
+            <div className="size-3 border border-neutral-400 border-t-transparent rounded-full animate-spin shrink-0" />
+          )}
+        </div>
+      )}
+    </div>
+  ); 
 }

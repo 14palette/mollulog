@@ -84,9 +84,9 @@ export default function SlotCountInfo({ student, raid, slotsCount, assistsCount,
             style={{ backgroundImage: `url(${bossImageUrl(raid.boss)})` }}
           />
           <div className="absolute right-2 bottom-1 z-10 flex gap-1">
-            <OptionBadge text={difficultyLocale[raid.difficulty]} dark />
-            <OptionBadge text={terrainLocale[raid.terrain]} dark />
-            <OptionBadge text={defenseTypeLocale[raid.defenseType]} color={defenseTypeColor[raid.defenseType]} dark />
+            <OptionBadge text={difficultyLocale[raid.difficulty]} bgColor="dark" />
+            <OptionBadge text={terrainLocale[raid.terrain]} bgColor="dark" />
+            <OptionBadge text={defenseTypeLocale[raid.defenseType]} color={defenseTypeColor[raid.defenseType]} bgColor="dark" />
           </div>
         </div>
       )}

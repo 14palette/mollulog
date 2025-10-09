@@ -1,4 +1,4 @@
-import ResourceCards from "./ResourceCards";
+import ResourceCards, { type ResourceCardsProps } from "./ResourceCards";
 import StudentCards from "./StudentCards";
 import StudentGradingComments from "./StudentGradingComments";
 import StudentInfo from "./StudentInfo";
@@ -15,3 +15,5 @@ export {
   TierCounts,
   TierSelector,
 };
+
+export type { ResourceCardsProps };

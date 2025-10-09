@@ -37,7 +37,7 @@ function MenuItem({ to, name, OutlineIcon, SolidIcon, isActive, onItemClick, sho
   return (
     <Link
       to={to}
-      className={sanitizeClassName(`my-2 p-2 flex items-center hover:bg-neutral-200 dark:hover:bg-neutral-700 rounded-lg transition relative ${isActive ? "font-bold drop-shadow-lg" : ""}`)}
+      className={sanitizeClassName(`my-2 px-2 py-1.5 xl:py-2 flex items-center hover:bg-neutral-200 dark:hover:bg-neutral-700 rounded-lg transition relative ${isActive ? "font-bold drop-shadow-lg" : ""}`)}
       onClick={() => onItemClick?.()}
     >
       {isActive ? <SolidIcon className="inline-block mr-3 size-6" /> : <OutlineIcon className="inline-block mr-3 size-6" />}
@@ -88,7 +88,6 @@ function MenuContent({ currentUsername, pathname, onMenuClose, onShowSignIn, onD
         SolidIcon={FireIconSolid}
         isActive={pathname.startsWith("/raids")}
         onItemClick={onMenuClose}
-        showRedDot
       />
       <MenuItem
         to="/students"

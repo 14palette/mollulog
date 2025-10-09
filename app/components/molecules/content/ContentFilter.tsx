@@ -1,5 +1,7 @@
-import { FunnelIcon, XMarkIcon } from "@heroicons/react/24/outline";
+import { FunnelIcon, HeartIcon as EmptyHeartIcon } from "@heroicons/react/24/outline";
+import { HeartIcon as FilledHeartIcon } from "@heroicons/react/16/solid";
 import { useState } from "react";
+import { Link } from "react-router";
 import FilterButtons from "./FilterButtons";
 import type { EventType, RaidType } from "~/models/content.d";
 import { Toggle } from "~/components/atoms/form";
@@ -13,9 +15,10 @@ export type ContentFilter = {
 type ContentFilterProps = {
   initialFilter: ContentFilter;
   onFilterChange: (filter: ContentFilter) => void;
+  signedIn: boolean;
 };
 
-export default function ContentFilter({ initialFilter, onFilterChange }: ContentFilterProps) {
+export default function ContentFilter({ initialFilter, onFilterChange, signedIn }: ContentFilterProps) {
   const [filter, setFilter] = useState<ContentFilter>(initialFilter);
   const [isMobileSheetOpen, setIsMobileSheetOpen] = useState(false);
 
@@ -36,22 +39,42 @@ export default function ContentFilter({ initialFilter, onFilterChange }: Content
   return (
     <>
       {/* PC 화면 */}
-      <div className="hidden xl:block bg-white dark:bg-neutral-900 rounded-xl xl:shadow-lg p-6 border border-neutral-100 dark:border-neutral-900">
-        <div className="flex items-center gap-3 mb-4">
-          <div className="p-3 flex items-center justify-center bg-neutral-100 dark:bg-neutral-800 rounded-lg">
-            <FunnelIcon className="size-5 text-neutral-600 dark:text-neutral-400" strokeWidth={2} />
+      <div className="hidden xl:block">
+        <div className="bg-white dark:bg-neutral-900 rounded-xl xl:shadow-lg p-6 border border-neutral-100 dark:border-neutral-900">
+          <div className="flex items-center gap-3 mb-4">
+            <div className="p-3 flex items-center justify-center bg-neutral-100 dark:bg-neutral-800 rounded-lg">
+              <FunnelIcon className="size-5 text-neutral-600 dark:text-neutral-400" strokeWidth={2} />
+            </div>
+            <p className="font-bold text-lg">필터</p>
           </div>
-          <p className="font-bold text-lg">필터</p>
+          <FilterContent
+            filter={filter}
+            onToggleType={onToggleType}
+            onToggleOnlyPickups={onToggleOnlyPickups}
+          />
+
+          {signedIn && (
+            <div className="mt-6">
+              <Link to="/my?path=futures" className="flex items-center justify-center gap-1 w-full px-4 py-3 bg-neutral-100 dark:bg-neutral-800 hover:bg-neutral-200 dark:hover:bg-neutral-700 text-neutral-600 dark:text-neutral-400 rounded-lg transition-colors">
+                <FilledHeartIcon className="size-5" />
+                <span className="font-medium">내 관심 학생</span>
+              </Link>
+            </div>
+          )}
         </div>
-        <FilterContent
-          filter={filter}
-          onToggleType={onToggleType}
-          onToggleOnlyPickups={onToggleOnlyPickups}
-        />
       </div>
 
       {/* 모바일 화면 필터 표시 버튼 */}
-      <div className="xl:hidden fixed bottom-6 right-4 z-40">
+      <div className="xl:hidden fixed bottom-6 right-4 z-40 flex gap-1">
+        {signedIn && (
+          <Link to="/my?path=futures">
+            <div className="flex items-center gap-2 px-4 py-3 bg-white/90 dark:bg-neutral-900/80 backdrop-blur-sm border border-neutral-200 dark:border-neutral-700 text-neutral-700 dark:text-neutral-300 hover:bg-neutral-50 dark:hover:bg-neutral-700 rounded-full shadow-lg transition-colors">
+              <EmptyHeartIcon className="size-5" />
+              <span className="font-medium">관심 학생</span>
+            </div>
+          </Link>
+        )}
+
         <button
           onClick={() => setIsMobileSheetOpen(true)}
           className="flex items-center gap-2 px-4 py-3 bg-white/90 dark:bg-neutral-900/80 backdrop-blur-sm border border-neutral-200 dark:border-neutral-700 text-neutral-700 dark:text-neutral-300 hover:bg-neutral-50 dark:hover:bg-neutral-700 rounded-full shadow-lg transition-colors"

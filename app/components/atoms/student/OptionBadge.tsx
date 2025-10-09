@@ -1,7 +1,13 @@
 type OptionBadgeProps = {
   text: string;
+  bgColor?: "dark" | "grey" | "light";
   color?: "red" | "yellow" | "blue" | "purple";
-  dark?: boolean;
+};
+
+const bgColorClass = {
+  dark: "bg-neutral-800 text-white",
+  grey: "bg-neutral-200",
+  light: "bg-neutral-100 dark:bg-neutral-900",
 };
 
 const colorClass = {
@@ -12,9 +18,9 @@ const colorClass = {
   purple: "bg-purple-500",
 };
 
-export default function OptionBadge({ text, color, dark }: OptionBadgeProps) {
+export default function OptionBadge({ text, color, bgColor }: OptionBadgeProps) {
   return (
-    <div className={`flex-shrink-0 px-2 py-0.5 flex items-center ${dark ? "bg-neutral-800 text-white" : "bg-neutral-200"} dark:bg-neutral-800 rounded-full`}>
+    <div className={`flex-shrink-0 px-2 py-0.5 flex items-center ${bgColorClass[bgColor ?? "grey"]} dark:bg-neutral-800 rounded-full`}>
       {color && <div className={`size-2.5 rounded-full mr-1 ` + colorClass[color]} />}
       <span className="text-sm">{text}</span>
     </div>

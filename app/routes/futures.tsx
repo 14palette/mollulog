@@ -217,7 +217,7 @@ export default function Futures() {
         </div>
 
         <div className="w-full xl:grow xl:sticky xl:top-4 xl:self-start xl:pl-6">
-          <ContentFilter initialFilter={contentFilter} onFilterChange={setContentFilter} />
+          <ContentFilter initialFilter={contentFilter} onFilterChange={setContentFilter} signedIn={signedIn} />
         </div>
       </div>
     </>
