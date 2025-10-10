@@ -3,18 +3,18 @@ import {
   HomeIcon as HomeIconOutline,
   CalendarIcon as CalendarIconOutline,
   UserCircleIcon as UserCircleIconOutline,
-  PencilSquareIcon as PencilSquareIconOutline,
   IdentificationIcon as IdentificationIconOutline,
   FireIcon as FireIconOutline,
   Bars3Icon,
+  HeartIcon as HeartIconOutline,
 } from "@heroicons/react/24/outline";
 import {
   HomeIcon as HomeIconSolid,
   CalendarIcon as CalendarIconSolid,
   UserCircleIcon as UserCircleIconSolid,
-  PencilSquareIcon as PencilSquareIconSolid,
   IdentificationIcon as IdentificationIconSolid,
   FireIcon as FireIconSolid,
+  HeartIcon as HeartIconSolid,
 } from "@heroicons/react/24/solid";
 import { Transition } from "@headlessui/react";
 import { Link, useMatches, useSubmit } from "react-router";
@@ -97,25 +97,24 @@ function MenuContent({ currentUsername, pathname, onMenuClose, onShowSignIn, onD
         isActive={pathname.startsWith("/students")}
         onItemClick={onMenuClose}
       />
+      <MenuItem
+        to="/utils/relationship"
+        name="인연 랭크 계산기"
+        OutlineIcon={HeartIconOutline}
+        SolidIcon={HeartIconSolid}
+        isActive={pathname.startsWith("/utils/relationship")}
+        onItemClick={onMenuClose}
+        showRedDot
+      />
       {currentUsername ? (
-        <>
-          <MenuItem
-            to={`/@${currentUsername}`}
-            name="내 정보"
-            OutlineIcon={UserCircleIconOutline}
-            SolidIcon={UserCircleIconSolid}
-            isActive={pathname.startsWith("/@")}
-            onItemClick={onMenuClose}
-          />
-          <MenuItem
-            to="/edit"
-            name="프로필 관리"
-            OutlineIcon={PencilSquareIconOutline}
-            SolidIcon={PencilSquareIconSolid}
-            isActive={pathname.startsWith("/edit")}
-            onItemClick={onMenuClose}
-          />
-        </>
+        <MenuItem
+          to={`/@${currentUsername}`}
+          name="내 정보"
+          OutlineIcon={UserCircleIconOutline}
+          SolidIcon={UserCircleIconSolid}
+          isActive={pathname.startsWith("/@") || pathname.startsWith("/edit")}
+          onItemClick={onMenuClose}
+        />
       ) : (
         <div
           className="w-full my-4 py-3 bg-neutral-800 dark:bg-neutral-100 text-white dark:text-neutral-900 text-center rounded-full hover:opacity-50 transition-opacity cursor-pointer"

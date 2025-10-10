@@ -114,7 +114,7 @@ export const action = async ({ request, context, params }: ActionFunctionArgs) =
 
   return {
     rankVisible: data.raid.rankVisible,
-    ranks: data.raid.ranks,
+    ranks: filter.rankBefore ? data.raid.ranks.slice(1, 11) : data.raid.ranks.slice(0, 10),
     hasMore: data.raid.ranks.length === 11,
   };
 };
