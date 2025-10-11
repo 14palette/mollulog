@@ -22,6 +22,7 @@ import { useState } from "react";
 import { useSignIn } from "~/contexts/SignInProvider";
 import { sanitizeClassName } from "~/prophandlers";
 import { submitPreference } from "~/routes/api.preference";
+import { Banner } from "~/components/atoms/notification";
 
 interface MenuItemProps {
   to: string;
@@ -171,9 +172,15 @@ type SidebarProps = {
   darkMode: boolean;
   setDarkMode: (fn: (prev: boolean) => boolean) => void;
   hasRecentNews: boolean;
+  banner: {
+    message: string;
+    linkText: string;
+    linkTo: string;
+    storageKey: string;
+  };
 };
 
-export default function Sidebar({ currentUsername, darkMode, setDarkMode, hasRecentNews }: SidebarProps) {
+export default function Sidebar({ currentUsername, darkMode, setDarkMode, hasRecentNews, banner }: SidebarProps) {
   const matches = useMatches();
   const pathname = matches[matches.length - 1].pathname;
 
@@ -185,44 +192,57 @@ export default function Sidebar({ currentUsername, darkMode, setDarkMode, hasRec
   };
 
   return (
-    <div className="px-4 py-4 xl:py-8">
-      <div className="flex items-center">
-        <Bars3Icon className="p-2 -m-2 block xl:hidden size-10" strokeWidth={2} onClick={() => setIsMenuOpen(!isMenuOpen)} />
-        <img src={darkMode ? "/logo-dark.png" : "/logo-light.png"} alt="몰루로그 로고" className="ml-2 mr-1 xl:mr-2 object-cover h-8 xl:h-10 aspect-4/3" />
-        <h1 className="text-2xl xl:text-3xl font-ingame">
-          <span className="font-bold">몰루</span>로그
-        </h1>
+    <div>
+      {/* Desktop Banner - Top */}
+      <div className="hidden xl:block mb-4">
+        <Banner message={banner.message} linkText={banner.linkText} linkTo={banner.linkTo} storageKey={banner.storageKey} />
       </div>
-      <div className="mt-6 hidden xl:block">
-        <MenuContent
-          currentUsername={currentUsername}
-          pathname={pathname}
-          onMenuClose={handleMenuClose}
-          onShowSignIn={showSignIn}
-          onDarkModeToggle={setDarkMode}
-          hasRecentNews={hasRecentNews}
-        />
+
+      <div className="px-4 py-4">
+        <div className="flex items-center">
+          <Bars3Icon className="p-2 -m-2 block xl:hidden size-10" strokeWidth={2} onClick={() => setIsMenuOpen(!isMenuOpen)} />
+          <img src={darkMode ? "/logo-dark.png" : "/logo-light.png"} alt="몰루로그 로고" className="ml-2 mr-1 xl:mr-2 object-cover h-8 xl:h-10 aspect-4/3" />
+          <h1 className="text-2xl xl:text-3xl font-ingame">
+            <span className="font-bold">몰루</span>로그
+          </h1>
+        </div>
+        <div className="mt-6 hidden xl:block">
+          <MenuContent
+            currentUsername={currentUsername}
+            pathname={pathname}
+            onMenuClose={handleMenuClose}
+            onShowSignIn={showSignIn}
+            onDarkModeToggle={setDarkMode}
+            hasRecentNews={hasRecentNews}
+          />
+        </div>
       </div>
-      <Transition
-        show={isMenuOpen}
-        as="div"
-        enter="transition duration-200 ease-out"
-        enterFrom="opacity-0"
-        enterTo="opacity-100"
-        leave="transition duration-100 ease-in"
-        leaveFrom="opacity-100"
-        leaveTo="opacity-0"
-        className="mt-6 block xl:hidden"
-      >
-        <MenuContent
-          currentUsername={currentUsername}
-          pathname={pathname}
-          onMenuClose={handleMenuClose}
-          onShowSignIn={showSignIn}
-          onDarkModeToggle={setDarkMode}
-          hasRecentNews={hasRecentNews}
-        />
-      </Transition>
+      <div>
+        {/* Mobile Banner - Bottom */}
+        <div className="block xl:hidden">
+          <Banner message={banner.message} linkText={banner.linkText} linkTo={banner.linkTo} storageKey={banner.storageKey} />
+        </div>
+        <Transition
+          show={isMenuOpen}
+          as="div"
+          enter="transition duration-200 ease-out"
+          enterFrom="opacity-0"
+          enterTo="opacity-100"
+          leave="transition duration-100 ease-in"
+          leaveFrom="opacity-100"
+          leaveTo="opacity-0"
+          className="p-4 block xl:hidden"
+        >
+          <MenuContent
+            currentUsername={currentUsername}
+            pathname={pathname}
+            onMenuClose={handleMenuClose}
+            onShowSignIn={showSignIn}
+            onDarkModeToggle={setDarkMode}
+            hasRecentNews={hasRecentNews}
+          />
+        </Transition>
+      </div>
     </div>
   );
 }

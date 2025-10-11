@@ -74,6 +74,13 @@ export function Layout({ children }: { children: React.ReactNode }) {
 const wideLayout = ["/futures", "/utils/relationship"];
 const fullLayout = ["/raids"]
 
+const banner = {
+  message: "인연 랭크 계산기 기능이 추가됐어요",
+  linkText: "바로가기 →",
+  linkTo: "/utils/relationship",
+  storageKey: "relationship-calculator-banner-dismissed",
+};
+
 export default function App() {
   const loaderData = useLoaderData<typeof loader>();
   const { currentUsername, hasRecentNews } = loaderData;
@@ -97,6 +104,12 @@ export default function App() {
   } else if (wideLayout.find((path) => location.pathname.startsWith(path))) {
     widthClass = "max-w-6xl";
   }
+
+  const [bannerHidden, setBannerHidden] = useState(false);
+  useEffect(() => {
+    setBannerHidden(localStorage.getItem(banner.storageKey) === "true");
+  }, [navigate.location]);
+
   return (
     <div className={`${darkMode ? "dark " : ""}text-neutral-900 dark:bg-neutral-800 dark:text-neutral-200 transition`}>
       <LoadingBar
@@ -109,14 +122,15 @@ export default function App() {
         <StudentCardPopupProvider>
           <div className="flex flex-col xl:flex-row">
             <div className="fixed xl:relative w-full xl:w-96 xl:h-screen bg-white/90 dark:bg-neutral-800/90 backdrop-blur-sm border-b xl:border-b-0 xl:border-r border-neutral-200 dark:border-neutral-700 shadow-xl shadow-neutral-200/30 dark:shadow-neutral-900/30 z-100">
-              <Sidebar 
+              <Sidebar
                 currentUsername={currentUsername} 
                 darkMode={darkMode} 
                 setDarkMode={setDarkMode}
                 hasRecentNews={hasRecentNews}
+                banner={banner}
               />
             </div>
-            <div className="w-full pt-10 xl:pt-0 overflow-y-scroll">
+            <div className={`w-full ${bannerHidden ? "pt-10" : "pt-18"} xl:pt-0 overflow-y-scroll`}>
               <div className={`xl:h-screen mx-auto ${widthClass} px-4 md:px-8 py-6`}>
                 <div className="pb-32">
                   <Outlet />
