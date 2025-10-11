@@ -71,7 +71,7 @@ export function Layout({ children }: { children: React.ReactNode }) {
   );
 }
 
-const wideLayout = ["/futures"];
+const wideLayout = ["/futures", "/utils/relationship"];
 const fullLayout = ["/raids"]
 
 export default function App() {

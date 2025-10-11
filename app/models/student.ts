@@ -89,3 +89,24 @@ export function getMaxTierAt(date: Date): number {
   }
   return 8;
 }
+
+export function parseVisibleNames(name: string): string[] {
+  const visibleNames = [];
+  if (name === "하츠네 미쿠") {
+    visibleNames.push("미쿠");
+  } else if (name === "미사카 미코토") {
+    visibleNames.push("미사카");
+  } else if (name === "쇼쿠호 미사키") {
+    visibleNames.push("쇼쿠호");
+  } else if (name === "사텐 루이코") {
+    visibleNames.push("사텐");
+  } else if (name === "시로코*테러") {
+    visibleNames.push("시로코", "테러");
+  } else if (name?.includes("(")) {
+    const splits = name.split("(");
+    visibleNames.push(splits[0], splits[1].replace(")", ""));
+  } else if (name) {
+    visibleNames.push(name);
+  }
+  return visibleNames;
+}
