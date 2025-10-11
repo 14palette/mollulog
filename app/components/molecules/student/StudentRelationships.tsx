@@ -1,4 +1,5 @@
-import { HeartIcon } from "@heroicons/react/16/solid";
+import { HeartIcon, ChevronLeftIcon, ChevronRightIcon } from "@heroicons/react/16/solid";
+import { useRef, useState, useEffect } from "react";
 import ProfileImage from "~/components/atoms/student/ProfileImage";
 import { parseVisibleNames } from "~/models/student";
 
@@ -15,9 +16,73 @@ type StudentStoriesProps = {
 };
 
 export default function StudentRelationships({ students, selectedStudent, onSelect }: StudentStoriesProps) {
+  const scrollContainerRef = useRef<HTMLDivElement>(null);
+  const [canScrollLeft, setCanScrollLeft] = useState(false);
+  const [canScrollRight, setCanScrollRight] = useState(false);
+
+  const checkScrollButtons = () => {
+    if (scrollContainerRef.current) {
+      const { scrollLeft, scrollWidth, clientWidth } = scrollContainerRef.current;
+      setCanScrollLeft(scrollLeft > 0);
+      setCanScrollRight(scrollLeft < scrollWidth - clientWidth);
+    }
+  };
+
+  useEffect(() => {
+    checkScrollButtons();
+    const container = scrollContainerRef.current;
+    if (container) {
+      container.addEventListener('scroll', checkScrollButtons);
+      return () => container.removeEventListener('scroll', checkScrollButtons);
+    }
+  }, [students]);
+
+  const scrollLeft = () => {
+    if (scrollContainerRef.current) {
+      scrollContainerRef.current.scrollBy({
+        left: -200,
+        behavior: 'smooth'
+      });
+    }
+  };
+
+  const scrollRight = () => {
+    if (scrollContainerRef.current) {
+      scrollContainerRef.current.scrollBy({
+        left: 200,
+        behavior: 'smooth'
+      });
+    }
+  };
+
   return (
-    <div className="w-full">
-      <div className="flex gap-1 overflow-x-auto no-scrollbar py-2">
+    <div className="w-full relative">
+      {/* Left scroll button */}
+      {canScrollLeft && (
+        <button
+          onClick={scrollLeft}
+          className="absolute left-1 top-2/5 -translate-y-1/2 z-10 bg-white dark:bg-neutral-800 shadow-lg rounded-full p-1 hover:bg-neutral-50 dark:hover:bg-neutral-700 transition-colors"
+          aria-label="Scroll left"
+        >
+          <ChevronLeftIcon className="size-6 text-neutral-600 dark:text-neutral-400" />
+        </button>
+      )}
+
+      {/* Right scroll button */}
+      {canScrollRight && (
+        <button
+          onClick={scrollRight}
+          className="absolute right-1 top-2/5 -translate-y-1/2 z-10 bg-white dark:bg-neutral-800 shadow-lg rounded-full p-1 hover:bg-neutral-50 dark:hover:bg-neutral-700 transition-colors"
+          aria-label="Scroll right"
+        >
+          <ChevronRightIcon className="size-6 text-neutral-600 dark:text-neutral-400" />
+        </button>
+      )}
+
+      <div 
+        ref={scrollContainerRef}
+        className="flex gap-1 overflow-x-auto no-scrollbar py-2"
+      >
         {students.map((student) => {
           const visibleNames = parseVisibleNames(student.name);
           return (

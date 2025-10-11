@@ -1,13 +1,17 @@
 import { useFetcher, useLoaderData } from "react-router";
-import type { LoaderFunctionArgs } from "react-router";
+import type { LoaderFunctionArgs, ActionFunctionArgs, MetaFunction } from "react-router";
 import { SubTitle, Title } from "~/components/atoms/typography";
 import { getAllStudents } from "~/models/student";
 import { useEffect, useState, useMemo } from "react";
-import { Input, Toggle } from "~/components/atoms/form";
+import { Input, Toggle, Button } from "~/components/atoms/form";
 import { ChevronRightIcon } from "@heroicons/react/24/outline";
-import { HeartIcon } from "@heroicons/react/16/solid";
+import { HeartIcon, BookmarkIcon } from "@heroicons/react/16/solid";
 import { filterStudentByName } from "~/filters/student";
 import { StudentRelationships } from "~/components/molecules/student";
+import { getAuthenticator } from "~/auth/authenticator.server";
+import { upsertRelationshipLevel, getRelationshipLevels, removeRelationshipLevel, type RelationshipLevel } from "~/models/relationship-level";
+import { redirect } from "react-router";
+import { useSignIn } from "~/contexts/SignInProvider";
 
 // Experience table data from Blue Archive
 const EXP_TABLE = [
@@ -166,67 +170,217 @@ function rarityBgClass(rarity: number | null | undefined): string {
   }
 }
 
-export const loader = async ({ context, request, params }: LoaderFunctionArgs) => {
-  const env = context.cloudflare.env;
-
-  const allStudents = await getAllStudents(env);
-  const relationships = [
-    { studentUid: "13005", level: 50 },
-    { studentUid: "10064", level: 30 },
-    { studentUid: "10088", level: 20 },
+export const meta: MetaFunction = () => {
+  const title = "인연 랭크 계산기 | 몰루로그";
+  const description = "블루 아카이브 학생들의 인연 랭크를 계산하고 관리해보세요";
+  return [
+    { title },
+    { name: "description", content: description },
+    { name: "og:title", content: title },
+    { name: "og:description", content: description },
+    { name: "twitter:title", content: title },
+    { name: "twitter:description", content: description },
   ];
+};
 
-  // Merge students with their relationship levels
+export const loader = async ({ context, request }: LoaderFunctionArgs) => {
+  const env = context.cloudflare.env;
+  const allStudents = await getAllStudents(env);
+
+  // Get saved relationship levels from database if user is authenticated
+  const currentUser = await getAuthenticator(env).isAuthenticated(request);
+  let savedRelationships: Record<string, RelationshipLevel> = {};
+  if (currentUser) {
+    const relationLevels = await getRelationshipLevels(env, currentUser.id);
+    savedRelationships = relationLevels.reduce((acc, rel) => {
+      acc[rel.studentId] = rel;
+      return acc;
+    }, {} as Record<string, RelationshipLevel>);
+  }
+
+  // Merge students with their relationship levels (only for authenticated users)
   const studentsWithRelationships = allStudents.map((student) => {
-    const relationship = relationships.find((rel) => rel.studentUid === student.uid);
+    const savedLevel = savedRelationships[student.uid];
     return {
       ...student,
-      relationshipLevel: relationship?.level ?? null,
+      currentLevel: savedLevel?.currentLevel ?? null,
+      targetLevel: savedLevel?.targetLevel ?? null,
+      items: savedLevel?.items ?? {},
     };
   });
 
   return {
     students: studentsWithRelationships.sort((a, b) => {
-      const aLevel = a.relationshipLevel ?? 0;
-      const bLevel = b.relationshipLevel ?? 0;
+      const aLevel = a.currentLevel ?? 0;
+      const bLevel = b.currentLevel ?? 0;
       if (aLevel === bLevel) {
         return a.order - b.order;
       }
       return bLevel - aLevel;
     }),
+    isAuthenticated: !!currentUser,
   };
 };
 
+export type ActionData = {
+  studentId: string;
+  currentLevel: number;
+  targetLevel: number;
+  items: Record<string, number>;
+};
+
+export const action = async ({ request, context }: ActionFunctionArgs) => {
+  const env = context.cloudflare.env;
+  const currentUser = await getAuthenticator(env).isAuthenticated(request);
+  if (!currentUser) {
+    return redirect("/unauthorized");
+  }
+
+  if (request.method === "DELETE") {
+    const actionData = await request.json<{ studentId: string }>();
+    await removeRelationshipLevel(env, currentUser.id, actionData.studentId);
+  } else if (request.method === "POST") {
+    const actionData = await request.json<ActionData>();
+    await upsertRelationshipLevel(
+      env,
+      currentUser.id,
+      actionData.studentId,
+      actionData.currentLevel,
+      actionData.targetLevel,
+      actionData.items
+    );
+  }
+
+  return null;
+};
+
+const emptyRelationshipLevel = {
+  currentLevel: 1,
+  targetLevel: 50,
+  items: {},
+};
+
 export default function Relationship() {
-  const { students } = useLoaderData<typeof loader>();
+  const { students, isAuthenticated } = useLoaderData<typeof loader>();
   const fetcher = useFetcher<typeof import("./api.students.$uid.items").loader>();
+  const saveFetcher = useFetcher<typeof action>();
+  const { showSignIn } = useSignIn();
 
-  const [filteredStudents, setFilteredStudents] = useState<{ uid: string; name: string; relationshipLevel: number | null }[]>(students.slice(0, 20));
-  const [selectedStudent, setSelectedStudent] = useState<string | null>(null);
+  const [filteredStudents, setFilteredStudents] = useState<{ uid: string; name: string; currentLevel: number | null; targetLevel: number | null }[]>(students.slice(0, 20));
+  const [selectedStudentUid, setSelectedStudent] = useState<string | null>(null);
 
-  const [currentLevel, setCurrentLevel] = useState<number>(1);
-  const [targetLevel, setTargetLevel] = useState<number>(50);
+  // RelationshipLevel fields merged into one state
+  const [relationshipLevel, setRelationshipLevel] = useState<{
+    currentLevel: number;
+    targetLevel: number;
+    items: Record<string, number>;
+  }>(emptyRelationshipLevel);
+
+  // UI-only states remain separate
   const [expectingLevel, setExpectingLevel] = useState<number>(1);
   const [expectedExp, setExpectedExp] = useState<number>(0);
   useEffect(() => {
-    if (selectedStudent) {
-      setCurrentLevel(students.find(s => s.uid === selectedStudent)?.relationshipLevel ?? 1);
+    if (selectedStudentUid) {
+      const student = students.find(s => s.uid === selectedStudentUid);
+      setRelationshipLevel({
+        currentLevel: student?.currentLevel ?? emptyRelationshipLevel.currentLevel,
+        targetLevel: student?.targetLevel ?? emptyRelationshipLevel.targetLevel,
+        items: student?.items ?? emptyRelationshipLevel.items,
+      });
+
       // load favorite items for selected student
-      fetcher.load(`/api/students/${selectedStudent}/items`);
+      fetcher.load(`/api/students/${selectedStudentUid}/items`);
     }
-  }, [selectedStudent]);
+  }, [selectedStudentUid]);
+
+  // Handle action success feedback
+  const [actionSuccess, setActionSuccess] = useState<"save" | "delete" | null>(null);
+  const [saveError, setSaveError] = useState<string | null>(null);
+  useEffect(() => {
+    if (saveFetcher.state === "idle" && saveFetcher.data !== undefined && actionSuccess) {
+      if (actionSuccess === "delete") {
+        // Reset relationship level to empty state after delete
+        setRelationshipLevel(emptyRelationshipLevel);
+      }
+      // Hide success message after 3 seconds
+      const timer = setTimeout(() => setActionSuccess(null), 3000);
+      return () => clearTimeout(timer);
+    }
+  }, [saveFetcher.state, saveFetcher.data, actionSuccess]);
+
+  const handleSave = () => {
+    if (!selectedStudentUid) {
+      return;
+    }
+
+    // Check if user is authenticated
+    if (!isAuthenticated) {
+      showSignIn();
+      return;
+    }
+
+    if (relationshipLevel.currentLevel < 1 || relationshipLevel.currentLevel > 100 || relationshipLevel.targetLevel < 1 || relationshipLevel.targetLevel > 100) {
+      setSaveError("인연 랭크는 1부터 100 사이만 가능해요");
+      return;
+    }
+    if (relationshipLevel.targetLevel < relationshipLevel.currentLevel) {
+      setSaveError("목표 랭크는 현재 랭크보다 높아야 해요");
+      return;
+    }
+    setSaveError(null);
+    setActionSuccess("save");
+
+    saveFetcher.submit(
+      {
+        studentId: selectedStudentUid,
+        currentLevel: relationshipLevel.currentLevel,
+        targetLevel: relationshipLevel.targetLevel,
+        items: relationshipLevel.items,
+      },
+      {
+        method: "POST",
+        encType: "application/json",
+      }
+    );
+  };
+
+  const handleDelete = () => {
+    if (!selectedStudentUid) {
+      return;
+    }
+
+    // Check if user is authenticated
+    if (!isAuthenticated) {
+      showSignIn();
+      return;
+    }
+
+    setActionSuccess("delete");
+    saveFetcher.submit(
+      {
+        studentId: selectedStudentUid,
+      },
+      {
+        method: "DELETE",
+        encType: "application/json",
+      }
+    );
+  };
+
+  // Check if current student has saved data
+  const hasSavedData = selectedStudentUid && students.find(s => s.uid === selectedStudentUid)?.currentLevel !== null;
 
   return (
     <>
       <Title text="인연 랭크 계산기" />
-      <SubTitle text="학생 선택" description="인연 랭크를 계산할 학생을 선택하세요" />
+      <SubTitle text="학생 선택" />
       <Input
         placeholder="이름으로 찾기..."
         onChange={(value) => {
           const filtered = filterStudentByName(value, students, 20);
           const sorted = filtered.sort((a, b) => {
-            const aLevel = students.find(s => s.uid === a.uid)?.relationshipLevel ?? 0;
-            const bLevel = students.find(s => s.uid === b.uid)?.relationshipLevel ?? 0;
+            const aLevel = students.find(s => s.uid === a.uid)?.currentLevel ?? 0;
+            const bLevel = students.find(s => s.uid === b.uid)?.currentLevel ?? 0;
             return bLevel - aLevel;
           });
           setFilteredStudents(sorted);
@@ -238,25 +392,25 @@ export default function Relationship() {
           students={filteredStudents.map((student) => ({ 
             uid: student.uid,
             name: student.name,
-            level: student.relationshipLevel,
+            level: student.currentLevel,
           }))}
-          selectedStudent={selectedStudent}
+          selectedStudent={selectedStudentUid}
           onSelect={(uid) => {
             setSelectedStudent(uid);
           }}
         />
       </div>
 
-      {selectedStudent && (
+      {selectedStudentUid && (
         <div className="mt-8">
           <SubTitle text="인연 랭크" description="기존 경험치에 따라 다소 차이가 생길 수 있어요" />
           <div className="sticky top-4 z-10 p-4 bg-neutral-100/90 dark:bg-neutral-800/90 backdrop-blur-sm rounded-xl shadow">
             <div className="flex flex-col md:flex-row items-center gap-4">
               <LevelInput
                 label="현재 랭크"
-                value={currentLevel}
-                onChange={setCurrentLevel}
-                expLabel={`${getAccumulatedExp(currentLevel).toLocaleString()} EXP`}
+                value={relationshipLevel.currentLevel}
+                onChange={(value) => setRelationshipLevel(prev => ({ ...prev, currentLevel: value }))}
+                expLabel={`${getAccumulatedExp(relationshipLevel.currentLevel).toLocaleString()} EXP`}
               />
               <ChevronRightIcon className="hidden md:block mt-2 size-6 text-neutral-500 dark:text-neutral-400 shrink-0" strokeWidth={2} />
               <LevelInput
@@ -268,24 +422,57 @@ export default function Relationship() {
               <ChevronRightIcon className="hidden md:block mt-2 size-6 text-neutral-500 dark:text-neutral-400 shrink-0" strokeWidth={2} />
               <LevelInput
                 label="목표 랭크"
-                value={targetLevel}
-                onChange={setTargetLevel}
-                expLabel={targetLevel <= currentLevel ? "목표 레벨에 도달했어요" : `목표 랭크까지 +${getRemainingExpTo(expectedExp, targetLevel).toLocaleString()} EXP`}
+                value={relationshipLevel.targetLevel}
+                onChange={(value) => setRelationshipLevel(prev => ({ ...prev, targetLevel: value }))}
+                expLabel={relationshipLevel.targetLevel <= relationshipLevel.currentLevel ? "목표 레벨에 도달했어요" : `목표 랭크까지 +${getRemainingExpTo(expectedExp, relationshipLevel.targetLevel).toLocaleString()} EXP`}
               />
             </div>
           </div>
 
           {/* Favorite items from API */}
-          {fetcher.state !== "idle" ? (
+          {(fetcher.state !== "idle" && fetcher.data === undefined) ? (
             <div className="mt-4 text-neutral-500 dark:text-neutral-400">불러오는 중...</div>
           ) : fetcher.data ? (
             <div className="mt-8">
               <FavoriteItemList 
                 items={fetcher.data.favoriteItems} 
-                currentLevel={currentLevel}
+                currentLevel={relationshipLevel.currentLevel}
                 onExpectedLevelChange={setExpectingLevel}
                 onExpectedExpChange={setExpectedExp}
+                quantities={relationshipLevel.items}
+                onQuantitiesChange={(items) => setRelationshipLevel(prev => ({ ...prev, items }))}
               />
+              
+              {/* Save and Delete buttons with feedback */}
+              <div className="mt-6 flex flex-col items-end gap-2">
+                <div className="flex gap-1">
+                  {hasSavedData && (
+                    <Button
+                      text="삭제"
+                      color="red"
+                      onClick={handleDelete}
+                      disabled={saveFetcher.state !== "idle" || !selectedStudentUid}
+                    />
+                  )}
+                  <Button
+                    text={saveFetcher.state === "submitting" ? "저장중..." : "저장하기"}
+                    Icon={BookmarkIcon}
+                    color="primary"
+                    onClick={handleSave}
+                    disabled={saveFetcher.state !== "idle" || !selectedStudentUid}
+                  />
+                </div>
+                {actionSuccess && (
+                  <div className="mr-2 text-sm text-green-600 dark:text-green-400">
+                    {actionSuccess === "delete" ? "저장된 데이터를 삭제했어요" : "성공적으로 저장했어요"}
+                  </div>
+                )}
+                {saveError && (
+                  <div className="mr-2 text-sm text-red-600 dark:text-red-400">
+                    {saveError}
+                  </div>
+                )}
+              </div>
             </div>
           ) : null}
         </div>
@@ -343,11 +530,12 @@ type FavoriteItemListProps = {
   currentLevel: number;
   onExpectedLevelChange: (level: number) => void;
   onExpectedExpChange: (exp: number) => void;
+  quantities: Record<string, number>;
+  onQuantitiesChange: (quantities: Record<string, number>) => void;
 };
 
-function FavoriteItemList({ items, currentLevel, onExpectedLevelChange, onExpectedExpChange }: FavoriteItemListProps) {
+function FavoriteItemList({ items, currentLevel, onExpectedLevelChange, onExpectedExpChange, quantities, onQuantitiesChange }: FavoriteItemListProps) {
   const [filterFavorited, setFilterFavorited] = useState(true);
-  const [quantities, setQuantities] = useState<Record<string, number>>({});
   
   const filteredItems = useMemo(() => items.filter(({ favorited }) => filterFavorited ? favorited : true).sort((a, b) => {
     if (a.item.rarity === b.item.rarity) {
@@ -374,10 +562,10 @@ function FavoriteItemList({ items, currentLevel, onExpectedLevelChange, onExpect
   }, [currentLevel, totalExp, onExpectedLevelChange, onExpectedExpChange]);
 
   const updateQuantity = (itemUid: string, quantity: number) => {
-    setQuantities(prev => ({
-      ...prev,
+    onQuantitiesChange({
+      ...quantities,
       [itemUid]: Math.max(0, quantity)
-    }));
+    });
   };
 
   return (

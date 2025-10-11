@@ -35,7 +35,7 @@ export default function Button({ text, Icon, className, children, type, color, o
       {children ?? (
         Icon ? (
           <div className="flex items-center">
-            <Icon className="size-3" strokeWidth={2} />
+            <Icon className="size-3.5" strokeWidth={2} />
             <span className="ml-2">{text}</span>
           </div>
         ) : (
