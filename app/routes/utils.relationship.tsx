@@ -1,4 +1,4 @@
-import { useFetcher, useLoaderData } from "react-router";
+import { useFetcher, useLoaderData, useRevalidator } from "react-router";
 import type { LoaderFunctionArgs, ActionFunctionArgs, MetaFunction } from "react-router";
 import { SubTitle, Title } from "~/components/atoms/typography";
 import { getAllStudents } from "~/models/student";
@@ -264,10 +264,16 @@ export default function Relationship() {
   const { students, isAuthenticated } = useLoaderData<typeof loader>();
   const fetcher = useFetcher<typeof import("./api.students.$uid.items").loader>();
   const saveFetcher = useFetcher<typeof action>();
+  const revalidator = useRevalidator();
   const { showSignIn } = useSignIn();
 
   const [filteredStudents, setFilteredStudents] = useState<{ uid: string; name: string; currentLevel: number | null; targetLevel: number | null }[]>(students.slice(0, 20));
   const [selectedStudentUid, setSelectedStudent] = useState<string | null>(null);
+
+  // Update filteredStudents when students data changes (e.g., after revalidation)
+  useEffect(() => {
+    setFilteredStudents(students.slice(0, 20));
+  }, [students]);
 
   // RelationshipLevel fields merged into one state
   const [relationshipLevel, setRelationshipLevel] = useState<{
@@ -302,11 +308,15 @@ export default function Relationship() {
         // Reset relationship level to empty state after delete
         setRelationshipLevel(emptyRelationshipLevel);
       }
+
+      // Revalidate loader data to refresh the StudentRelationships component
+      revalidator.revalidate();
+
       // Hide success message after 3 seconds
       const timer = setTimeout(() => setActionSuccess(null), 3000);
       return () => clearTimeout(timer);
     }
-  }, [saveFetcher.state, saveFetcher.data, actionSuccess]);
+  }, [saveFetcher.state, saveFetcher.data, actionSuccess, revalidator]);
 
   const handleSave = () => {
     if (!selectedStudentUid) {
@@ -501,9 +511,22 @@ function LevelInput({ label, value, onChange, readOnly = false, expLabel }: Leve
             w-full pl-10 pr-3 py-2 border border-neutral-300 dark:border-neutral-600 rounded-lg text-neutral-900 dark:text-neutral-100 focus:outline-none focus:ring-2 focus:ring-blue-500 text-center text-lg font-semibold appearance-none [&::-webkit-outer-spin-button]:appearance-none [&::-webkit-inner-spin-button]:appearance-none [-moz-appearance:textfield] ${
             readOnly ? "bg-pink-50 dark:bg-pink-700 cursor-not-allowed" : "bg-white dark:bg-neutral-700"
           }`}
-          type="number" min="1" max="100"
+          type="text"
+          inputMode="numeric"
+          pattern="[0-9]*"
           value={value}
-          onChange={(e) => onChange?.(Number(e.target.value))}
+          onChange={(e) => {
+            const inputValue = e.target.value;
+            // Only allow digits and remove leading zeros
+            const digitsOnly = inputValue.replace(/[^0-9]/g, "");
+            const cleanValue = digitsOnly.replace(/^0+/, "") || "0";
+            let numValue = Number(cleanValue);
+
+            // Validate range: 1-100
+            if (numValue < 0) numValue = 0;
+            if (numValue > 100) numValue = 100;
+            onChange?.(numValue);
+          }}
           readOnly={readOnly}
         />
         <HeartIcon className="absolute left-3 top-1/2 transform -translate-y-1/2 size-4 text-neutral-600 dark:text-neutral-400" />
@@ -626,12 +649,21 @@ function FavoriteItemList({ items, currentLevel, onExpectedLevelChange, onExpect
                         −
                       </button>
                       <input
-                        type="number"
+                        type="text"
                         inputMode="numeric"
-                        min="0"
-                        max="999"
+                        pattern="[0-9]*"
                         value={quantity}
-                        onChange={(e) => updateQuantity(item.uid, Number(e.target.value))}
+                        onChange={(e) => {
+                          const inputValue = e.target.value;
+                          // Only allow digits and remove leading zeros
+                          const digitsOnly = inputValue.replace(/[^0-9]/g, "");
+                          const cleanValue = digitsOnly.replace(/^0+/, "") || "0";
+
+                          let numValue = Number(cleanValue);
+                          // Validate range: 0-(inf)
+                          if (numValue < 0) numValue = 0;
+                          updateQuantity(item.uid, numValue);
+                        }}
                         className="w-16 px-2 py-1 text-center text-sm bg-transparent text-neutral-900 dark:text-neutral-100 focus:outline-none appearance-none [&::-webkit-outer-spin-button]:appearance-none [&::-webkit-inner-spin-button]:appearance-none [-moz-appearance:textfield]"
                         aria-label={`${item.name} 수량`}
                       />
