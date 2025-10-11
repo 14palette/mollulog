@@ -1,17 +1,18 @@
+import { useEffect, useState, useMemo } from "react";
 import { useFetcher, useLoaderData, useRevalidator } from "react-router";
 import type { LoaderFunctionArgs, ActionFunctionArgs, MetaFunction } from "react-router";
-import { SubTitle, Title } from "~/components/atoms/typography";
-import { getAllStudents } from "~/models/student";
-import { useEffect, useState, useMemo } from "react";
-import { Input, Toggle, Button } from "~/components/atoms/form";
 import { ChevronRightIcon } from "@heroicons/react/24/outline";
 import { HeartIcon, BookmarkIcon } from "@heroicons/react/16/solid";
+import { SubTitle, Title } from "~/components/atoms/typography";
+import { Input, Toggle, Button } from "~/components/atoms/form";
+import { ResourceCard } from "~/components/atoms/item";
 import { filterStudentByName } from "~/filters/student";
-import { StudentRelationships } from "~/components/molecules/student";
 import { getAuthenticator } from "~/auth/authenticator.server";
+import { useSignIn } from "~/contexts/SignInProvider";
+import { StudentRelationships } from "~/components/molecules/student";
+import { getAllStudents } from "~/models/student";
 import { upsertRelationshipLevel, getRelationshipLevels, removeRelationshipLevel, type RelationshipLevel } from "~/models/relationship-level";
 import { redirect } from "react-router";
-import { useSignIn } from "~/contexts/SignInProvider";
 
 // Experience table data from Blue Archive
 const EXP_TABLE = [
@@ -156,19 +157,6 @@ function calculateExpectedLevel(currentLevel: number, totalExp: number): number 
   return 1; // Fallback
 }
 
-function rarityBgClass(rarity: number | null | undefined): string {
-  switch (rarity) {
-    case 4:
-      return "bg-purple-200 dark:bg-purple-300";
-    case 3:
-      return "bg-orange-200 dark:bg-orange-300";
-    case 2:
-      return "bg-blue-200 dark:bg-blue-300";
-    case 1:
-    default:
-      return "bg-neutral-100 dark:bg-neutral-300";
-  }
-}
 
 export const meta: MetaFunction = () => {
   const title = "인연 랭크 계산기 | 몰루로그";
@@ -185,7 +173,7 @@ export const meta: MetaFunction = () => {
 
 export const loader = async ({ context, request }: LoaderFunctionArgs) => {
   const env = context.cloudflare.env;
-  const allStudents = await getAllStudents(env);
+  const allStudents = await getAllStudents(env, true);
 
   // Get saved relationship levels from database if user is authenticated
   const currentUser = await getAuthenticator(env).isAuthenticated(request);
@@ -260,6 +248,17 @@ const emptyRelationshipLevel = {
   items: {},
 };
 
+const expTypes = [
+  { type: "item", name: "일반 선물", item: { favoriteLevel: 2, rarity: 3 }, exp: 40 },
+  { type: "item", name: "일반 선물", item: { favoriteLevel: 3, rarity: 3 }, exp: 60 },
+  { type: "item", name: "일반 선물", item: { favoriteLevel: 4, rarity: 3 }, exp: 80 },
+  { type: "item", name: "고급 선물", item: { favoriteLevel: 2, rarity: 4 }, exp: 120 },
+  { type: "item", name: "고급 선물", item: { favoriteLevel: 3, rarity: 4 }, exp: 180 },
+  { type: "item", name: "고급 선물", item: { favoriteLevel: 4, rarity: 4 }, exp: 240 },
+  { type: "cafe", name: "카페 쓰다듬기", exp: 15 },
+  { type: "schedule", name: "스케줄", exp: 25 },
+];
+
 export default function Relationship() {
   const { students, isAuthenticated } = useLoaderData<typeof loader>();
   const fetcher = useFetcher<typeof import("./api.students.$uid.items").loader>();
@@ -272,7 +271,12 @@ export default function Relationship() {
 
   // Update filteredStudents when students data changes (e.g., after revalidation)
   useEffect(() => {
-    setFilteredStudents(students.slice(0, 20));
+    const newFilteredStudents = students.slice(0, 20);
+    if (selectedStudentUid && !newFilteredStudents.find((s) => s.uid === selectedStudentUid)) {
+      // Add selected student to the top of the filtered students
+      newFilteredStudents.unshift(students.find((s) => s.uid === selectedStudentUid)!);
+    }
+    setFilteredStudents(newFilteredStudents.slice(0, 20));
   }, [students]);
 
   // RelationshipLevel fields merged into one state
@@ -302,6 +306,8 @@ export default function Relationship() {
   // Handle action success feedback
   const [actionSuccess, setActionSuccess] = useState<"save" | "delete" | null>(null);
   const [saveError, setSaveError] = useState<string | null>(null);
+
+  // Handle fetcher completion
   useEffect(() => {
     if (saveFetcher.state === "idle" && saveFetcher.data !== undefined && actionSuccess) {
       if (actionSuccess === "delete") {
@@ -311,12 +317,16 @@ export default function Relationship() {
 
       // Revalidate loader data to refresh the StudentRelationships component
       revalidator.revalidate();
+    }
+  }, [saveFetcher.state, saveFetcher.data, actionSuccess, revalidator]);
 
-      // Hide success message after 3 seconds
+  // Handle success message timeout
+  useEffect(() => {
+    if (actionSuccess) {
       const timer = setTimeout(() => setActionSuccess(null), 3000);
       return () => clearTimeout(timer);
     }
-  }, [saveFetcher.state, saveFetcher.data, actionSuccess, revalidator]);
+  }, [actionSuccess]);
 
   const handleSave = () => {
     if (!selectedStudentUid) {
@@ -382,7 +392,10 @@ export default function Relationship() {
 
   return (
     <>
-      <Title text="인연 랭크 계산기" />
+      <Title
+        text="인연 랭크 계산기"
+        description="학생들의 목표 인연 레벨까지 필요한 선물 개수를 계산할 수 있어요."
+      />
       <SubTitle text="학생 선택" />
       <Input
         placeholder="이름으로 찾기..."
@@ -434,9 +447,28 @@ export default function Relationship() {
                 label="목표 랭크"
                 value={relationshipLevel.targetLevel}
                 onChange={(value) => setRelationshipLevel(prev => ({ ...prev, targetLevel: value }))}
-                expLabel={relationshipLevel.targetLevel <= relationshipLevel.currentLevel ? "목표 레벨에 도달했어요" : `목표 랭크까지 +${getRemainingExpTo(expectedExp, relationshipLevel.targetLevel).toLocaleString()} EXP`}
+                expLabel={relationshipLevel.targetLevel <= relationshipLevel.currentLevel ? "목표 랭크에 도달했어요" : `목표 랭크까지 +${getRemainingExpTo(expectedExp, relationshipLevel.targetLevel).toLocaleString()} EXP`}
               />
             </div>
+          </div>
+
+          <SubTitle text="목표 랭크까지 필요한 선물 개수" />
+          <div className="grid grid-cols-2 xl:grid-cols-4 gap-3">
+            {expTypes.map(({ type, name, exp, item }) => (
+              <div key={`${type}-${name}-${exp}`} className="p-3 flex items-center gap-3 rounded-xl border border-neutral-200 dark:border-neutral-800 bg-white dark:bg-neutral-900 shadow-sm">
+                {item && <ResourceCard rarity={item.rarity} imageUrl={`https://assets.mollulog.net/assets/images/ui/gift-reaction-${item.favoriteLevel}.png`} />}
+                {(type === "schedule") && <ResourceCard rarity={1} imageUrl="https://assets.mollulog.net/assets/images/ui/menu-schedule.webp" />}
+                {(type === "cafe") && <ResourceCard rarity={1} imageUrl="https://assets.mollulog.net/assets/images/ui/menu-cafe.webp" />}
+                <div className="w-full">
+                  <div className="text-sm md:text-base w-full flex items-center justify-between gap-1">
+                    <span className="grow font-medium">{name}</span>
+                  </div>
+                  <p className="text-sm text-neutral-500 dark:text-neutral-400">
+                    {Math.ceil((getRemainingExpTo(expectedExp, relationshipLevel.targetLevel) / exp)).toLocaleString()}{item ? "개" : "번"}
+                  </p>
+                </div>
+              </div>
+            ))}
           </div>
 
           {/* Favorite items from API */}
@@ -458,8 +490,7 @@ export default function Relationship() {
                 <div className="flex gap-1">
                   {hasSavedData && (
                     <Button
-                      text="삭제"
-                      color="red"
+                      text="초기화"
                       onClick={handleDelete}
                       disabled={saveFetcher.state !== "idle" || !selectedStudentUid}
                     />
@@ -474,7 +505,7 @@ export default function Relationship() {
                 </div>
                 {actionSuccess && (
                   <div className="mr-2 text-sm text-green-600 dark:text-green-400">
-                    {actionSuccess === "delete" ? "저장된 데이터를 삭제했어요" : "성공적으로 저장했어요"}
+                    {actionSuccess === "delete" ? "저장된 데이터를 초기화했어요" : "성공적으로 저장했어요"}
                   </div>
                 )}
                 {saveError && (
@@ -579,7 +610,6 @@ function FavoriteItemList({ items, currentLevel, onExpectedLevelChange, onExpect
     const expectedLevel = calculateExpectedLevel(currentLevel, totalExp);
     const currentAccumulatedExp = getAccumulatedExp(currentLevel);
     const expectedExp = currentAccumulatedExp + totalExp;
-    
     onExpectedLevelChange(expectedLevel);
     onExpectedExpChange(expectedExp);
   }, [currentLevel, totalExp, onExpectedLevelChange, onExpectedExpChange]);
@@ -598,32 +628,17 @@ function FavoriteItemList({ items, currentLevel, onExpectedLevelChange, onExpect
         <Toggle label="좋아하는 선물만 보기" initialState={filterFavorited} onChange={setFilterFavorited} />
       </div>
 
-      <div className="mt-4 grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-3">
+      <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-3">
         {filteredItems.map(({ item, favoriteLevel, exp }) => {
-          const levelImageUrl = `https://assets.mollulog.net/assets/images/ui/gift-reaction-${favoriteLevel}.png`;
-          const itemImageUrl = `https://baql-assets.mollulog.net/images/items/${item.uid}`;
           const quantity = quantities[item.uid] || 0;
           const totalItemExp = exp * quantity;
-
           return (
             <div
               key={item.uid}
               className="group p-3 rounded-xl border border-neutral-200 dark:border-neutral-800 bg-white dark:bg-neutral-900 shadow-sm hover:shadow transition-shadow duration-200"
             >
               <div className="flex items-start">
-                <div className="relative">
-                  <div
-                    className={`shrink-0 size-14 rounded-lg border border-neutral-200 dark:border-neutral-700 ${rarityBgClass(item.rarity)} flex items-center justify-center overflow-hidden`}
-                  >
-                    <img src={itemImageUrl} alt={item.name} className="max-h-full max-w-full object-contain" loading="lazy" />
-                  </div>
-                  <img
-                    src={levelImageUrl}
-                    alt={`호감 레벨 ${favoriteLevel}`}
-                    className="absolute -bottom-1 -right-1 w-6 h-6 object-contain"
-                    loading="lazy"
-                  />
-                </div>
+                <ResourceCard rarity={item.rarity} favoriteLevel={favoriteLevel} itemUid={item.uid} />
 
                 <div className="ml-3 grow min-w-0">
                   <div className="flex items-center justify-between gap-2">
