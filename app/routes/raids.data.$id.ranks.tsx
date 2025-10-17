@@ -17,7 +17,7 @@ const raidRanksQuery = graphql(`
           partyIndex
           slots {
             slotIndex tier level isAssist
-            student { uid name }
+            student { uid name attackType defenseType role }
           }
         }
         video { youtubeId }

@@ -30,6 +30,7 @@ type StudentCardProps = {
 
   onSelect?: (id: string) => void;
   popups?: StudentCardPopupProps["popups"];
+  popupId?: string | null;
 }
 
 function visibileTier(tier: number): [number, boolean] {
@@ -42,10 +43,10 @@ function visibileTier(tier: number): [number, boolean] {
 
 export default function StudentCard({
   uid, name, nameSize, tier, level, label, isAssist, attackType, defenseType, role,
-  favorited, favoritedCount, grayscale, border, onSelect, popups,
+  favorited, favoritedCount, grayscale, border, onSelect, popups, popupId = uid,
 }: StudentCardProps) {
   const { activePopupId, setActivePopupId } = useStudentCardPopup();
-  const showPopup = uid === activePopupId;
+  const showPopup = popupId === activePopupId;
 
   const visibleNames = parseVisibleNames(name ?? "");
 
@@ -64,7 +65,7 @@ export default function StudentCard({
           if (onSelect) {
             onSelect(uid);
           } else {
-            setActivePopupId(uid === activePopupId ? null : uid);
+            setActivePopupId(popupId === activePopupId ? null : popupId);
           }
         } : undefined}
       >
@@ -160,14 +161,14 @@ export function StudentCardPopup({ student, popups, onClose }: StudentCardPopupP
   const { name, attackType, defenseType, role } = student;
 
   return (
-    <div className="m-4 md:m-0 bg-white/90 dark:bg-neutral-900/80 backdrop-blur-sm text-black dark:text-white rounded-xl border border-neutral-200 dark:border-neutral-800 shadow-lg">
+    <div className="m-4 md:m-0 bg-white/90 dark:bg-black/80 backdrop-blur-sm text-black dark:text-white rounded-xl border border-neutral-200 dark:border-neutral-800 shadow-lg">
       <div className="px-4 pt-4 pb-2">
         <p className="text-lg font-bold">{name}</p>
         {attackType && defenseType && role && (
           <div className="py-2 flex text-sm gap-x-1">
-            <OptionBadge text={attackTypeLocale[attackType]} color={attackTypeColor[attackType]} />
-            <OptionBadge text={defenseTypeLocale[defenseType]} color={defenseTypeColor[defenseType]} />
-            <OptionBadge text={roleLocale[role]} color={roleColor[role]} />
+            <OptionBadge text={attackTypeLocale[attackType]} color={attackTypeColor[attackType]} bgColor="light" />
+            <OptionBadge text={defenseTypeLocale[defenseType]} color={defenseTypeColor[defenseType]} bgColor="light" />
+            <OptionBadge text={roleLocale[role]} color={roleColor[role]} bgColor="light" />
           </div>
         )}
         <XMarkIcon className="absolute top-4 right-2 size-5 hover:text-neutral-700 transition cursor-pointer" strokeWidth={2} onClick={onClose} />

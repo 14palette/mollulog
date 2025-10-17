@@ -1,12 +1,13 @@
-import { StudentCards } from "~/components/molecules/student";
 import { useFetcher } from "react-router";
 import { useEffect, useMemo } from "react";
+import { IdentificationIcon, MinusCircleIcon, PlusCircleIcon } from "@heroicons/react/24/outline";
 import { EmptyView } from "~/components/atoms/typography";
 import { ActionCard } from "~/components/molecules/editor";
-import type { RaidRanksData } from "~/routes/raids.data.$id.ranks";
+import { StudentCards } from "~/components/molecules/student";
 import { Button } from "~/components/atoms/form";
 import { LoadingSkeleton } from "~/components/atoms/layout";
 import type { DefenseType } from "~/models/content.d";
+import type { RaidRanksData } from "~/routes/raids.data.$id.ranks";
 
 export type RaidRankFilters = {
   defenseType: DefenseType | null;
@@ -16,6 +17,36 @@ export type RaidRankFilters = {
   rankAfter: number | null;
   rankBefore: number | null;
 };
+
+type MergeFilters = {
+  includeStudents?: { uid: string; tiers: number[] }[];
+  excludeStudents?: { uid: string; tiers: number[] }[];
+};
+
+function mergeFilters(prev: RaidRankFilters, newFilters: MergeFilters): RaidRankFilters {
+  const mergedFilters = { ...prev };
+  if (newFilters.includeStudents) {
+    for (const includeStudent of newFilters.includeStudents) {
+      const found = mergedFilters.includeStudents.find((student) => student.uid === includeStudent.uid);
+      if (found) {
+        found.tiers = Array.from(new Set([...found.tiers, ...includeStudent.tiers]));
+      } else {
+        mergedFilters.includeStudents.push(includeStudent);
+      }
+    }
+  }
+  if (newFilters.excludeStudents) {
+    for (const excludeStudent of newFilters.excludeStudents) {
+      const found = mergedFilters.excludeStudents.find((student) => student.uid === excludeStudent.uid);
+      if (found) {
+        found.tiers = Array.from(new Set([...found.tiers, ...excludeStudent.tiers]));
+      } else {
+        mergedFilters.excludeStudents.push(excludeStudent);
+      }
+    }
+  }
+  return mergedFilters;
+}
 
 type RaidRanksProps = {
   raidUid: string;
@@ -48,7 +79,7 @@ function getMaxLevelAt(date: Date): number {
 
 export default function RaidRanks({ raidUid, raidSince, filters, setFilters }: RaidRanksProps) {
   const rankFetcher = useFetcher<RaidRanksData>();
-  
+
   // Memoize the filters object to prevent infinite re-renders
   const memoizedFilters = useMemo(() => filters, [
     filters.defenseType,
@@ -98,12 +129,33 @@ export default function RaidRanks({ raidUid, raidSince, filters, setFilters }: R
                   {parties.map((party) => (
                     <StudentCards
                       key={`party-${party.partyIndex}`}
-                      students={party.slots.map((slot) => ({
-                        uid: slot.student?.uid ?? null,
-                        name: slot.student?.name,
-                        tier: slot.tier,
-                        level: slot.level && slot.level < maxLevel ? slot.level : undefined,
-                        isAssist: slot.isAssist,
+                      students={party.slots.map(({ student, tier, level, isAssist }) => ({
+                        uid: student?.uid ?? null,
+                        name: student?.name,
+                        attackType: student?.attackType,
+                        defenseType: student?.defenseType,
+                        role: student?.role,
+                        tier,
+                        level: level && level < maxLevel ? level : undefined,
+                        isAssist,
+                        popups: student ? [
+                          {
+                            Icon: IdentificationIcon,
+                            text: "학생부 보기 (평가/통계)",
+                            link: `/students/${student.uid}`,
+                          },
+                          {
+                            Icon: PlusCircleIcon,
+                            text: "이 학생을 포함한 편성만 보기",
+                            onClick: () => setFilters((prev) => mergeFilters(prev, { includeStudents: [{ uid: student.uid, tiers: tier ? [tier] : [] }] })),
+                          },
+                          {
+                            Icon: MinusCircleIcon,
+                            text: "이 학생을 제외한 편성만 보기",
+                            onClick: () => setFilters((prev) => mergeFilters(prev, { excludeStudents: [{ uid: student.uid, tiers: tier ? [tier] : [] }] })),
+                          },
+                        ] : undefined,
+                        popupId: student ? `${rank}-${party.partyIndex}-${student.uid}` : undefined,
                       }))}
                     />
                   ))}

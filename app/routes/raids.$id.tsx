@@ -5,7 +5,7 @@ import dayjs from "dayjs";
 import { Suspense, useEffect, useMemo, useState } from "react";
 import { Await, isRouteErrorResponse, Link, MetaFunction, data as routeData, useLoaderData, useRouteError, type LoaderFunctionArgs } from "react-router";
 import { OptionBadge } from "~/components/atoms/student";
-import { Title } from "~/components/atoms/typography";
+import { SubTitle, Title } from "~/components/atoms/typography";
 import { FilterButtons } from "~/components/molecules/content";
 import { ErrorPage } from "~/components/organisms/error";
 import { graphql } from "~/graphql";
@@ -55,6 +55,12 @@ const screenTitles: Record<Screen, string> = {
   "ranks":      "상위권 순위",
   "statistics": "학생 편성 통계",
   "videos":     "공략 영상 (베타)",
+};
+
+const screenDescriptions: Record<Screen, string | undefined> = {
+  "ranks": "학생을 선택하여 평가 및 통계를 확인하거나, 해당 학생을 포함/제외한 편성을 찾을 수 있어요",
+  "statistics": undefined,
+  "videos": undefined,
 };
 
 export const loader = async ({ request, context, params }: LoaderFunctionArgs) => {
@@ -204,7 +210,9 @@ export default function RaidDetail() {
       <div className="grow mt-6 xl:mt-0 xl:p-8 relative">
         {currentRaid.rankVisible ?
           <>
-            <p className="mb-4 text-xl xl:text-2xl font-bold">{screenTitles[screen]}</p>
+            <div className="-mt-4">
+              <SubTitle text={screenTitles[screen]} description={screenDescriptions[screen]} />
+            </div>
             {screen === "ranks" && <RaidRanksPage filters={filters} setFilters={setFilters} raid={currentRaid} signedIn={signedIn} allStudents={filterStudents} />}
             {screen === "statistics" && <RaidStatisticsPage raid={currentRaid} />}
             {screen === "videos" && <RaidVideosPage raid={currentRaid} />}
