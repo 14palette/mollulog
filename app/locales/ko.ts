@@ -1,3 +1,4 @@
+import dayjs from "dayjs";
 import type { AttackType, DefenseType, EventType, PickupType, RaidType, Role, Terrain } from "~/models/content.d";
 
 export const attackTypeLocale: Record<AttackType, string> = {
@@ -115,3 +116,21 @@ export const schoolNameLocale: Record<string, string> = {
   wildhunt: "와일드헌트 예술학원",
   others: "기타 학원",
 };
+
+export function relativeTime(at: dayjs.Dayjs): string {
+  let timeLabel = null;
+
+  const now = dayjs();
+  const remainingDays = at.startOf("day").diff(now.startOf("day"), "day");
+  if (remainingDays >= 2) {
+    timeLabel = `${remainingDays}일 후`;
+  } else {
+    const remainingHours = at.startOf("hour").diff(now.startOf("hour"), "hour");
+    if (remainingHours > 24) {
+      timeLabel = "내일";
+    } else {
+      timeLabel = `${remainingHours}시간 후`;
+    }
+  }
+  return timeLabel;
+}
