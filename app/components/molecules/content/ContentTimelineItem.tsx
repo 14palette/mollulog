@@ -78,10 +78,10 @@ function ContentTitles({ name, showLink }: { name: string, showLink: boolean }):
     titles.map((titleLine, index) => {
       const key = `${name}-${index}`;
       if (index < titles.length - 1) {
-        return <p key={key} className="text-lg md:text-xl font-bold">{titleLine}</p>;
+        return <p key={key} className="text-lg md:text-xl font-semibold">{titleLine}</p>;
       } else {
         return (
-          <div key={key} className="text-lg md:text-xl font-bold flex items-center">
+          <div key={key} className="text-lg md:text-xl font-semibold flex items-center">
             <span className="inline">{titleLine}</span>
             {showLink && <ChevronRightIcon className="inline size-4" strokeWidth={2} />}
           </div>

@@ -1,72 +1,52 @@
-import { ExclamationTriangleIcon } from "@heroicons/react/16/solid";
-import { ClockIcon, StarIcon, XCircleIcon, CursorArrowRippleIcon } from "@heroicons/react/24/solid";
-import type { ActionFunctionArgs, LoaderFunctionArgs, MetaFunction } from "react-router";
-import { redirect } from "react-router";
-import {
-  Await,
-  isRouteErrorResponse,
-  useFetcher,
-  useLoaderData,
-  useRouteError,
-} from "react-router";
-import dayjs from "dayjs";
-import { Suspense, useState } from "react";
-import { getAuthenticator } from "~/auth/authenticator.server";
-import { SubTitle } from "~/components/atoms/typography";
-import { LoadingSkeleton } from "~/components/atoms/layout";
+import { useState } from "react";
+import { isRouteErrorResponse, MetaFunction, redirect, useLoaderData, useRouteError } from "react-router";
+import type { ActionFunctionArgs, LoaderFunctionArgs } from "react-router";
+import { Bars3Icon } from "@heroicons/react/24/outline";
+import { EventDetailPickupPage, EventHeader, EventDetailShopPage } from "~/components/event";
+import type { EventDetailPickupPageActionData } from "~/components/event";
+import { FilterButtons } from "~/components/molecules/content";
 import { ErrorPage } from "~/components/organisms/error";
-import { EventStages } from "~/components/organisms/event";
 import { graphql } from "~/graphql";
-import type { EventStagesQuery } from "~/graphql/graphql";
 import { runQuery } from "~/lib/baql";
-import { getContentMemos, setMemo } from "~/models/content";
+import { getAuthenticator } from "~/auth/authenticator.server";
 import { favoriteStudent, getFavoritedCounts, getUserFavoritedStudents, unfavoriteStudent } from "~/models/favorite-students";
 import { getRecruitedStudents } from "~/models/recruited-student";
-import { ContentMemoEditor } from "~/components/molecules/content";
-import EventPickup from "~/components/molecules/event/EventPickup";
-import { EventHeader } from "~/components/event";
 
 const eventDetailQuery = graphql(`
   query EventDetail($eventUid: String!) {
     event(uid: $eventUid) {
       uid name type since until endless imageUrl rerun
-      videos { title youtube start }
-      pickups {
-        type rerun since until
-        student { uid attackType defenseType role }
-        studentName
-      }
-    }
-  }
-`);
-
-const eventStagesQuery = graphql(`
-  query EventStages($eventUid: String!) {
-    event(uid: $eventUid) {
-      stages {
-        difficulty index entryAp
-        rewards {
-          item {
-            itemId name imageId
-            eventBonuses {
-              student { uid role }
-              ratio
-            }
-          }
-          amount
+      stages(difficulty: 1) {
+        uid name entryAp index
+        rewards(rewardType: "item") {
+          amount rewardRequirement
+          item { uid category rarity }
         }
       }
+      videos { title youtube start }
+      shopResources {
+        uid
+        resource { type uid name rarity }
+        resourceAmount
+        paymentResource { uid name }
+        paymentResourceAmount
+        shopAmount
+      }
+    }
+    pickupEvent: event(uid: $eventUid) {
+      pickups { type rerun since until student { uid attackType defenseType role } studentName }
     }
   }
 `);
 
-async function getEventStages(eventUid: string): Promise<Exclude<EventStagesQuery["event"], null>["stages"] | []> {
-  const { data, error } = await runQuery(eventStagesQuery, { eventUid });
-  if (error || !data?.event) {
-    return [];
+const eventRewardBonusQuery = graphql(`
+  query EventRewardBonus($itemUids: [String!]!) {
+    items(uids: $itemUids) {
+      uid name
+      rewardBonuses { student { uid role } ratio }
+    }
   }
-  return data.event.stages;
-}
+`);
 
 export const loader = async ({ params, context, request }: LoaderFunctionArgs) => {
   const eventUid = params.id as string;
@@ -88,60 +68,54 @@ export const loader = async ({ params, context, request }: LoaderFunctionArgs) =
     );
   }
 
-  const content = data!.event!;
-  const pickupStudentUids = content.pickups.map((pickup) => pickup.student?.uid).filter((id) => id !== undefined);
+  const { env } = context.cloudflare;
+  const currentUser = await getAuthenticator(env).isAuthenticated(request);
 
-  const env = context.cloudflare.env;
-  const sensei = await getAuthenticator(env).isAuthenticated(request);
+  const pickupStudentUids = data!.pickupEvent!.pickups.map((pickup) => pickup.student?.uid).filter((uid) => uid !== undefined);
+  const favoritedStudents = currentUser ? await getUserFavoritedStudents(env, currentUser.id, eventUid) : [];
+  const favoritedCounts = (await getFavoritedCounts(env, pickupStudentUids)).filter((favorited) => favorited.contentId === eventUid);
+  const pickups = data!.pickupEvent!.pickups.map((pickup) => {
+    return {
+      ...pickup,
+      favoritedCount: favoritedCounts.find((favorited) => favorited.studentId === pickup.student?.uid)?.count ?? 0,
+      favorited: favoritedStudents.some((favorited) => favorited.studentId === pickup.student?.uid),
+    };
+  });
+
   let recruitedStudentUids: string[] = [];
-  if (sensei) {
-    const recruitedStudents = await getRecruitedStudents(env, sensei.id);
+  if (currentUser) {
+    const recruitedStudents = await getRecruitedStudents(env, currentUser.id);
     recruitedStudentUids = recruitedStudents.map((student) => student.studentUid);
   }
 
-  const allMemos = await getContentMemos(env, content.uid, sensei?.id);
-  const myMemo = allMemos.find((memo) => memo.sensei.username === sensei?.username);
+  const paymentResourceUids = [...new Set(data!.event!.stages.flatMap((stage) => stage.rewards.flatMap((reward) => reward.item?.uid).filter((uid) => uid !== undefined)))];
+  const { data: eventRewardBonusData } = await runQuery(eventRewardBonusQuery, { itemUids: paymentResourceUids });
+  const eventRewardBonus = eventRewardBonusData?.items ?? [];
 
   return {
-    event: content,
-    stages: getEventStages(eventUid),
+    event: data!.event!,
+    pickups,
+    signedIn: currentUser !== null,
     recruitedStudentUids,
-    favoritedStudents: sensei ? await getUserFavoritedStudents(env, sensei.id, content.uid) : [],
-    favoritedCounts: (await getFavoritedCounts(env, pickupStudentUids)).filter((favorited) => favorited.contentId === content.uid),
-    signedIn: sensei !== null,
-    allMemos,
-    myMemo,
+    eventRewardBonus,
   };
 };
 
-type ActionData = {
-  memo?: {
-    body?: string;
-    visibility?: "private" | "public";
-  };
-  favorite?: {
-    studentUid: string;
-    favorited: boolean;
-  };
-};
+type ActionData = EventDetailPickupPageActionData;
 
-export const action = async ({ params, request, context }: ActionFunctionArgs) => {
+export const action = async ({ params, context, request }: ActionFunctionArgs) => {
   const { env } = context.cloudflare;
   const currentUser = await getAuthenticator(env).isAuthenticated(request);
   if (!currentUser) {
     return redirect("/unauthorized");
   }
 
-  const contentId = params.id!;
+  const eventUid = params.id!;
   const actionData = await request.json() as ActionData;
   if (actionData.favorite) {
     const { studentUid, favorited } = actionData.favorite;
     const run = favorited ? favoriteStudent : unfavoriteStudent;
-    await run(env, currentUser.id, studentUid, contentId);
-  }
-
-  if (actionData.memo?.body !== undefined) {
-    await setMemo(env, currentUser.id, contentId, actionData.memo.body, actionData.memo.visibility);
+    await run(env, currentUser.id, studentUid, eventUid);
   }
 
   return {};
@@ -156,7 +130,7 @@ export const meta: MetaFunction<typeof loader> = ({ data }) => {
   const title = event.name;
   const description = `블루 아카이브 "${event.name}" 이벤트의 픽업, 보상 정보 등을 확인해보세요.`;
   return [
-    { title: `${title} - 이벤트 | 몰루로그` },
+    { title: `${title} | 몰루로그` },
     { name: "description", content: description },
     { name: "og:title", content: title },
     { name: "og:image", content: event.imageUrl },
@@ -167,211 +141,51 @@ export const meta: MetaFunction<typeof loader> = ({ data }) => {
   ];
 };
 
-export const ErrorBoundary = () => {
+export function ErrorBoundary() {
   const error = useRouteError();
   if (isRouteErrorResponse(error)) {
     return <ErrorPage message={error.data.error.message} />;
   } else {
     return <ErrorPage />;
   }
-};
+}
+
+type EventDetailPage = "pickups" | "stages" | "shop";
 
 export default function EventDetail() {
-  const { event, stages, signedIn, recruitedStudentUids, favoritedStudents: initialFavoritedStudents, favoritedCounts: initialFavoritedCounts, allMemos, myMemo } = useLoaderData<typeof loader>();
+  const { event, pickups, signedIn, recruitedStudentUids, eventRewardBonus } = useLoaderData<typeof loader>();
 
-  const fetcher = useFetcher();
-  const submit = (data: ActionData) => fetcher.submit(data, { method: "post", encType: "application/json" });
+  const showPickupsPage = pickups.length > 0;
+  const showStagesPage = event.stages.length > 0;
+  const showShopPage = event.shopResources.length > 0;
+  const [page, setPage] = useState<EventDetailPage>("pickups");
 
-  const [favoritedStudents, setFavoritedStudents] = useState(initialFavoritedStudents);
-  const [favoritedCounts, setFavoritedCounts] = useState(initialFavoritedCounts);
-
-  const toggleFavorite = (studentUid: string, favorited: boolean) => {
-    submit({ favorite: { studentUid, favorited } });
-    setFavoritedStudents((prev) => {
-      const alreadyFavorited = prev && prev.some((favorited) => favorited.studentId === studentUid);
-      if (favorited && !alreadyFavorited) {
-        return prev && [...prev, { uid: studentUid, contentId: event.uid, studentId: studentUid }];
-      } else if (!favorited && alreadyFavorited) {
-        return prev && prev.filter((favorited) => favorited.studentId !== studentUid);
-      }
-      return prev;
-    });
-    setFavoritedCounts((prev) => {
-      const found = prev.find((student) => student.studentId === studentUid);
-      if (found) {
-        return prev.map((student) => student.studentId === studentUid ? { ...student, count: student.count + (favorited ? 1 : -1) } : student);
-      }
-      return prev;
-    });
-  };
-
-  // Group pickups by their date ranges
-  const pickupDateGroups = event.pickups.reduce((groups, pickup) => {
-    const key = `${pickup.since}-${pickup.until}`;
-    if (!groups[key]) {
-      groups[key] = {
-        since: pickup.since,
-        until: pickup.until,
-        pickups: []
-      };
-    }
-    groups[key].pickups.push(pickup);
-    return groups;
-  }, {} as Record<string, { since: Date; until: Date | null; pickups: typeof event.pickups }>);
-
-  const pickupDateGroupsArray = Object.values(pickupDateGroups);
-  const hasMultipleDateRanges = pickupDateGroupsArray.length > 1;
-  
-  // Check if any pickup group has different dates from event
-  const shouldNotifyPickupPeriod = event.pickups.length > 0 && pickupDateGroupsArray.some(group => {
-    const isSinceDifferent = !dayjs(group.since).isSame(dayjs(event.since), "day");
-    const isUntilDifferent = !dayjs(group.until).isSame(dayjs(event.until), "day");
-    return group.until !== null && (isSinceDifferent || isUntilDifferent);
-  });
   return (
     <>
-      <EventHeader {...event} />
+      <div className="max-w-3xl mx-auto">
+        <EventHeader {...event} />
+      </div>
 
-      {event.type === "fes" && <FesInfo />}
-      {event.type === "archive_pickup" && <ArchivePickupInfo />}
+      <div className="mt-8 mb-4">
+        <FilterButtons
+          Icon={Bars3Icon}
+          buttonProps={[
+            showPickupsPage ? { text: "픽업 학생", active: page === "pickups", onToggle: () => setPage("pickups") } : null,
+            showShopPage ? { text: "소탕 계산기", active: page === "shop", onToggle: () => setPage("shop") } : null,
+          ].filter((button) => button !== null)}
+          exclusive atLeastOne
+        />
+      </div>
 
-      {event.pickups.length > 0 && (
-        <div className="my-8">
-          <SubTitle text="픽업 모집 학생" />
-          {shouldNotifyPickupPeriod && (
-            <div className="mb-4 p-4 bg-gradient-to-r from-amber-50 to-orange-50 dark:from-amber-900/20 dark:to-orange-900/20 border border-amber-200 dark:border-amber-700 rounded-xl">
-              <div className="flex items-center gap-3">
-                <div className="flex-shrink-0">
-                  <ExclamationTriangleIcon className="size-5 text-amber-600 dark:text-amber-400" />
-                </div>
-                <div className="flex-1">
-                  <p className="text-amber-700 dark:text-amber-300 mb-1">
-                    이벤트 개최 기간과 픽업 모집 기간이 달라요
-                  </p>
-                  <div className="text-sm text-amber-600 dark:text-amber-400">
-                    {hasMultipleDateRanges ? (
-                      <>
-                        {pickupDateGroupsArray.map((group, index) => {
-                          const studentNames = group.pickups.map(pickup => pickup.studentName).join(", ");
-                          const isSinceDifferent = !dayjs(group.since).isSame(dayjs(event.since), "day");
-                          const isUntilDifferent = !dayjs(group.until).isSame(dayjs(event.until), "day");
-                          
-                          return (
-                            <span key={`group-${index}`}>
-                              {studentNames}의 픽업은&nbsp;
-                              <span className={isSinceDifferent ? "font-semibold" : ""}>{dayjs(group.since).format("M월 D일")}</span>부터&nbsp;
-                              <span className={isUntilDifferent ? "font-semibold" : ""}>{dayjs(group.until).format("M월 D일")}</span>까지
-                              {index < pickupDateGroupsArray.length - 1 ? ", " : " "}
-                            </span>
-                          );
-                        })}
-                        진행해요.
-                      </>
-                    ) : (
-                      <>
-                        픽업 모집은&nbsp;
-                        <span className={!dayjs(pickupDateGroupsArray[0].since).isSame(dayjs(event.since), "day") ? "font-semibold" : ""}>{dayjs(pickupDateGroupsArray[0].since).format("M월 D일")}</span>부터&nbsp;
-                        <span className={!dayjs(pickupDateGroupsArray[0].until).isSame(dayjs(event.until), "day") ? "font-semibold" : ""}>{dayjs(pickupDateGroupsArray[0].until).format("M월 D일")}</span>까지 진행해요.
-                      </>
-                    )}
-                  </div>
-                </div>
-              </div>
-            </div>
-          )}
-          {event.pickups.map((pickup) =>
-            <EventPickup
-              key={pickup.student?.uid}
-              pickup={pickup}
-              favoritedStudentUids={favoritedStudents.map((favorited) => favorited.studentId)}
-              favoritedCounts={favoritedCounts}
-              onFavorite={toggleFavorite}
-              signedIn={signedIn}
-            />
-          )}
-        </div>
+      {page === "pickups" && <EventDetailPickupPage event={event} pickups={pickups} signedIn={signedIn} />}
+      {page === "shop" && (
+        <EventDetailShopPage
+          stages={event.stages}
+          shopResources={event.shopResources}
+          eventRewardBonus={eventRewardBonus}
+          recruitedStudentUids={recruitedStudentUids}
+        />
       )}
-
-      <div id="memos" />
-      <SubTitle text="이벤트 메모" description="공개 메모에 스포일러가 포함되지 않도록 주의해주세요." />
-      <ContentMemoEditor
-        allMemos={allMemos}
-        myMemo={myMemo}
-        onUpdate={({ body, visibility }) => submit({ memo: { body, visibility } })}
-        signedIn={signedIn}
-        isSubmitting={fetcher.state !== "idle"}
-      />
-
-      <Suspense fallback={<LoadingSkeleton />}>
-        <Await resolve={stages}>
-          {(stages) => event.type === "event" && stages && stages.length > 0 && (
-            <EventStages
-              stages={stages}
-              signedIn={signedIn}
-              ownedStudentUids={recruitedStudentUids}
-            />
-          )}
-        </Await>
-      </Suspense>
     </>
-  );
-}
-
-function InfoCard({ Icon, title, description }: { Icon: React.ElementType, title: string, description: string }) {
-  return (
-    <div className="my-2 flex items-center gap-3 p-4 bg-white dark:bg-neutral-800 rounded-lg border border-neutral-200 dark:border-neutral-700">
-      <div className="flex-shrink-0 p-2 bg-neutral-100 dark:bg-neutral-700 rounded-lg">
-        <Icon className="size-5 text-neutral-600 dark:text-neutral-300" />
-      </div>
-      <div>
-        <h4 className="font-semibold text-neutral-900 dark:text-neutral-100 mb-1">{title}</h4>
-        <p className="text-sm text-neutral-700 dark:text-neutral-300">{description}</p>
-      </div>
-    </div>
-  );
-}
-
-function FesInfo() {
-  return (
-    <div className="my-8">
-      <SubTitle text="페스 모집 소개" />
-      <div>
-        <InfoCard
-          Icon={StarIcon}
-          title="모집 확률 상승"
-          description="★3 학생 모집 확률이 6%로 상승해요"
-        />
-        <InfoCard
-          Icon={ClockIcon}
-          title="기간 한정 모집"
-          description={"일부 학생은 페스 기간에만 모집할 수 있어요. 아래 \"페스 신규/복각\" 학생 목록을 확인해주세요."}
-        />
-        <InfoCard
-          Icon={XCircleIcon}
-          title="모집 포인트 교환 불가"
-          description={"\"페스 복각\" 학생은 모집 포인트(천장)로는 교환할 수 없어요."}
-        />
-      </div>
-    </div>
-  );
-}
-
-function ArchivePickupInfo() {
-  return (
-    <div className="my-8">
-      <SubTitle text="아카이브 모집 소개" />
-      <div>
-        <InfoCard
-          Icon={CursorArrowRippleIcon}
-          title="픽업할 학생을 직접 선택"
-          description="아래 명단에서 픽업할 학생을 직접 선택하여 모집할 수 있어요."
-        />
-        <InfoCard
-          Icon={ClockIcon}
-          title="모집 포인트 유지"
-          description="모집 포인트는 시간이 지나도 유지되고 기동석으로 변환되지 않아요."
-        />
-      </div>
-    </div>
   );
 }

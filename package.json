@@ -30,6 +30,7 @@
     "@simplewebauthn/browser": "^11.0.0",
     "@simplewebauthn/server": "^11.0.0",
     "dayjs": "^1.11.13",
+    "decimal.js": "^10.6.0",
     "drizzle-orm": "^0.43.1",
     "fido2-lib": "^3.5.3",
     "graphql": "^16.11.0",
