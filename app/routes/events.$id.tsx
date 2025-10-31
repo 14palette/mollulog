@@ -2,8 +2,8 @@ import { useState } from "react";
 import { isRouteErrorResponse, MetaFunction, redirect, useLoaderData, useRouteError } from "react-router";
 import type { ActionFunctionArgs, LoaderFunctionArgs } from "react-router";
 import { Bars3Icon } from "@heroicons/react/24/outline";
-import { EventDetailPickupPage, EventHeader, EventDetailShopPage } from "~/components/event";
-import type { EventDetailPickupPageActionData } from "~/components/event";
+import { EventHeader, EventDetailShopPage, EventDetailInfoPage, EventDetailStagePage } from "~/components/event";
+import type { ActionData as EventDetailInfoPageActionData } from "~/components/event/EventDetailInfoPage";
 import { FilterButtons } from "~/components/molecules/content";
 import { ErrorPage } from "~/components/organisms/error";
 import { graphql } from "~/graphql";
@@ -11,6 +11,8 @@ import { runQuery } from "~/lib/baql";
 import { getAuthenticator } from "~/auth/authenticator.server";
 import { favoriteStudent, getFavoritedCounts, getUserFavoritedStudents, unfavoriteStudent } from "~/models/favorite-students";
 import { getRecruitedStudents } from "~/models/recruited-student";
+import { getEventShopState } from "~/models/event-shop-state";
+import { getContentMemos } from "~/models/content";
 
 const eventDetailQuery = graphql(`
   query EventDetail($eventUid: String!) {
@@ -19,7 +21,7 @@ const eventDetailQuery = graphql(`
       stages(difficulty: 1) {
         uid name entryAp index
         rewards(rewardType: "item") {
-          amount rewardRequirement
+          amount rewardRequirement chance
           item { uid category rarity }
         }
       }
@@ -92,16 +94,22 @@ export const loader = async ({ params, context, request }: LoaderFunctionArgs) =
   const { data: eventRewardBonusData } = await runQuery(eventRewardBonusQuery, { itemUids: paymentResourceUids });
   const eventRewardBonus = eventRewardBonusData?.items ?? [];
 
+  const savedShopState = currentUser ? await getEventShopState(env, currentUser.id, eventUid) : null;
+
+  const allMemos = await getContentMemos(env, eventUid, currentUser?.id);
+
   return {
     event: data!.event!,
     pickups,
-    signedIn: currentUser !== null,
     recruitedStudentUids,
     eventRewardBonus,
+    savedShopState,
+    allMemos,
+    me: currentUser ? { username: currentUser.username } : null,
   };
 };
 
-type ActionData = EventDetailPickupPageActionData;
+type ActionData = EventDetailInfoPageActionData;
 
 export const action = async ({ params, context, request }: ActionFunctionArgs) => {
   const { env } = context.cloudflare;
@@ -150,15 +158,15 @@ export function ErrorBoundary() {
   }
 }
 
-type EventDetailPage = "pickups" | "stages" | "shop";
+type EventDetailPage = "info" | "stages" | "shop";
 
 export default function EventDetail() {
-  const { event, pickups, signedIn, recruitedStudentUids, eventRewardBonus } = useLoaderData<typeof loader>();
+  const { event, pickups, recruitedStudentUids, eventRewardBonus, savedShopState, allMemos, me } = useLoaderData<typeof loader>();
 
-  const showPickupsPage = pickups.length > 0;
+  const showInfoPage = true;
   const showStagesPage = event.stages.length > 0;
   const showShopPage = event.shopResources.length > 0;
-  const [page, setPage] = useState<EventDetailPage>("pickups");
+  const [page, setPage] = useState<EventDetailPage>("info");
 
   return (
     <>
@@ -166,24 +174,42 @@ export default function EventDetail() {
         <EventHeader {...event} />
       </div>
 
-      <div className="mt-8 mb-4">
+      <div className="my-6 md:my-8">
         <FilterButtons
           Icon={Bars3Icon}
           buttonProps={[
-            showPickupsPage ? { text: "픽업 학생", active: page === "pickups", onToggle: () => setPage("pickups") } : null,
+            showInfoPage ? { text: "정보", active: page === "info", onToggle: () => setPage("info") } : null,
+            showStagesPage ? { text: "스테이지", active: page === "stages", onToggle: () => setPage("stages") } : null,
             showShopPage ? { text: "소탕 계산기", active: page === "shop", onToggle: () => setPage("shop") } : null,
           ].filter((button) => button !== null)}
           exclusive atLeastOne
         />
       </div>
 
-      {page === "pickups" && <EventDetailPickupPage event={event} pickups={pickups} signedIn={signedIn} />}
+      {page === "info" && (
+        <EventDetailInfoPage
+          event={event}
+          pickups={pickups}
+          allMemos={allMemos}
+          me={me}
+        />
+      )}
+      {page === "stages" && (
+        <EventDetailStagePage
+          stages={event.stages}
+          eventRewardBonus={eventRewardBonus}
+          recruitedStudentUids={recruitedStudentUids}
+        />
+      )}
       {page === "shop" && (
         <EventDetailShopPage
           stages={event.stages}
           shopResources={event.shopResources}
           eventRewardBonus={eventRewardBonus}
           recruitedStudentUids={recruitedStudentUids}
+          eventUid={event.uid}
+          savedShopState={savedShopState}
+          signedIn={me !== null}
         />
       )}
     </>

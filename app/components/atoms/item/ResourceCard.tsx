@@ -48,7 +48,7 @@ function rarityBgClass(rarity: number | null | undefined): string {
       return "bg-blue-200 dark:bg-blue-300";
     case 1:
     default:
-      return "bg-neutral-100 dark:bg-neutral-300";
+      return "bg-neutral-100 dark:bg-neutral-500";
   }
 }
 

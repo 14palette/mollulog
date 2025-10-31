@@ -1,7 +1,7 @@
 import { useState, type ReactNode } from "react";
 import { Link } from "react-router";
 import dayjs from "dayjs";
-import { ChevronRightIcon, ChartBarIcon, ClockIcon, CheckCircleIcon, ExclamationTriangleIcon, ChatBubbleOvalLeftEllipsisIcon, EyeIcon, EyeSlashIcon } from "@heroicons/react/16/solid";
+import { ChevronRightIcon, ChartBarIcon, ClockIcon, CheckCircleIcon, ExclamationTriangleIcon, ChatBubbleOvalLeftEllipsisIcon, EyeIcon, EyeSlashIcon, CalculatorIcon } from "@heroicons/react/16/solid";
 import { ArrowTopRightOnSquareIcon, IdentificationIcon, HeartIcon as EmptyHeartIcon } from "@heroicons/react/24/outline";
 import { HeartIcon as FilledHeartIcon } from "@heroicons/react/24/solid";
 import type { AttackType, DefenseType, EventType, PickupType, RaidType, Role, Terrain } from "~/models/content.d";
@@ -22,6 +22,7 @@ export type ContentTimelineItemProps = {
   until: Date | null;
   link: string;
   confirmed?: boolean;
+  hasShopData?: boolean;
 
   allMemos?: {
     uid: string;
@@ -95,7 +96,7 @@ const MEMO_CONTENT_TYPES = ["event", "pickup", "fes", "immortal_event", "main_st
 
 export default function ContentTimelineItem(
   {
-    name, contentType, rerun, endless, since, until, link, confirmed, raidInfo, pickups,
+    name, contentType, rerun, endless, since, until, link, confirmed, hasShopData, raidInfo, pickups,
     allMemos, myMemo, onUpdateMemo, isSubmittingMemo, favoritedStudents, favoritedCounts, onFavorite, signedIn,
   }: ContentTimelineItemProps,
 ) {
@@ -182,6 +183,12 @@ export default function ContentTimelineItem(
             <span className="flex items-center px-2 py-0.5 rounded-full bg-neutral-100 dark:bg-neutral-700 text-neutral-800 dark:text-neutral-200">
               <ChartBarIcon className="inline size-4 mr-1" />
               순위 정보
+            </span>
+          )}
+          {hasShopData && (
+            <span className="flex items-center px-2 py-0.5 rounded-full bg-neutral-100 dark:bg-neutral-700 text-neutral-800 dark:text-neutral-200">
+              <CalculatorIcon className="inline size-4 mr-1" />
+              소탕 계산기
             </span>
           )}
         </div>

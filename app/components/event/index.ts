@@ -1,8 +1,9 @@
 import EventHeader from "./EventHeader";
-import EventDetailPickupPage from "./EventDetailPickupPage";
+import EventDetailInfoPage from "./EventDetailInfoPage";
 import EventDetailShopPage from "./EventDetailShopPage";
-import type { ActionData as EventDetailPickupPageActionData } from "./EventDetailPickupPage";
+import EventDetailStagePage from "./EventDetailStagePage";
+import type { ActionData as EventDetailPickupPageActionData } from "./EventDetailInfoPage";
 import EventInfoCard from "./EventInfoCard";
 
-export { EventHeader, EventDetailPickupPage, EventDetailShopPage, EventInfoCard };
+export { EventHeader, EventDetailInfoPage, EventDetailShopPage, EventDetailStagePage, EventInfoCard };
 export type { EventDetailPickupPageActionData };

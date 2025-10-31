@@ -44,9 +44,9 @@ export default function EventPickup({ pickup, favoritedCount, favorited, onFavor
         </div>
         <div className="px-2 grow">
           <div className="pt-2">
-            <p className="text-sm text-neutral-500">{pickupLabelLocale(pickup)}</p>
+            <p className="text-xs text-neutral-500">{pickupLabelLocale(pickup)}</p>
             <Link to={`/students/${studentUid}`} className="flex items-center hover:underline">
-              <span className="font-bold text-lg">{pickup.studentName}</span>
+              <span className="font-semibold">{pickup.studentName}</span>
               {studentUid && <ChevronRightIcon className="ml-1 size-4 inline" />}
             </Link>
           </div>

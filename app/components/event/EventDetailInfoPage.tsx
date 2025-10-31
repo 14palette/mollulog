@@ -1,13 +1,17 @@
-import { ExclamationTriangleIcon } from "@heroicons/react/16/solid";
+import { ClockIcon, ExclamationTriangleIcon, StarIcon, XCircleIcon } from "@heroicons/react/16/solid";
 import dayjs from "dayjs";
 import { useMemo, useState } from "react";
 import { useFetcher } from "react-router";
-import type { PickupType, AttackType, DefenseType, Role } from "~/models/content.d";
+import type { PickupType, AttackType, DefenseType, Role, EventType } from "~/models/content.d";
 import EventPickup from "./EventPickup";
+import { SubTitle } from "../atoms/typography";
+import { ContentMemoEditor } from "../molecules/content";
+import EventInfoCard from "./EventInfoCard";
 
-type EventDetailPickupPageProps = {
+type EventDetailInfoPageProps = {
   event: {
     uid: string;
+    type: EventType;
     since: Date;
     until: Date;
   }
@@ -28,7 +32,19 @@ type EventDetailPickupPageProps = {
     favorited: boolean;
   }[];
 
-  signedIn: boolean;
+  allMemos: {
+    uid: string;
+    body: string;
+    visibility: "private" | "public";
+    sensei: {
+      username: string;
+      profileStudentId: string | null;
+    };
+  }[];
+
+  me: {
+    username: string;
+  } | null;
 };
 
 export type ActionData = {
@@ -36,9 +52,52 @@ export type ActionData = {
     studentUid: string;
     favorited: boolean;
   };
+  memo?: {
+    body: string;
+    visibility: "private" | "public";
+  };
 };
 
-export default function EventDetailPickupPage({ event, pickups, signedIn }: EventDetailPickupPageProps) {
+export default function EventDetailInfoPage({ event, pickups, allMemos, me }: EventDetailInfoPageProps) {
+  return (
+    <div>
+      {event.type === "fes" && (
+        <>
+          <EventInfoCard
+            Icon={StarIcon}
+            title="모집 확률 상승"
+            description="★3 학생 모집 확률이 6%로 상승해요"
+          />
+          <EventInfoCard
+            Icon={ClockIcon}
+            title="기간 한정 모집"
+            description={"\"페스 신규/복각\" 학생은 페스 기간에만 모집할 수 있어요"}
+          />
+          <EventInfoCard
+            Icon={XCircleIcon}
+            title="모집 포인트 교환 불가"
+            description={"\"페스 복각\" 학생은 모집 포인트(천장)로는 교환할 수 없어요"}
+          />
+        </>
+      )}
+
+      <Pickups pickups={pickups} signedIn={me !== null} event={event} />
+      <EventMemo allMemos={allMemos} me={me} />
+    </div>
+  )
+}
+
+type PickupsProps = {
+  pickups: EventDetailInfoPageProps["pickups"];
+  signedIn: boolean;
+  event: {
+    uid: string;
+    since: Date;
+    until: Date;
+  };
+};
+
+function Pickups({ pickups, signedIn, event }: PickupsProps) {
   const pickupDateGroupsArray = useMemo(() => {
     const pickupDateGroups = pickups.reduce((groups, pickup) => {
       const key = `${pickup.since}-${pickup.until}`;
@@ -65,7 +124,8 @@ export default function EventDetailPickupPage({ event, pickups, signedIn }: Even
   });
 
   return (
-    <div className="my-4">
+    <>
+      <SubTitle text="픽업 모집 정보" />
       {shouldNotifyPickupPeriod && (
         <div className="mb-4 p-4 bg-gradient-to-r from-amber-50 to-orange-50 dark:from-amber-900/20 dark:to-orange-900/20 border border-amber-200 dark:border-amber-700 rounded-xl">
           <div className="flex items-center gap-3">
@@ -108,12 +168,12 @@ export default function EventDetailPickupPage({ event, pickups, signedIn }: Even
         </div>
       )}
       {pickups.map((pickup) => <EventPickupWithFavoriteState key={pickup.student?.uid} pickup={pickup} signedIn={signedIn} />)}
-    </div>
-  )
+    </>
+  );
 }
 
 type EventPickupWithFavoriteStateProps = {
-  pickup: EventDetailPickupPageProps["pickups"][0];
+  pickup: EventDetailInfoPageProps["pickups"][0];
   signedIn: boolean;
 }
 
@@ -137,5 +197,27 @@ function EventPickupWithFavoriteState({ pickup, signedIn }: EventPickupWithFavor
       onFavorite={toggleFavorite}
       signedIn={signedIn}
     />
+  );
+}
+
+type EventMemoProps = {
+  allMemos: EventDetailInfoPageProps["allMemos"];
+  me: EventDetailInfoPageProps["me"];
+};
+
+function EventMemo({ allMemos, me }: EventMemoProps) {
+  const fetcher = useFetcher();
+  const submit = (data: ActionData) => fetcher.submit(data, { method: "post", encType: "application/json" });
+
+  return (
+    <>
+      <SubTitle text="이벤트 메모" />
+      <ContentMemoEditor
+        allMemos={allMemos}
+        myMemo={me?.username ? allMemos.find(memo => memo.sensei.username === me.username) : undefined}
+        onUpdate={({ body, visibility }) => submit({ memo: { body, visibility } })}
+        signedIn={me !== null}
+      />
+    </>
   );
 }

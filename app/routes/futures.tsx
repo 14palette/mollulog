@@ -22,6 +22,7 @@ export const futureContentsQuery = graphql(`
         ... on Event {
           eventType: type
           rerun endless
+          shopResources { uid }
           pickups {
             type rerun since until studentName
             student { uid attackType defenseType role schaleDbId }
@@ -186,6 +187,7 @@ export default function Futures() {
                 contentAttrs.rerun = content.rerun;
                 contentAttrs.pickups = content.pickups ?? undefined;
                 contentAttrs.link = `/events/${content.uid}`;
+                contentAttrs.hasShopData = content.shopResources?.length > 0;
               } else if (content.__typename === "Raid") {
                 contentAttrs.contentType = content.raidType;
                 contentAttrs.rerun = false;
