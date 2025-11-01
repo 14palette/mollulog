@@ -217,6 +217,7 @@ function EventMemo({ allMemos, me }: EventMemoProps) {
         myMemo={me?.username ? allMemos.find(memo => memo.sensei.username === me.username) : undefined}
         onUpdate={({ body, visibility }) => submit({ memo: { body, visibility } })}
         signedIn={me !== null}
+        isSubmitting={fetcher.state === "submitting"}
       />
     </>
   );

@@ -29,7 +29,7 @@ type ContentMemoEditorProps = {
 
 export default function ContentMemoEditor({ allMemos, myMemo, signedIn, placeholder, onUpdate, isSubmitting }: ContentMemoEditorProps) {
   const { showSignIn } = useSignIn();
-  const [body, setBody] = useState<string | undefined>(myMemo?.body || undefined);
+  const [body, setBody] = useState<string>(myMemo?.body || "");
   const [visibility, setVisibility] = useState(myMemo?.visibility || "private");
 
   const handleSubmit = () => {
@@ -74,7 +74,7 @@ export default function ContentMemoEditor({ allMemos, myMemo, signedIn, placehol
                 className="w-full px-3 py-2 bg-neutral-100 dark:bg-neutral-900 text-sm xl:text-base rounded-lg"
                 placeholder={placeholder ?? "메모를 남겨보세요"}
                 value={body}
-                onChange={(e) => setBody(e.target.value || undefined)}
+                onChange={(e) => setBody(e.target.value)}
                 onKeyDown={(e) => {
                   if (e.key === "Enter" && !isSubmitting) {
                     handleSubmit();

@@ -1,5 +1,5 @@
 import { useState } from "react";
-import { isRouteErrorResponse, MetaFunction, redirect, useLoaderData, useRouteError } from "react-router";
+import { isRouteErrorResponse, MetaFunction, redirect, useLoaderData, useRouteError, useSearchParams } from "react-router";
 import type { ActionFunctionArgs, LoaderFunctionArgs } from "react-router";
 import { Bars3Icon } from "@heroicons/react/24/outline";
 import { EventHeader, EventDetailShopPage, EventDetailInfoPage, EventDetailStagePage } from "~/components/event";
@@ -12,7 +12,7 @@ import { getAuthenticator } from "~/auth/authenticator.server";
 import { favoriteStudent, getFavoritedCounts, getUserFavoritedStudents, unfavoriteStudent } from "~/models/favorite-students";
 import { getRecruitedStudents } from "~/models/recruited-student";
 import { getEventShopState } from "~/models/event-shop-state";
-import { getContentMemos } from "~/models/content";
+import { getContentMemos, setMemo } from "~/models/content";
 
 const eventDetailQuery = graphql(`
   query EventDetail($eventUid: String!) {
@@ -125,6 +125,10 @@ export const action = async ({ params, context, request }: ActionFunctionArgs) =
     const run = favorited ? favoriteStudent : unfavoriteStudent;
     await run(env, currentUser.id, studentUid, eventUid);
   }
+  if (actionData.memo) {
+    const { body, visibility } = actionData.memo;
+    await setMemo(env, currentUser.id, eventUid, body, visibility);
+  }
 
   return {};
 };
@@ -163,10 +167,12 @@ type EventDetailPage = "info" | "stages" | "shop";
 export default function EventDetail() {
   const { event, pickups, recruitedStudentUids, eventRewardBonus, savedShopState, allMemos, me } = useLoaderData<typeof loader>();
 
+  const [searchParams] = useSearchParams();
+
   const showInfoPage = true;
   const showStagesPage = event.stages.length > 0;
   const showShopPage = event.shopResources.length > 0;
-  const [page, setPage] = useState<EventDetailPage>("info");
+  const [page, setPage] = useState<EventDetailPage>(searchParams.get("page") as EventDetailPage | null ?? "info");
 
   return (
     <>

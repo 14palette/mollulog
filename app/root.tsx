@@ -75,10 +75,10 @@ const wideLayout = ["/futures", "/utils/relationship"];
 const fullLayout = ["/raids"]
 
 const banner = {
-  message: "인연 랭크 계산기 기능이 추가됐어요",
+  message: "이벤트 소탕 계산기 기능이 추가됐어요",
   linkText: "바로가기 →",
-  linkTo: "/utils/relationship",
-  storageKey: "relationship-calculator-banner-dismissed",
+  linkTo: "/events/ive-alive-rerun?page=shop",
+  storageKey: "event-shop-calculator-banner-dismissed",
 };
 
 export default function App() {
