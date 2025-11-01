@@ -81,7 +81,7 @@ export default function EventDetailInfoPage({ event, pickups, allMemos, me }: Ev
         </>
       )}
 
-      <Pickups pickups={pickups} signedIn={me !== null} event={event} />
+      {pickups.length > 0 && <Pickups pickups={pickups} signedIn={me !== null} event={event} />}
       <EventMemo allMemos={allMemos} me={me} />
     </div>
   )

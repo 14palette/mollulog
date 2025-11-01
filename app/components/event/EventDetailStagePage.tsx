@@ -36,9 +36,10 @@ type EventDetailStagePageProps = {
   }[];
 
   recruitedStudentUids: string[];
+  signedIn: boolean;
 };
 
-export default function EventDetailStagePage({ stages, eventRewardBonus, recruitedStudentUids }: EventDetailStagePageProps) {
+export default function EventDetailStagePage({ stages, eventRewardBonus, recruitedStudentUids, signedIn }: EventDetailStagePageProps) {
   const appliedEventRewardBonus = useMemo(() => {
     return eventRewardBonus.map(({ uid, name, rewardBonuses }) => {
       let appliedStrikerRatio = new Decimal(0), appliedStrikerCount = 0, maxStrikerRatio = new Decimal(0), maxStrikerCount = 0;
@@ -92,6 +93,7 @@ export default function EventDetailStagePage({ stages, eventRewardBonus, recruit
             maxRatio={maxStrikerRatio.plus(maxSpecialRatio)}
             rewardBonuses={eventRewardBonus.find(({ uid: appliedUid }) => appliedUid === uid)?.rewardBonuses ?? []}
             selectedBonusStudentUids={recruitedStudentUids}
+            signedIn={signedIn}
           />
         );
       })}

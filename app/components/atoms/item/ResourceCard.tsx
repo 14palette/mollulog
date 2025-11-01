@@ -16,14 +16,26 @@ type ResourceCardProps = {
   }
 );
 
-export default function ResourceCard({ resourceType, rarity = 1, favoriteLevel, itemUid, imageUrl, label, labelColor = "white" }: ResourceCardProps) {
+export default function ResourceCard({ resourceType, rarity = 1, favoriteLevel, itemUid, imageUrl: imageUrlProp, label, labelColor = "white" }: ResourceCardProps) {
   const labelColorClass = labelColor === "white" ? "text-white" : "text-orange-300";
+
+  let imageUrl = imageUrlProp;
+  if (itemUid) {
+    if (resourceType === "furniture") {
+      imageUrl = furnitureImageUrl(itemUid);
+    } else if (resourceType === "equipment") {
+      imageUrl = equipmentImageUrl(itemUid);
+    } else {
+      imageUrl = itemImageUrl(itemUid);
+    }
+  }
+
   return (
     <div className="relative">
       <div className={`shrink-0 size-10 md:size-12 rounded-lg border border-neutral-200 dark:border-neutral-700 ${rarityBgClass(rarity)} flex items-center justify-center overflow-hidden`}>
         <img
           alt="아이템 이미지"
-          src={imageUrl ?? (resourceType === "furniture" ? furnitureImageUrl(itemUid) : itemImageUrl(itemUid))}
+          src={imageUrl}
           className={`${imageUrl ? "size-6 md:size-8" : "w-full h-full"} object-contain`}
           loading="lazy"
         />
@@ -58,6 +70,10 @@ function itemImageUrl(itemUid: string): string {
 
 function furnitureImageUrl(furnitureUid: string): string {
   return `https://baql-assets.mollulog.net/images/furnitures/${furnitureUid}`;
+}
+
+function equipmentImageUrl(equipmentUid: string): string {
+  return `https://baql-assets.mollulog.net/images/equipments/${equipmentUid}`;
 }
 
 function favoriteLevelImageUrl(favoriteLevel: number): string {

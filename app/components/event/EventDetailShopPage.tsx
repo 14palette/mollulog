@@ -81,7 +81,7 @@ export default function EventDetailShopPage({ stages, shopResources, eventReward
 
   const fetcher = useFetcher();
   const saveIntervalRef = useRef<NodeJS.Timeout>();
-  const isInitialLoadRef = useRef(true);
+  const [isInitialLoad, setIsInitialLoad] = useState(true);
   const lastSavedStateRef = useRef<EventShopState | null>(null);
 
   // Initialize state from saved state or defaults
@@ -110,7 +110,14 @@ export default function EventDetailShopPage({ stages, shopResources, eventReward
   useEffect(() => {
     if (savedShopState && lastSavedStateRef.current === null) {
       lastSavedStateRef.current = savedShopState;
-      isInitialLoadRef.current = false;
+      setIsInitialLoad(false);
+    } else if (!savedShopState) {
+      // No saved state - mark initialization as complete after a brief delay
+      // This ensures state is fully initialized before starting auto-save
+      const timer = setTimeout(() => {
+        setIsInitialLoad(false);
+      }, 100);
+      return () => clearTimeout(timer);
     }
   }, []); // Only run on mount
 
@@ -135,7 +142,7 @@ export default function EventDetailShopPage({ stages, shopResources, eventReward
         setEnabledStages(newState.enabledStages);
         setExistingPaymentItemQuantities(newState.existingPaymentItemQuantities || {});
         lastSavedStateRef.current = newState;
-        isInitialLoadRef.current = false;
+        setIsInitialLoad(false);
       } else {
         // Check if this matches what we last saved
         const stateMatches = JSON.stringify(lastSavedStateRef.current) === JSON.stringify(newState);
@@ -162,7 +169,7 @@ export default function EventDetailShopPage({ stages, shopResources, eventReward
 
   // Periodic save check: every 3 seconds, check if state changed and save if needed
   useEffect(() => {
-    if (!signedIn || isInitialLoadRef.current) {
+    if (!signedIn || isInitialLoad) {
       return;
     }
 
@@ -205,7 +212,7 @@ export default function EventDetailShopPage({ stages, shopResources, eventReward
         clearInterval(saveIntervalRef.current);
       }
     };
-  }, [itemQuantities, selectedBonusStudentUids, enabledStages, selectedPaymentResourceUid, includeRecruitedStudents, existingPaymentItemQuantities, signedIn, eventUid, fetcher]);
+  }, [itemQuantities, selectedBonusStudentUids, enabledStages, selectedPaymentResourceUid, includeRecruitedStudents, existingPaymentItemQuantities, signedIn, eventUid, fetcher, isInitialLoad]);
 
   const paymentItemQuantities = useMemo(() => {
     const quantities: Record<string, number> = {};
@@ -243,8 +250,8 @@ export default function EventDetailShopPage({ stages, shopResources, eventReward
         {!signedIn && (
           <EventInfoCard
             Icon={UserIcon}
-            title="로그인 후 데이터를 저장할 수 있어요"
-            description="모집한 학생 정보를 자동으로 반영하고, 선택한 아이템과 스테이지 정보를 저장할 수 있어요"
+            title="로그인 후 더 많은 기능을 이용할 수 있어요"
+            description="모집 학생 데이터가 자동으로 반영되며, 입력한 정보를 저장하고 언제든지 불러올 수 있어요"
             onClick={showSignIn}
             showArrow
           />
@@ -259,6 +266,7 @@ export default function EventDetailShopPage({ stages, shopResources, eventReward
         setAppliedBonusRatio={setAppliedBonusRatio}
         includeRecruitedStudents={includeRecruitedStudents}
         setIncludeRecruitedStudents={setIncludeRecruitedStudents}
+        signedIn={signedIn}
       />
 
       {paymentResources.length > 0 && (
@@ -289,17 +297,17 @@ export default function EventDetailShopPage({ stages, shopResources, eventReward
 type StudentBonusSelectorProps = {
   eventRewardBonus: EventDetailShopPageProps["eventRewardBonus"];
   recruitedStudentUids: string[];
-
   selectedBonusStudentUids: string[];
   setSelectedBonusStudentUids: Dispatch<SetStateAction<string[]>>;
   setAppliedBonusRatio: Dispatch<SetStateAction<Record<string, Decimal>>>;
   includeRecruitedStudents: boolean;
   setIncludeRecruitedStudents: Dispatch<SetStateAction<boolean>>;
+  signedIn: boolean;
 };
 
 const StudentBonusSelector = memo(function StudentBonusSelector({
   eventRewardBonus, recruitedStudentUids, selectedBonusStudentUids, setSelectedBonusStudentUids, setAppliedBonusRatio,
-  includeRecruitedStudents, setIncludeRecruitedStudents,
+  includeRecruitedStudents, setIncludeRecruitedStudents, signedIn,
 }: StudentBonusSelectorProps) {
   const eventBonusStudentUids = useMemo(() => {
     return [...new Set(eventRewardBonus.flatMap(({ rewardBonuses }) => rewardBonuses.map(({ student }) => student.uid)))];
@@ -408,8 +416,8 @@ const StudentBonusSelector = memo(function StudentBonusSelector({
       />
       <Toggle
         label="모집한 학생 일괄 반영"
-        disabled={recruitedStudentUids.length === 0}
-        initialState={includeRecruitedStudents}
+        disabled={!signedIn}
+        initialState={signedIn ? includeRecruitedStudents : false}
         onChange={handleToggleRecruitedStudents}
       />
 
@@ -452,6 +460,7 @@ const StudentBonusSelector = memo(function StudentBonusSelector({
                 rewardBonuses={rewardBonuses}
                 selectedBonusStudentUids={selectedBonusStudentUids}
                 setSelectedBonusStudentUid={handleSelectBonusStudent}
+                signedIn={signedIn}
               />
             );
           })}
@@ -674,13 +683,13 @@ const Stages = memo(function Stages({ stages, appliedBonusRatio, paymentItemQuan
 
     const stageRuns: Record<string, number> = {};
     let totalAp = new Decimal(0);
-    let safety = 0;
+    let iterationCount = 0;
     const maxIterations = 10000;
 
     const anyRemaining = () => Object.values(remaining).some((v) => v.gt(0));
 
-    while (anyRemaining() && safety < maxIterations) {
-      safety += 1;
+    while (anyRemaining() && iterationCount < maxIterations) {
+      iterationCount += 1;
       // Score stages by how much they reduce remaining per AP
       let best = null as null | typeof stageInfos[number];
       let bestScore = new Decimal(0);

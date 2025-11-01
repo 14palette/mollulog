@@ -46,7 +46,7 @@ export default function NumberInput({ defaultValue, value, maxValue, onChange }:
           let numValue = Number(cleanValue);
           // Validate range: 0-(inf)
           if (numValue < 0) numValue = 0;
-          if (maxValue !== undefined && numValue > maxValue) numValue = maxValue;
+          if (maxValue !== undefined && numValue >= maxValue) numValue = maxValue;
           setInternalValue(numValue);
           onChange(numValue);
         }}

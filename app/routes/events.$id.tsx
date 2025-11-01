@@ -138,8 +138,19 @@ export const meta: MetaFunction<typeof loader> = ({ data }) => {
     return [{ title: "이벤트 정보 | 몰루로그" }];
   }
 
+  const [searchParams] = useSearchParams();
+  const page = searchParams.get("page") as EventDetailPage | null ?? "info";
+
   const { event } = data;
-  const title = event.name;
+  let title = event.name;
+  if (page === "shop") {
+    title += " - 이벤트 소탕 계산기";
+  } else if (page === "stages") {
+    title += " - 스테이지 정보";
+  } else {
+    title += " - 이벤트 정보";
+  }
+
   const description = `블루 아카이브 "${event.name}" 이벤트의 픽업, 보상 정보 등을 확인해보세요.`;
   return [
     { title: `${title} | 몰루로그` },
@@ -147,6 +158,7 @@ export const meta: MetaFunction<typeof loader> = ({ data }) => {
     { name: "og:title", content: title },
     { name: "og:image", content: event.imageUrl },
     { name: "og:description", content: description },
+    { name: "og:url", content: `https://mollulog.net/events/${event.uid}?page=${page}` },
     { name: "twitter:title", content: title },
     { name: "twitter:description", content: description },
     { name: "twitter:card", content: "summary_large_image" },
@@ -205,6 +217,7 @@ export default function EventDetail() {
           stages={event.stages}
           eventRewardBonus={eventRewardBonus}
           recruitedStudentUids={recruitedStudentUids}
+          signedIn={me !== null}
         />
       )}
       {page === "shop" && (
