@@ -1,5 +1,5 @@
 import { Link } from "react-router";
-import { ChevronRightIcon, ExclamationTriangleIcon } from "@heroicons/react/16/solid";
+import { ChevronRightIcon } from "@heroicons/react/16/solid";
 import { HeartIcon as HeartIconOutline } from "@heroicons/react/24/outline";
 import { HeartIcon as HeartIconSolid } from "@heroicons/react/24/solid";
 import { OptionBadge, StudentCard } from "~/components/atoms/student";
@@ -22,31 +22,31 @@ type EventPickupProps = {
     } | null;
     studentName: string;
   };
-  favoritedStudentUids: string[];
-  favoritedCounts: { studentId: string, count: number }[];
-  onFavorite: (studentUid: string, favorited: boolean) => void;
+
+  favoritedCount: number;
+  favorited: boolean;
+  onFavorite: (favorited: boolean) => void;
 
   signedIn: boolean;
 };
 
-export default function EventPickup({ pickup, favoritedStudentUids, favoritedCounts, onFavorite, signedIn }: EventPickupProps) {
+export default function EventPickup({ pickup, favoritedCount, favorited, onFavorite, signedIn }: EventPickupProps) {
   const studentUid = pickup.student?.uid ?? null;
   const { attackType, defenseType, role } = pickup.student ?? {};
 
   const { showSignIn } = useSignIn();
 
-  const favorited = favoritedStudentUids.includes(studentUid ?? "");
   return (
-    <div key={`pickup-${studentUid}`} className="relative my-4 p-2 flex flex-col md:flex-row bg-neutral-100 dark:bg-neutral-900 rounded-lg">
+    <div className="relative my-4 p-2 flex flex-col md:flex-row bg-neutral-100 dark:bg-neutral-900 rounded-lg">
       <div className="flex items-center grow">
         <div className="w-12 md:w-16 mx-1 md:mx-2">
           <StudentCard uid={studentUid} />
         </div>
         <div className="px-2 grow">
           <div className="pt-2">
-            <p className="text-sm text-neutral-500">{pickupLabelLocale(pickup)}</p>
+            <p className="text-xs text-neutral-500">{pickupLabelLocale(pickup)}</p>
             <Link to={`/students/${studentUid}`} className="flex items-center hover:underline">
-              <span className="font-bold text-lg">{pickup.studentName}</span>
+              <span className="font-semibold">{pickup.studentName}</span>
               {studentUid && <ChevronRightIcon className="ml-1 size-4 inline" />}
             </Link>
           </div>
@@ -66,12 +66,10 @@ export default function EventPickup({ pickup, favoritedStudentUids, favoritedCou
                 ? "bg-gradient-to-r from-red-500 to-pink-500 text-white shadow-lg shadow-red-500/25 hover:shadow-red-500/40"
                 : "bg-white dark:bg-neutral-800 text-neutral-700 dark:text-neutral-300 border border-neutral-200 dark:border-neutral-700 shadow-lg shadow-neutral-200/50 dark:shadow-neutral-700/50 hover:bg-neutral-100 dark:hover:bg-neutral-700"
               }`)}
-            onClick={() => signedIn ? onFavorite(studentUid, !favorited) : showSignIn()}
+            onClick={() => signedIn ? onFavorite(!favorited) : showSignIn()}
           >
             {favorited ? <HeartIconSolid className="size-4" /> : <HeartIconOutline className="size-4" strokeWidth={2} />}
-            <span className="font-semibold">
-              {favoritedCounts.find((favorited) => favorited.studentId === studentUid)?.count ?? 0}
-            </span>
+            <span className="font-semibold">{favoritedCount}</span>
           </div>
         </div>
       )}

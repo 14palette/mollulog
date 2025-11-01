@@ -1,5 +1,5 @@
 import type { ReactNode } from "react";
-import { HeartIcon, StarIcon, XMarkIcon } from "@heroicons/react/16/solid";
+import { CheckIcon, HeartIcon, StarIcon, XMarkIcon } from "@heroicons/react/16/solid";
 import { Transition } from "@headlessui/react";
 import { studentImageUrl } from "~/models/assets";
 import type { AttackType, DefenseType, Role } from "~/models/content.d";
@@ -27,6 +27,7 @@ type StudentCardProps = {
   favoritedCount?: number;
   grayscale?: boolean;
   border?: "gray" | "blue";
+  checked?: boolean;
 
   onSelect?: (id: string) => void;
   popups?: StudentCardPopupProps["popups"];
@@ -43,7 +44,7 @@ function visibileTier(tier: number): [number, boolean] {
 
 export default function StudentCard({
   uid, name, nameSize, tier, level, label, isAssist, attackType, defenseType, role,
-  favorited, favoritedCount, grayscale, border, onSelect, popups, popupId = uid,
+  favorited, favoritedCount, grayscale, border, checked, onSelect, popups, popupId = uid,
 }: StudentCardProps) {
   const { activePopupId, setActivePopupId } = useStudentCardPopup();
   const showPopup = popupId === activePopupId;
@@ -86,6 +87,12 @@ export default function StudentCard({
                 <div className={`px-1 absolute top-0.5 right-0.5 text-white border rounded-lg flex items-center transition ${(favorited === undefined || favorited === true) ? "bg-red-500/90" : "bg-neutral-900/80"}`}>
                   <HeartIcon className="size-3.5" />
                   {favoritedCount && <span className="text-xs font-bold">{favoritedCount}</span>}
+                </div>
+              )}
+
+              {checked && (
+                <div className="absolute top-0.5 right-0.5 size-5 text-white border rounded-full flex items-center justify-center bg-blue-500/90">
+                  <CheckIcon className="size-3.5" />
                 </div>
               )}
 

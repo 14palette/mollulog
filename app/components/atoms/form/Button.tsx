@@ -28,7 +28,7 @@ export default function Button({ text, Icon, className, children, type, color, o
   return (
     <button
       type={type || "button"}
-      className={`inline-block my-2 mr-2 px-4 py-2 rounded-xl shadow shadow-neutral-200 dark:shadow-neutral-900 transition cursor-pointer ${colorClass} ${className ?? ""}`}
+      className={`inline-block my-2 mr-2 px-4 py-1.5 rounded-lg shadow shadow-neutral-200 dark:shadow-neutral-900 transition cursor-pointer ${colorClass} ${className ?? ""}`}
       onClick={onClick}
       disabled={disabled}
     >

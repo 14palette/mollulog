@@ -22,7 +22,7 @@ export default function OptionBadge({ text, color, bgColor }: OptionBadgeProps) 
   return (
     <div className={`flex-shrink-0 px-2 py-0.5 flex items-center ${bgColorClass[bgColor ?? "grey"]} dark:bg-neutral-800 rounded-full`}>
       {color && <div className={`size-2.5 rounded-full mr-1 ` + colorClass[color]} />}
-      <span className="text-sm">{text}</span>
+      <span className="text-xs md:text-sm">{text}</span>
     </div>
   );
 }

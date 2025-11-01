@@ -14,6 +14,7 @@ export type ContentTimelineProps = {
     uid: string;
     link: string;
     contentType: EventType | RaidType;
+    hasShopData?: boolean;
     pickups?: ContentTimelineItemProps["pickups"];
     raidInfo?: ContentTimelineItemProps["raidInfo"];
 
