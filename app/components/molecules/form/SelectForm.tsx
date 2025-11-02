@@ -38,6 +38,11 @@ export default function SelectForm({
     hangul.search(option.searchLabel ?? option.label, debouncedSearchQuery) >= 0
   );
 
+  // Sync selectedValue when initialValue prop changes (e.g., when loaded from localStorage)
+  useEffect(() => {
+    setSelectedValue(initialValue);
+  }, [initialValue]);
+
   useEffect(() => {
     const timer = setTimeout(() => {
       setDebouncedSearchQuery(searchQuery);
@@ -57,9 +62,9 @@ export default function SelectForm({
           <ChevronDownIcon className="size-4" />
         </div>
         {isOpen && (
-          <div className="absolute top-full left-0 w-full max-h-72 overflow-y-auto no-scrollbar bg-white/90 dark:bg-black/80 backdrop-blur-sm rounded-b-lg shadow-lg">
+          <div className="absolute top-full mt-4 left-0 w-full max-h-72 md:max-h-128 overflow-y-auto no-scrollbar bg-white/90 dark:bg-black/80 backdrop-blur-sm border border-neutral-100 dark:border-neutral-800 rounded-lg shadow-lg z-5">
             {useSearch && (
-              <div className="sticky top-0 p-2 bg-white/90 dark:bg-black/80 backdrop-blur-sm border-b border-neutral-100 dark:border-neutral-800 z-10">
+              <div className="sticky top-0 p-2 bg-white dark:bg-black border-b border-neutral-100 dark:border-neutral-800 rounded-t-lg z-10">
                 <input
                   type="text"
                   className="w-full p-2"
@@ -74,7 +79,7 @@ export default function SelectForm({
               </div>
             )}
             {filteredOptions.length > 0 ? (
-              filteredOptions.slice(0, 10).map((option) => (
+              filteredOptions.slice(0, 20).map((option) => (
                 <div
                   key={option.value}
                   className="flex items-center gap-x-2 hover:bg-neutral-200 dark:hover:bg-neutral-800 transition-colors duration-100 cursor-pointer"
