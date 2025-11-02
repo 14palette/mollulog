@@ -7,6 +7,7 @@ import {
   FireIcon as FireIconOutline,
   Bars3Icon,
   HeartIcon as HeartIconOutline,
+  CalculatorIcon as CalculatorIconOutline,
 } from "@heroicons/react/24/outline";
 import {
   HomeIcon as HomeIconSolid,
@@ -15,6 +16,7 @@ import {
   IdentificationIcon as IdentificationIconSolid,
   FireIcon as FireIconSolid,
   HeartIcon as HeartIconSolid,
+  CalculatorIcon as CalculatorIconSolid,
 } from "@heroicons/react/24/solid";
 import { Transition } from "@headlessui/react";
 import { Link, useMatches, useSubmit } from "react-router";
@@ -104,6 +106,14 @@ function MenuContent({ currentUsername, pathname, onMenuClose, onShowSignIn, onD
         OutlineIcon={HeartIconOutline}
         SolidIcon={HeartIconSolid}
         isActive={pathname.startsWith("/utils/relationship")}
+        onItemClick={onMenuClose}
+      />
+      <MenuItem
+        to="/events/ive-alive-rerun?page=shop"
+        name="이벤트 소탕 계산기"
+        OutlineIcon={CalculatorIconOutline}
+        SolidIcon={CalculatorIconSolid}
+        isActive={false}
         onItemClick={onMenuClose}
         showRedDot
       />

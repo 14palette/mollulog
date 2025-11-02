@@ -4,7 +4,7 @@ import type { LoaderFunctionArgs, ActionFunctionArgs, MetaFunction } from "react
 import { ChevronRightIcon } from "@heroicons/react/24/outline";
 import { HeartIcon, BookmarkIcon } from "@heroicons/react/16/solid";
 import { SubTitle, Title } from "~/components/atoms/typography";
-import { Input, Toggle, Button } from "~/components/atoms/form";
+import { Input, Toggle, Button, NumberInput } from "~/components/atoms/form";
 import { ResourceCard } from "~/components/atoms/item";
 import { filterStudentByName } from "~/filters/student";
 import { getAuthenticator } from "~/auth/authenticator.server";
@@ -652,45 +652,11 @@ function FavoriteItemList({ items, currentLevel, onExpectedLevelChange, onExpect
                   <div className="mt-0.5 text-xs text-neutral-500 dark:text-neutral-400">인연 랭크 경험치: {exp}</div>
 
                   <div className="mt-3 flex items-center gap-2">
-                    <label className="text-sm text-neutral-600 dark:text-neutral-400">수량</label>
-                    <div className="inline-flex items-center rounded-md border border-neutral-300 dark:border-neutral-700 overflow-hidden">
-                      <button
-                        type="button"
-                        onClick={() => updateQuantity(item.uid, (quantities[item.uid] || 0) - 1)}
-                        className="px-2 py-1 text-sm text-neutral-700 dark:text-neutral-200 hover:bg-neutral-100 dark:hover:bg-neutral-800 disabled:opacity-40"
-                        disabled={quantity <= 0}
-                        aria-label="감소"
-                      >
-                        −
-                      </button>
-                      <input
-                        type="text"
-                        inputMode="numeric"
-                        pattern="[0-9]*"
-                        value={quantity}
-                        onChange={(e) => {
-                          const inputValue = e.target.value;
-                          // Only allow digits and remove leading zeros
-                          const digitsOnly = inputValue.replace(/[^0-9]/g, "");
-                          const cleanValue = digitsOnly.replace(/^0+/, "") || "0";
-
-                          let numValue = Number(cleanValue);
-                          // Validate range: 0-(inf)
-                          if (numValue < 0) numValue = 0;
-                          updateQuantity(item.uid, numValue);
-                        }}
-                        className="w-16 px-2 py-1 text-center text-sm bg-transparent text-neutral-900 dark:text-neutral-100 focus:outline-none appearance-none [&::-webkit-outer-spin-button]:appearance-none [&::-webkit-inner-spin-button]:appearance-none [-moz-appearance:textfield]"
-                        aria-label={`${item.name} 수량`}
-                      />
-                      <button
-                        type="button"
-                        onClick={() => updateQuantity(item.uid, (quantities[item.uid] || 0) + 1)}
-                        className="px-2 py-1 text-sm text-neutral-700 dark:text-neutral-200 hover:bg-neutral-100 dark:hover:bg-neutral-800"
-                        aria-label="증가"
-                      >
-                        +
-                      </button>
-                    </div>
+                    <label className="shrink-0 text-sm text-neutral-600 dark:text-neutral-400">수량</label>
+                    <NumberInput
+                      defaultValue={quantity}
+                      onChange={(value) => updateQuantity(item.uid, value)}
+                    />
                   </div>
                 </div>
               </div>

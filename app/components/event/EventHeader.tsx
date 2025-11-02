@@ -190,7 +190,7 @@ function VideoList({ videos, currentVideo, onVideoSelect }: VideoListProps): Rea
   };
 
   return (
-    <div className="w-full my-4 relative">
+    <div className="w-full my-2 md:my-4 relative">
       <div className="w-full px-10 flex flex-nowrap overflow-x-scroll no-scrollbar" ref={videoListRef}>
         {videos.map((video) => (
           <span
