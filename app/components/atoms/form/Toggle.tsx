@@ -1,5 +1,5 @@
 import { Switch, Field, Label } from "@headlessui/react";
-import { useState } from "react";
+import { useState, useEffect } from "react";
 import { sanitizeClassName } from "~/prophandlers";
 
 type ToggleProps = {
@@ -13,6 +13,10 @@ type ToggleProps = {
 
 export default function Toggle({ name, label, colorClass, initialState, disabled, onChange }: ToggleProps) {
   const [enabled, setEnabled] = useState(initialState ?? false);
+
+  useEffect(() => {
+    setEnabled(initialState ?? false);
+  }, [initialState]);
 
   return (
     <>

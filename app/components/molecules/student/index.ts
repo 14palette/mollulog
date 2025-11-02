@@ -3,7 +3,6 @@ import StudentCards from "./StudentCards";
 import StudentGradingComments from "./StudentGradingComments";
 import StudentInfo from "./StudentInfo";
 import StudentSearch from "./StudentSearch";
-import StudentRelationships from "./StudentRelationships";
 import TierCounts from "./TierCounts";
 import TierSelector from "./TierSelector";
 
@@ -13,7 +12,6 @@ export {
   StudentGradingComments,
   StudentInfo,
   StudentSearch,
-  StudentRelationships,
   TierCounts,
   TierSelector,
 };

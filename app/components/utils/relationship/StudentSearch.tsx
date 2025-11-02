@@ -1,21 +1,65 @@
-import { HeartIcon, ChevronLeftIcon, ChevronRightIcon } from "@heroicons/react/16/solid";
-import { useRef, useState, useEffect } from "react";
-import ProfileImage from "~/components/atoms/student/ProfileImage";
+import { ChevronLeftIcon, ChevronRightIcon, HeartIcon } from "@heroicons/react/16/solid";
+import { useState, useRef, useEffect } from "react";
+import { Input } from "~/components/atoms/form";
+import { ProfileImage } from "~/components/atoms/student";
+import { SubTitle } from "~/components/atoms/typography";
+import { filterStudentByName } from "~/filters/student";
 import { parseVisibleNames } from "~/models/student";
+import { sanitizeClassName } from "~/prophandlers";
 
-type StoryStudent = {
-  uid: string;
-  name: string;
-  level: number | null; // relationship level
+type StudentSearchProps = {
+  students: { uid: string; name: string; currentLevel: number | null }[];
+
+  selectedStudentUid: string | null;
+  onSelectStudentUid: React.Dispatch<React.SetStateAction<string | null>>;
 };
 
-type StudentStoriesProps = {
-  students: StoryStudent[];
-  selectedStudent?: string | null;
-  onSelect?: (studentUid: string) => void;
+export default function StudentSearch({ students, selectedStudentUid, onSelectStudentUid }: StudentSearchProps) {
+  const [filteredStudents, setFilteredStudents] = useState<{ uid: string; name: string; currentLevel: number | null }[]>(students.slice(0, 20));
+
+  useEffect(() => {
+    const sorted = students.slice(0, 20).sort((a, b) => {
+      const aLevel = a.currentLevel ?? 0;
+      const bLevel = b.currentLevel ?? 0;
+      return bLevel - aLevel;
+    });
+    setFilteredStudents(sorted);
+  }, [students]);
+
+  return (
+    <>
+      <SubTitle text="학생 선택" />
+      <Input
+        placeholder="이름으로 찾기..."
+        onChange={(value) => {
+          const filtered = filterStudentByName(value, students, 20);
+          const sorted = filtered.sort((a, b) => {
+            const aLevel = students.find(s => s.uid === a.uid)?.currentLevel ?? 0;
+            const bLevel = students.find(s => s.uid === b.uid)?.currentLevel ?? 0;
+            return bLevel - aLevel;
+          });
+          setFilteredStudents(sorted);
+        }}
+      />
+
+      <div className="-mt-4">
+        <StudentSearchResult
+          students={filteredStudents}
+          selectedStudentUid={selectedStudentUid}
+          onSelectStudentUid={onSelectStudentUid}
+        />
+      </div>
+    </>
+  );
+}
+
+type StudentSearchResultProps = {
+  students: { uid: string; name: string; currentLevel: number | null }[];
+  selectedStudentUid: string | null;
+  onSelectStudentUid: React.Dispatch<React.SetStateAction<string | null>>;
 };
 
-export default function StudentRelationships({ students, selectedStudent, onSelect }: StudentStoriesProps) {
+function StudentSearchResult({ students, selectedStudentUid, onSelectStudentUid }: StudentSearchResultProps) {
   const scrollContainerRef = useRef<HTMLDivElement>(null);
   const [canScrollLeft, setCanScrollLeft] = useState(false);
   const [canScrollRight, setCanScrollRight] = useState(false);
@@ -79,7 +123,7 @@ export default function StudentRelationships({ students, selectedStudent, onSele
         </button>
       )}
 
-      <div 
+      <div
         ref={scrollContainerRef}
         className="flex gap-1 overflow-x-auto no-scrollbar py-2"
       >
@@ -88,23 +132,22 @@ export default function StudentRelationships({ students, selectedStudent, onSele
           return (
             <button
               key={student.uid}
-              className={`relative shrink-0 flex flex-col border-2 items-center transition-all p-1 rounded-lg
-                ${selectedStudent === student.uid
-                  ? "bg-blue-50 dark:bg-blue-900/20 border-blue-200 dark:border-blue-700"
-                  : "hover:bg-neutral-100 dark:hover:bg-neutral-700 border-transparent"}
-              `}
-              onClick={() => onSelect?.(student.uid)}
+              className={sanitizeClassName(`
+                relative shrink-0 flex flex-col border-2 items-center transition-all p-1 rounded-lg
+                ${selectedStudentUid === student.uid ? "bg-blue-50 dark:bg-blue-900/20 border-blue-200 dark:border-blue-700" : "hover:bg-neutral-100 dark:hover:bg-neutral-700 border-transparent"}
+              `)}
+              onClick={() => onSelectStudentUid(student.uid)}
             >
               <div className="relative">
                 <ProfileImage studentUid={student.uid} imageSize={16} />
 
                 {/* Heart badge at bottom-right */}
-                {student.level && (
+                {student.currentLevel && (
                   <div className="absolute -bottom-1 -right-1">
                     <div className="relative">
                       <HeartIcon className="size-8 text-rose-500 blur-[1px]" />
                       <span className="absolute inset-0 flex items-center justify-center text-xs font-bold text-white leading-none">
-                        {student.level}
+                        {student.currentLevel}
                       </span>
                     </div>
                   </div>
@@ -122,5 +165,3 @@ export default function StudentRelationships({ students, selectedStudent, onSele
     </div>
   );
 }
-
-
