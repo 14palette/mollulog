@@ -1,5 +1,6 @@
 import dayjs from "dayjs";
 import type { AttackType, DefenseType, EventType, PickupType, RaidType, Role, Terrain } from "~/models/content.d";
+import { Boss } from "~/models/raid";
 
 export const attackTypeLocale: Record<AttackType, string> = {
   explosive: "폭발",
@@ -46,9 +47,30 @@ export const terrainLocale: Record<Terrain, string> = {
 };
 
 export const difficultyLocale: Record<string, string> = {
+  normal: "노말",
+  hard: "하드",
+  veryhard: "베리하드",
+  hardcore: "하드코어",
+  extreme: "익스트림",
   insane: "인세인",
   torment: "토먼트",
   lunatic: "루나틱",
+};
+
+export const bossName: Record<Boss, string> = {
+  "binah": "비나",
+  "chesed": "헤세드",
+  "hod": "호드",
+  "shirokuro": "시로 & 쿠로",
+  "perorozilla": "페로로지라",
+  "goz": "고즈",
+  "hieronymus": "예로니무스",
+  "kaiten-fx-mk0": "KAITEN FX Mk.0",
+  "gregorius": "그레고리오",
+  "hovercraft": "호버크래프트",
+  "myouki-kurokage": "묘귀 쿠로카게",
+  "geburah": "게부라",
+  "yesod": "예소드",
 };
 
 export const eventTypeLocale: Record<EventType, string> = {

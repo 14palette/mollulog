@@ -1,4 +1,4 @@
-import { HTMLInputTypeAttribute, useRef } from "react";
+import { HTMLInputTypeAttribute, useEffect, useRef } from "react";
 
 type InputFormProps = {
   label: string;
@@ -13,6 +13,13 @@ type InputFormProps = {
 
 export default function InputForm({ label, type, name, defaultValue, description, placeholder, error, onChange }: InputFormProps) {
   const inputRef = useRef<HTMLInputElement>(null);
+
+  // Sync input value when defaultValue prop changes (e.g., when loaded from localStorage)
+  useEffect(() => {
+    if (inputRef.current && defaultValue !== undefined) {
+      inputRef.current.value = defaultValue;
+    }
+  }, [defaultValue]);
 
   return (
     <div className="p-4" onClick={() => inputRef.current?.focus()}>

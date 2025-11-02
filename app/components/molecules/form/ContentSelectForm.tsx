@@ -7,8 +7,8 @@ type ContentSelectFormProps = Omit<SelectFormProps, "options"> & {
   contents: {
     uid: string;
     name: string;
-    since: Date;
-    until: Date;
+    since?: Date;
+    until?: Date;
     pickups?: {
       student: { uid: string;} | null;
       studentName: string;
@@ -29,10 +29,12 @@ export default function ContentSelectForm(props: ContentSelectFormProps) {
         searchLabel: `${content.name} ${content.pickups?.map((pickup) => pickup.studentName).join(" ")}`,
         element: (
           <div className="w-full px-4 py-2 relative">
-            <p className="font-bold">{content.name}</p>
-            <p className="text-sm text-neutral-500">
-              {dayjs(content.since).format("YYYY.MM.DD")} ~ {dayjs(content.until).format("YYYY.MM.DD")}
-            </p>
+            <p className="font-semibold">{content.name}</p>
+            {content.since && content.until && (
+              <p className="text-sm text-neutral-500">
+                {dayjs(content.since).format("YYYY.MM.DD")} ~ {dayjs(content.until).format("YYYY.MM.DD")}
+              </p>
+            )}
             {content.pickups && (
               <div className="mt-2">
                 <StudentCards

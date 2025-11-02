@@ -7,7 +7,8 @@ import {
   FireIcon as FireIconOutline,
   Bars3Icon,
   HeartIcon as HeartIconOutline,
-  CalculatorIcon as CalculatorIconOutline,
+  BoltIcon as BoltIconOutline,
+  ClockIcon as ClockIconOutline,
 } from "@heroicons/react/24/outline";
 import {
   HomeIcon as HomeIconSolid,
@@ -16,7 +17,8 @@ import {
   IdentificationIcon as IdentificationIconSolid,
   FireIcon as FireIconSolid,
   HeartIcon as HeartIconSolid,
-  CalculatorIcon as CalculatorIconSolid,
+  BoltIcon as BoltIconSolid,
+  ClockIcon as ClockIconSolid,
 } from "@heroicons/react/24/solid";
 import { Transition } from "@headlessui/react";
 import { Link, useMatches, useSubmit } from "react-router";
@@ -50,6 +52,22 @@ function MenuItem({ to, name, OutlineIcon, SolidIcon, isActive, onItemClick, sho
           <div className="absolute top-0 -right-3 size-1.5 bg-red-500 rounded-full animate-pulse" />
         )}
       </span>
+    </Link>
+  );
+}
+
+function UtilItem({ to, name, OutlineIcon, SolidIcon, isActive, onItemClick, showRedDot }: MenuItemProps) {
+  return (
+    <Link to={to} onClick={onItemClick}>
+      <div className={`p-2 flex flex-col items-center hover:bg-neutral-200 dark:hover:bg-neutral-700 border border-neutral-100 dark:border-neutral-700 rounded-lg transition relative ${isActive ? "font-bold drop-shadow-lg" : ""}`}>
+        {isActive ? <SolidIcon className="size-6" /> : <OutlineIcon className="size-6" />}
+        <p className="mt-1 text-xs text-center">
+          {name.split("\n").map((line, index) => <span key={index} className="block">{line}</span>)}
+        </p>
+        {showRedDot && (
+          <div className="absolute top-2 right-2 size-1.5 bg-red-500 rounded-full animate-pulse" />
+        )}
+      </div>
     </Link>
   );
 }
@@ -100,24 +118,7 @@ function MenuContent({ currentUsername, pathname, onMenuClose, onShowSignIn, onD
         isActive={pathname.startsWith("/students")}
         onItemClick={onMenuClose}
       />
-      <MenuItem
-        to="/utils/relationship"
-        name="인연 랭크 계산기"
-        OutlineIcon={HeartIconOutline}
-        SolidIcon={HeartIconSolid}
-        isActive={pathname.startsWith("/utils/relationship")}
-        onItemClick={onMenuClose}
-      />
-      <MenuItem
-        to="/events/ive-alive-rerun?page=shop"
-        name="이벤트 소탕 계산기"
-        OutlineIcon={CalculatorIconOutline}
-        SolidIcon={CalculatorIconSolid}
-        isActive={false}
-        onItemClick={onMenuClose}
-        showRedDot
-      />
-      {currentUsername ? (
+      {currentUsername && (
         <MenuItem
           to={`/@${currentUsername}`}
           name="내 정보"
@@ -126,7 +127,15 @@ function MenuContent({ currentUsername, pathname, onMenuClose, onShowSignIn, onD
           isActive={pathname.startsWith("/@") || pathname.startsWith("/edit")}
           onItemClick={onMenuClose}
         />
-      ) : (
+      )}
+
+      <div className="my-2 grid grid-cols-3 gap-2">
+        <UtilItem name={"인연 랭크\n계산기"} to="/utils/relationship" OutlineIcon={HeartIconOutline} SolidIcon={HeartIconSolid} isActive={pathname.startsWith("/utils/relationship")} onItemClick={onMenuClose} />
+        <UtilItem name={"이벤트 소탕\n계산기"} to="/events/ive-alive-rerun?page=shop" OutlineIcon={BoltIconOutline} SolidIcon={BoltIconSolid} isActive={false} onItemClick={onMenuClose} showRedDot />
+        <UtilItem name={"총력전 점수\n계산기"} to="/utils/raidscore" OutlineIcon={ClockIconOutline} SolidIcon={ClockIconSolid} isActive={pathname.startsWith("/utils/raidscore")} onItemClick={onMenuClose} showRedDot />
+      </div>
+
+      {!currentUsername && (
         <div
           className="w-full my-4 py-3 bg-neutral-800 dark:bg-neutral-100 text-white dark:text-neutral-900 text-center rounded-full hover:opacity-50 transition-opacity cursor-pointer"
           onClick={() => {
