@@ -12,7 +12,6 @@ export const eventShopStatesTable = sqliteTable("event_shop_states", {
   itemQuantities: text().notNull().default("{}"),
   selectedBonusStudentUids: text().notNull().default("[]"),
   enabledStages: text().notNull().default("{}"),
-  selectedPaymentResourceUid: text(),
   includeRecruitedStudents: int().notNull().default(0),
   existingPaymentItemQuantities: text().notNull().default("{}"),
   createdAt: text().notNull().default(sql`current_timestamp`),
@@ -23,7 +22,6 @@ export type EventShopState = {
   itemQuantities: Record<string, number>;
   selectedBonusStudentUids: string[];
   enabledStages: Record<string, boolean>;
-  selectedPaymentResourceUid: string | null;
   includeRecruitedStudents: boolean;
   existingPaymentItemQuantities: Record<string, number>;
 };
@@ -33,7 +31,6 @@ function toModel(state: typeof eventShopStatesTable.$inferSelect): EventShopStat
     itemQuantities: JSON.parse(state.itemQuantities),
     selectedBonusStudentUids: JSON.parse(state.selectedBonusStudentUids),
     enabledStages: JSON.parse(state.enabledStages),
-    selectedPaymentResourceUid: state.selectedPaymentResourceUid ?? null,
     includeRecruitedStudents: state.includeRecruitedStudents === 1,
     existingPaymentItemQuantities: JSON.parse(state.existingPaymentItemQuantities || "{}"),
   };
@@ -76,7 +73,6 @@ export async function upsertEventShopState(
       itemQuantities: itemQuantitiesJson,
       selectedBonusStudentUids: selectedBonusStudentUidsJson,
       enabledStages: enabledStagesJson,
-      selectedPaymentResourceUid: state.selectedPaymentResourceUid,
       includeRecruitedStudents: state.includeRecruitedStudents ? 1 : 0,
       existingPaymentItemQuantities: existingPaymentItemQuantitiesJson,
     })
@@ -86,7 +82,6 @@ export async function upsertEventShopState(
         itemQuantities: itemQuantitiesJson,
         selectedBonusStudentUids: selectedBonusStudentUidsJson,
         enabledStages: enabledStagesJson,
-        selectedPaymentResourceUid: state.selectedPaymentResourceUid,
         includeRecruitedStudents: state.includeRecruitedStudents ? 1 : 0,
         existingPaymentItemQuantities: existingPaymentItemQuantitiesJson,
         updatedAt: sql`current_timestamp`,

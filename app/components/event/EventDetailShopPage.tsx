@@ -91,9 +91,6 @@ export default function EventDetailShopPage({ stages, shopResources, eventReward
   const [selectedBonusStudentUids, setSelectedBonusStudentUids] = useState<string[]>(
     savedShopState?.selectedBonusStudentUids ?? recruitedStudentUids
   );
-  const [selectedPaymentResourceUid, setSelectedPaymentResourceUid] = useState<string>(
-    savedShopState?.selectedPaymentResourceUid ?? paymentResources[0]?.uid ?? ""
-  );
   const [includeRecruitedStudents, setIncludeRecruitedStudents] = useState<boolean>(
     savedShopState?.includeRecruitedStudents ?? true
   );
@@ -135,9 +132,6 @@ export default function EventDetailShopPage({ stages, shopResources, eventReward
         // Initial load - apply saved state
         setItemQuantities(newState.itemQuantities);
         setSelectedBonusStudentUids(newState.selectedBonusStudentUids);
-        if (newState.selectedPaymentResourceUid) {
-          setSelectedPaymentResourceUid(newState.selectedPaymentResourceUid);
-        }
         setIncludeRecruitedStudents(newState.includeRecruitedStudents);
         setEnabledStages(newState.enabledStages);
         setExistingPaymentItemQuantities(newState.existingPaymentItemQuantities || {});
@@ -160,13 +154,6 @@ export default function EventDetailShopPage({ stages, shopResources, eventReward
     }
   }, [savedShopState]);
 
-  // Set default payment resource if not set
-  useEffect(() => {
-    if (paymentResources.length > 0 && !selectedPaymentResourceUid) {
-      setSelectedPaymentResourceUid(paymentResources[0].uid);
-    }
-  }, [paymentResources, selectedPaymentResourceUid]);
-
   // Periodic save check: every 3 seconds, check if state changed and save if needed
   useEffect(() => {
     if (!signedIn || isInitialLoad) {
@@ -185,7 +172,6 @@ export default function EventDetailShopPage({ stages, shopResources, eventReward
         itemQuantities,
         selectedBonusStudentUids,
         enabledStages,
-        selectedPaymentResourceUid,
         includeRecruitedStudents,
         existingPaymentItemQuantities,
       };
@@ -212,16 +198,16 @@ export default function EventDetailShopPage({ stages, shopResources, eventReward
         clearInterval(saveIntervalRef.current);
       }
     };
-  }, [itemQuantities, selectedBonusStudentUids, enabledStages, selectedPaymentResourceUid, includeRecruitedStudents, existingPaymentItemQuantities, signedIn, eventUid, fetcher, isInitialLoad]);
+  }, [itemQuantities, selectedBonusStudentUids, enabledStages, includeRecruitedStudents, existingPaymentItemQuantities, signedIn, eventUid, fetcher, isInitialLoad]);
 
   const paymentItemQuantities = useMemo(() => {
     const quantities: Record<string, number> = {};
     paymentResources.forEach(({ uid }) => {
-      const required = shopResources.reduce((total, { resource, paymentResourceAmount, paymentResource }) => {
+      const required = shopResources.reduce((total, { uid: shopResourceUid, paymentResourceAmount, paymentResource }) => {
         if (paymentResource.uid !== uid) {
           return total;
         }
-        return total + ((itemQuantities[resource.uid] || 0) * paymentResourceAmount);
+        return total + ((itemQuantities[shopResourceUid] || 0) * paymentResourceAmount);
       }, 0);
       const existing = existingPaymentItemQuantities[uid] || 0;
       quantities[uid] = Math.max(0, required - existing);
@@ -276,8 +262,6 @@ export default function EventDetailShopPage({ stages, shopResources, eventReward
           itemQuantities={itemQuantities}
           setItemQuantities={setItemQuantities}
           paymentItemQuantities={paymentItemQuantities}
-          selectedPaymentResourceUid={selectedPaymentResourceUid}
-          setSelectedPaymentResourceUid={setSelectedPaymentResourceUid}
           existingPaymentItemQuantities={existingPaymentItemQuantities}
           setExistingPaymentItemQuantities={setExistingPaymentItemQuantities}
         />
@@ -485,41 +469,39 @@ type ShopResourceSelectorProps = {
   itemQuantities: Record<string, number>;
   setItemQuantities: Dispatch<SetStateAction<Record<string, number>>>;
   paymentItemQuantities: Record<string, number>;
-  selectedPaymentResourceUid: string;
-  setSelectedPaymentResourceUid: Dispatch<SetStateAction<string>>;
   existingPaymentItemQuantities: Record<string, number>;
   setExistingPaymentItemQuantities: Dispatch<SetStateAction<Record<string, number>>>;
 };
 
 const ShopResourceSelector = memo(function ShopResourceSelector({
   shopResources, paymentResources, itemQuantities, setItemQuantities, paymentItemQuantities,
-  selectedPaymentResourceUid, setSelectedPaymentResourceUid,
   existingPaymentItemQuantities, setExistingPaymentItemQuantities,
 }: ShopResourceSelectorProps) {
+  const [selectedPaymentResourceUid, setSelectedPaymentResourceUid] = useState<string>(paymentResources[0]?.uid ?? "");
   const selectedShopResources = useMemo(() => {
     return shopResources.filter(({ paymentResource }) => paymentResource.uid === selectedPaymentResourceUid);
   }, [shopResources, selectedPaymentResourceUid]);
 
-  const handleSetMinQuantity = useCallback((resourceUid: string) => {
-    setItemQuantities(prev => ({ ...prev, [resourceUid]: 0 }));
+  const handleSetMinQuantity = useCallback((uid: string) => {
+    setItemQuantities(prev => ({ ...prev, [uid]: 0 }));
   }, [setItemQuantities]);
 
-  const handleSetMaxQuantity = useCallback((resourceUid: string, shopAmount: number | null) => {
+  const handleSetMaxQuantity = useCallback((uid: string, shopAmount: number | null) => {
     if (shopAmount) {
-      setItemQuantities(prev => ({ ...prev, [resourceUid]: shopAmount }));
+      setItemQuantities(prev => ({ ...prev, [uid]: shopAmount }));
     }
   }, [setItemQuantities]);
 
-  const handleQuantityChange = useCallback((resourceUid: string, value: number) => {
-    setItemQuantities(prev => ({ ...prev, [resourceUid]: value }));
+  const handleQuantityChange = useCallback((uid: string, value: number) => {
+    setItemQuantities(prev => ({ ...prev, [uid]: value }));
   }, [setItemQuantities]);
 
   const handleSelectAll = useCallback(() => {
     setItemQuantities((prev) => {
       const newQuantities = { ...prev };
-      selectedShopResources.forEach(({ resource, shopAmount }) => {
+      selectedShopResources.forEach(({ uid, shopAmount }) => {
         if (shopAmount !== null) {
-          newQuantities[resource.uid] = shopAmount;
+          newQuantities[uid] = shopAmount;
         }
       });
       return newQuantities;
@@ -529,8 +511,8 @@ const ShopResourceSelector = memo(function ShopResourceSelector({
   const handleResetAll = useCallback(() => {
     setItemQuantities((prev) => {
       const newQuantities = { ...prev };
-      selectedShopResources.forEach(({ resource }) => {
-        newQuantities[resource.uid] = 0;
+      selectedShopResources.forEach(({ uid }) => {
+        newQuantities[uid] = 0;
       });
       return newQuantities;
     });
@@ -546,46 +528,50 @@ const ShopResourceSelector = memo(function ShopResourceSelector({
       />
 
       <div className="grid grid-cols-2 lg:grid-cols-4 gap-1.5 md:gap-4">
-        {selectedShopResources.map(({ uid, resource, paymentResource, paymentResourceAmount, shopAmount }) => {
-          const quantity = itemQuantities[resource.uid] || 0;
+        {selectedShopResources.map(({ uid, resource, resourceAmount, paymentResource, paymentResourceAmount, shopAmount }) => {
+          const quantity = itemQuantities[uid] || 0;
           return (
             <div key={uid} className="px-2 py-3 flex flex-col gap-2 bg-neutral-100 dark:bg-neutral-900 rounded-lg">
               <div className="flex items-center justify-center gap-x-1">
-                <ResourceCard itemUid={resource.uid} resourceType={resource.type} rarity={resource.rarity} />
+                <ResourceCard itemUid={resource.uid} resourceType={resource.type} rarity={resource.rarity} label={resourceAmount > 1 ? resourceAmount : undefined} />
                 <div className="grow">
                   <div className="flex items-center justify-center gap-1">
                     <img
                       alt={resource.name}
                       src={`https://baql-assets.mollulog.net/images/items/${paymentResource.uid}`}
-                      className="size-4 md:size-6 object-contain"
+                      className="-m-1 size-6 md:size-8 object-contain"
                       loading="lazy"
                     />
-                    <span className="mr-2 text-xs md:text-sm font-medium text-neutral-700 dark:text-neutral-300">
+                    <span className="mr-2 text-sm font-medium text-neutral-700 dark:text-neutral-300">
                       {paymentResourceAmount}
                     </span>
                   </div>
-                  {shopAmount && <p className="text-xs text-neutral-500 dark:text-neutral-400 text-center">{shopAmount}회 구매 가능</p>}
+                  <p className="text-xs text-neutral-500 dark:text-neutral-400 text-center">
+                    {shopAmount ? `${shopAmount}회 구매 가능` : "구매 제한 없음"}
+                  </p>
                 </div>
               </div>
 
               <div className="flex items-center gap-1">
                 <button
-                  onClick={() => handleSetMinQuantity(resource.uid)}
+                  onClick={() => handleSetMinQuantity(uid)}
                   disabled={quantity === 0}
                   className="shrink-0 h-full px-1.5 text-xs bg-blue-500 hover:bg-blue-600 dark:bg-blue-600 dark:hover:bg-blue-500 text-white rounded transition-colors disabled:bg-neutral-300 dark:disabled:bg-neutral-800 disabled:opacity-50 disabled:cursor-not-allowed"
                 >
                   최소
                 </button>
                 <div className="grow">
-                  <NumberInput value={quantity} maxValue={shopAmount ?? undefined} onChange={(value) => handleQuantityChange(resource.uid, value)} />
+                  <NumberInput value={quantity} maxValue={shopAmount ?? undefined} onChange={(value) => handleQuantityChange(uid, value)} />
                 </div>
-                <button
-                  onClick={() => handleSetMaxQuantity(resource.uid, shopAmount)}
-                  disabled={shopAmount === null || quantity >= shopAmount}
-                  className="shrink-0 h-full px-1.5 text-xs bg-blue-500 hover:bg-blue-600 dark:bg-blue-600 dark:hover:bg-blue-500 text-white rounded transition-colors disabled:bg-neutral-300 dark:disabled:bg-neutral-800 disabled:opacity-50 disabled:cursor-not-allowed"
-                >
-                  최대
-                </button>
+                {shopAmount && (
+                  <button
+                    onClick={() => handleSetMaxQuantity(uid, shopAmount)}
+                    disabled={quantity >= shopAmount}
+                    className="shrink-0 h-full px-1.5 text-xs bg-blue-500 hover:bg-blue-600 dark:bg-blue-600 dark:hover:bg-blue-500 text-white rounded transition-colors disabled:bg-neutral-300 dark:disabled:bg-neutral-800 disabled:opacity-50 disabled:cursor-not-allowed"
+                  >
+                    최대
+                  </button>
+                )}
               </div>
             </div>
           );
@@ -790,12 +776,7 @@ const Stages = memo(function Stages({ stages, appliedBonusRatio, paymentItemQuan
                         return null;
                       }
                       return (
-                        <ResourceCard
-                          key={`${item.uid}-${idx}`}
-                          itemUid={item.uid}
-                          resourceType={ResourceTypeEnum.Item}
-                          label={amount}
-                        />
+                        <ResourceCard key={`${item.uid}-${idx}`} itemUid={item.uid} resourceType={ResourceTypeEnum.Item} label={amount} />
                       );
                     })}
                     {coinRewards.map(({ amount, item }, idx) => {
@@ -805,13 +786,7 @@ const Stages = memo(function Stages({ stages, appliedBonusRatio, paymentItemQuan
                       const bonusRatio = appliedBonusRatio[item.uid] ?? new Decimal(0);
                       const amountLabel = bonusRatio.mul(amount).ceil().toString();
                       return (
-                        <ResourceCard
-                          key={`${item.uid}-${idx}-bonus`}
-                          itemUid={item.uid}
-                          resourceType={ResourceTypeEnum.Item}
-                          label={amountLabel}
-                          labelColor="yellow"
-                        />
+                        <ResourceCard key={`${item.uid}-${idx}-bonus`} itemUid={item.uid} resourceType={ResourceTypeEnum.Item} label={amountLabel} labelColor="yellow" />
                       );
                     })}
                   </div>

@@ -6,7 +6,6 @@ create table event_shop_states (
   itemQuantities text not null default '{}', -- JSON field for resourceUid -> quantity
   selectedBonusStudentUids text not null default '[]', -- JSON array of student UIDs
   enabledStages text not null default '{}', -- JSON field for stageUid -> enabled boolean
-  selectedPaymentResourceUid text, -- optional payment resource UID
   includeRecruitedStudents integer not null default 0, -- boolean (0 or 1)
   existingPaymentItemQuantities text not null default '{}', -- JSON field for paymentResourceUid -> quantity
   createdAt text not null default current_timestamp,

@@ -36,7 +36,7 @@ export default function ResourceCard({ resourceType, rarity = 1, favoriteLevel, 
         <img
           alt="아이템 이미지"
           src={imageUrl}
-          className={`${imageUrl ? "size-6 md:size-8" : "w-full h-full"} object-contain`}
+          className={`${imageUrlProp ? "size-8" : "w-full h-full"} object-contain`}
           loading="lazy"
         />
         {label && (
