@@ -21,12 +21,15 @@ export default function StudentRelationshipLevel({
   const currentExp = useMemo(() => currentExpProp ?? getAccumulatedExpForLevel(currentLevel), [currentExpProp, currentLevel]);
 
   const expectedExp = currentExp + selectedItemExp;
-  const expectedLevel = useMemo(() => getLevelForExp(expectedExp), [expectedExp]);
+  const expectedLevel = useMemo(() => getLevelForExp(expectedExp) || 100, [expectedExp]);
 
   const [useCurrentExp, setUseCurrentExp] = useState(currentExpProp !== null);
   useEffect(() => {
     setUseCurrentExp(currentExpProp !== null);
   }, [currentExpProp]);
+
+  const requiredExp = getAccumulatedExpForLevel(targetLevel) - expectedExp;
+
   return (
     <>
       <SubTitle text="인연 랭크" description="현재 경험치를 알고 있다면 더 정확하게 계산할 수 있어요" />
@@ -38,8 +41,9 @@ export default function StudentRelationshipLevel({
               label="현재 경험치"
               value={currentExp}
               onChange={(value) => onCurrentLevelUpdate({ level: getLevelForExp(value), exp: value })}
-              expLabel={`${getLevelForExp(currentExp)} 레벨`}
+              expLabel={`${getLevelForExp(currentExp)} 랭크`}
               minValue={0}
+              icon="exp"
             /> :
             <LevelInput
               label="현재 랭크"
@@ -48,24 +52,27 @@ export default function StudentRelationshipLevel({
               expLabel={`${getAccumulatedExpForLevel(currentLevel).toLocaleString()} EXP`}
               minValue={1}
               maxValue={100}
+              icon="heart"
             />}
           <ChevronRightIcon className="hidden md:block mt-2 size-6 text-neutral-500 dark:text-neutral-400 shrink-0" strokeWidth={2} />
           <LevelInput
             label="선물 후 랭크"
             value={expectedLevel}
-            expLabel={expectedLevel === 100 ? "최고 레벨에 도달했어요" : `다음 랭크까지 +${(getAccumulatedExpForLevel(expectedLevel + 1) - expectedExp).toLocaleString()} EXP`}
+            expLabel={expectedLevel === 100 ? "최고 랭크에 도달했어요" : `다음 랭크까지 +${(getAccumulatedExpForLevel(expectedLevel + 1) - expectedExp).toLocaleString()} EXP`}
             minValue={1}
             maxValue={100}
             readOnly={true}
+            icon="heart"
           />
           <ChevronRightIcon className="hidden md:block mt-2 size-6 text-neutral-500 dark:text-neutral-400 shrink-0" strokeWidth={2} />
           <LevelInput
             label="목표 랭크"
             value={targetLevel}
             onChange={(value) => onTargetLevelUpdate(value)}
-            expLabel={targetLevel <= currentLevel ? "목표 랭크에 도달했어요" : `목표 랭크까지 +${(getAccumulatedExpForLevel(targetLevel) - expectedExp).toLocaleString()} EXP`}
+            expLabel={requiredExp <= 0 ? "목표 랭크에 도달했어요" : `목표 랭크까지 +${requiredExp.toLocaleString()} EXP`}
             minValue={1}
             maxValue={100}
+            icon="heart"
           />
         </div>
       </div>
@@ -94,9 +101,11 @@ type LevelInputProps = {
   onChange?: (value: number) => void;
   readOnly?: boolean;
   expLabel?: string;
+
+  icon: "heart" | "exp";
 };
 
-function LevelInput({ label, value, minValue, maxValue, onChange, readOnly = false, expLabel }: LevelInputProps) {
+function LevelInput({ label, value, minValue, maxValue, onChange, readOnly = false, expLabel, icon }: LevelInputProps) {
   const [internalValue, setInternalValue] = useState(value);
 
   useEffect(() => {
@@ -133,7 +142,8 @@ function LevelInput({ label, value, minValue, maxValue, onChange, readOnly = fal
           }}
           readOnly={readOnly}
         />
-        <HeartIcon className="absolute left-3 top-1/2 transform -translate-y-1/2 size-4 text-neutral-600 dark:text-neutral-400" />
+        {icon === "heart" && <HeartIcon className="absolute left-3 top-1/2 transform -translate-y-1/2 size-4 text-neutral-600 dark:text-neutral-400" />}
+        {icon === "exp" && <span className="absolute left-3 top-1/2 transform -translate-y-1/2 text-sm font-extrabold text-neutral-600 dark:text-neutral-400">EXP</span>}
       </div>
       <p className="mt-1 text-xs text-neutral-500 dark:text-neutral-400 text-left md:text-center">
         {expLabel}
