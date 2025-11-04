@@ -31,7 +31,7 @@ export default function Banner({ message, linkText, linkTo, storageKey, classNam
   }
 
   return (
-    <div className={`bg-blue-600 dark:bg-blue-700 relative ${className}`}>
+    <div className={`min-h-10 bg-blue-600 dark:bg-blue-700 relative ${className}`}>
       <div className="flex items-center justify-between px-4 py-2 xl:py-4">
         <div className="flex-1 flex flex-row xl:flex-col gap-x-1.5 text-white text-sm font-bold">
           <span>{message}</span>

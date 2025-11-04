@@ -130,7 +130,7 @@ export default function App() {
                 banner={banner}
               />
             </div>
-            <div className={`w-full ${bannerHidden ? "pt-10" : "pt-18"} xl:pt-0 overflow-y-scroll`}>
+            <div className={`w-full ${bannerHidden ? "pt-10" : "pt-20"} xl:pt-0 overflow-y-scroll`}>
               <div className={`xl:h-screen mx-auto ${widthClass} px-4 md:px-8 py-6`}>
                 <div className="pb-32">
                   <Outlet />

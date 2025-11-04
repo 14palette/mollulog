@@ -102,10 +102,10 @@ export const loader = async ({ context, request }: LoaderFunctionArgs) => {
   const { env } = context.cloudflare;
   const currentUser = await getAuthenticator(env).isAuthenticated(request);
   const favoritedStudentUids = currentUser ? (await getUserFavoritedStudents(env, currentUser.id)).filter((favorited) => currentPickups.some((pickup) => pickup.eventUid === favorited.contentId)).map((favorited) => favorited.studentId) : [];
-  
+
   // Get favorite counts for all students in current pickups (not just user's favorites)
   const allStudentUids = currentPickups.map(({ pickup }) => pickup.student?.uid).filter((uid) => uid !== null) as string[];
-  const favoritedCounts = await getFavoritedCounts(env, allStudentUids);
+  const favoritedCounts = (await getFavoritedCounts(env, allStudentUids)).filter((favorited) => currentPickups.some((pickup) => pickup.eventUid === favorited.contentId));
 
   // ========== Raids ==========
   const currentTotalAssualt = data.raids.nodes.find((raid) => raid.type === "total_assault" || raid.type === "elimination");
