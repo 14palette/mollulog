@@ -19,6 +19,7 @@ type EventDetailShopPageProps = {
     name: string;
     entryAp: number;
     index: string;
+    difficulty: number;
     rewards: {
       amount: number;
       rewardRequirement: string | null;
@@ -69,11 +70,11 @@ type EventDetailShopPageProps = {
 export default function EventDetailShopPage({ stages, shopResources, eventRewardBonus, recruitedStudentUids, eventUid, savedShopState, signedIn }: EventDetailShopPageProps) {
   const paymentResources = useMemo(() => {
     const resources: { uid: string; name: string }[] = [];
-    for (const shopResource of shopResources) {
-      if (!resources.some(({ uid }) => uid === shopResource.paymentResource.uid)) {
-        resources.push(shopResource.paymentResource);
+    shopResources.forEach(({ paymentResource }) => {
+      if (!resources.some(({ uid }) => uid === paymentResource.uid)) {
+        resources.push(paymentResource);
       }
-    }
+    });
     return resources;
   }, [shopResources]);
 
@@ -99,6 +100,12 @@ export default function EventDetailShopPage({ stages, shopResources, eventReward
   );
   const [existingPaymentItemQuantities, setExistingPaymentItemQuantities] = useState<Record<string, number>>(
     savedShopState?.existingPaymentItemQuantities ?? {}
+  );
+  const [includeFirstClear, setIncludeFirstClear] = useState<boolean>(
+    savedShopState?.includeFirstClear ?? true
+  );
+  const [extraStageRuns, setExtraStageRuns] = useState<Record<string, number>>(
+    savedShopState?.extraStageRuns ?? {}
   );
 
   const [appliedBonusRatio, setAppliedBonusRatio] = useState<Record<string, Decimal>>({});
@@ -135,6 +142,8 @@ export default function EventDetailShopPage({ stages, shopResources, eventReward
         setIncludeRecruitedStudents(newState.includeRecruitedStudents);
         setEnabledStages(newState.enabledStages);
         setExistingPaymentItemQuantities(newState.existingPaymentItemQuantities || {});
+        setIncludeFirstClear(newState.includeFirstClear ?? true);
+        setExtraStageRuns(newState.extraStageRuns || {});
         lastSavedStateRef.current = newState;
         setIsInitialLoad(false);
       } else {
@@ -174,6 +183,8 @@ export default function EventDetailShopPage({ stages, shopResources, eventReward
         enabledStages,
         includeRecruitedStudents,
         existingPaymentItemQuantities,
+        includeFirstClear,
+        extraStageRuns,
       };
 
       // Check if state has changed compared to what we last saved
@@ -198,7 +209,7 @@ export default function EventDetailShopPage({ stages, shopResources, eventReward
         clearInterval(saveIntervalRef.current);
       }
     };
-  }, [itemQuantities, selectedBonusStudentUids, enabledStages, includeRecruitedStudents, existingPaymentItemQuantities, signedIn, eventUid, fetcher, isInitialLoad]);
+  }, [itemQuantities, selectedBonusStudentUids, enabledStages, includeRecruitedStudents, existingPaymentItemQuantities, includeFirstClear, extraStageRuns, signedIn, eventUid, fetcher, isInitialLoad]);
 
   const paymentItemQuantities = useMemo(() => {
     const quantities: Record<string, number> = {};
@@ -273,6 +284,10 @@ export default function EventDetailShopPage({ stages, shopResources, eventReward
         paymentItemQuantities={paymentItemQuantities}
         enabledStages={enabledStages}
         setEnabledStages={setEnabledStages}
+        includeFirstClear={includeFirstClear}
+        setIncludeFirstClear={setIncludeFirstClear}
+        extraStageRuns={extraStageRuns}
+        setExtraStageRuns={setExtraStageRuns}
       />
     </>
   );
@@ -527,7 +542,7 @@ const ShopResourceSelector = memo(function ShopResourceSelector({
         setActiveTabId={setSelectedPaymentResourceUid}
       />
 
-      <div className="grid grid-cols-2 lg:grid-cols-4 gap-1.5 md:gap-4">
+      <div className="grid grid-cols-2 lg:grid-cols-4 gap-1.5 md:gap-2">
         {selectedShopResources.map(({ uid, resource, resourceAmount, paymentResource, paymentResourceAmount, shopAmount }) => {
           const quantity = itemQuantities[uid] || 0;
           return (
@@ -593,7 +608,7 @@ const ShopResourceSelector = memo(function ShopResourceSelector({
                 <div className="flex flex-row items-center gap-2">
                   <ResourceCard itemUid={uid} resourceType={ResourceTypeEnum.Item} rarity={1} />
                   <div className="grow">
-                    <p className="mb-2 text-xs text-neutral-600 dark:text-neutral-400">이미 보유한 수량</p>
+                    <p className="mb-2 text-xs text-center text-neutral-600 dark:text-neutral-400">이미 보유한 수량</p>
                     <NumberInput
                       value={existing}
                       onChange={(value) => setExistingPaymentItemQuantities(prev => ({ ...prev, [uid]: value }))}
@@ -618,9 +633,15 @@ type StagesProps = {
   paymentItemQuantities: Record<string, number>;
   enabledStages: Record<string, boolean>;
   setEnabledStages: Dispatch<SetStateAction<Record<string, boolean>>>;
+  includeFirstClear: boolean;
+  setIncludeFirstClear: Dispatch<SetStateAction<boolean>>;
+  extraStageRuns: Record<string, number>;
+  setExtraStageRuns: Dispatch<SetStateAction<Record<string, number>>>;
 }
 
-const Stages = memo(function Stages({ stages, appliedBonusRatio, paymentItemQuantities, enabledStages, setEnabledStages }: StagesProps) {
+const Stages = memo(function Stages({ 
+  stages, appliedBonusRatio,  paymentItemQuantities,  enabledStages,  setEnabledStages, includeFirstClear, setIncludeFirstClear, extraStageRuns, setExtraStageRuns,
+}: StagesProps) {
   const toggleStage = useCallback((stageUid: string, enabled: boolean) => {
     setEnabledStages(prev => ({
       ...prev,
@@ -628,12 +649,44 @@ const Stages = memo(function Stages({ stages, appliedBonusRatio, paymentItemQuan
     }));
   }, [setEnabledStages]);
 
-  // Build a global clear plan that minimizes AP to satisfy all required payment items
-  const clearPlan = useMemo(() => {
-    const targets = Object.entries(paymentItemQuantities).filter(([, qty]) => (qty || 0) > 0);
-    if (targets.length === 0) {
-      return { totalAp: 0, stageRuns: {} as Record<string, number> };
+  const handleExtraRunsChange = useCallback((stageUid: string, value: number) => {
+    setExtraStageRuns(prev => ({ ...prev, [stageUid]: value }));
+  }, [setExtraStageRuns]);
+
+  // Calculate adjusted payment item quantities by subtracting first_clear rewards
+  const paymentItemQuantitiesWithFirstclear = useMemo(() => {
+    const adjusted: Record<string, number> = { ...paymentItemQuantities };
+    if (includeFirstClear) {
+      // Calculate total first_clear rewards for enabled stages
+      const firstClearRewards: Record<string, number> = {};
+      stages.forEach((stage) => {
+        stage.rewards.forEach(({ item, amount, rewardRequirement }) => {
+          if (!item || item.category !== "coin") {
+            return;
+          }
+          if (rewardRequirement === "first_clear") {
+            firstClearRewards[item.uid] = (firstClearRewards[item.uid] || 0) + amount;
+          } else if (stage.difficulty === 0) {  // story
+            firstClearRewards[item.uid] = (firstClearRewards[item.uid] || 0) + amount;
+          }
+        });
+      });
+
+      // Subtract first_clear rewards from payment item quantities
+      Object.entries(firstClearRewards).forEach(([itemUid, amount]) => {
+        if (adjusted[itemUid] !== undefined) {
+          adjusted[itemUid] = Math.max(0, (adjusted[itemUid] || 0) - amount);
+        }
+      });
     }
+
+    return adjusted;
+  }, [paymentItemQuantities, includeFirstClear, stages, enabledStages]);
+
+  // Calculate stage runs, collected totals, and total AP in a single pass
+  const stageCalculations = useMemo(() => {
+    // Build a global clear plan that minimizes AP to satisfy all required payment items
+    const targets = Object.entries(paymentItemQuantitiesWithFirstclear).filter(([, qty]) => (qty || 0) > 0);
 
     // Stage reward map per run for target items
     const stageInfos = stages.filter(stage => enabledStages[stage.uid]).map((stage) => {
@@ -648,7 +701,7 @@ const Stages = memo(function Stages({ stages, appliedBonusRatio, paymentItemQuan
           rewardPerItem[item.uid] = perClear;
         }
       });
-      const contributes = targets.some(([uid]) => rewardPerItem[uid]?.gt(0));
+      const contributes = targets.length > 0 && targets.some(([uid]) => rewardPerItem[uid]?.gt(0));
       return {
         uid: stage.uid,
         name: stage.name,
@@ -657,141 +710,327 @@ const Stages = memo(function Stages({ stages, appliedBonusRatio, paymentItemQuan
         rewardPerItem,
         contributes,
       };
-    }).filter((s) => s.contributes);
-
-    if (stageInfos.length === 0) {
-      return { totalAp: 0, stageRuns: {} as Record<string, number> };
-    }
-
-    // Remaining requirements
-    const remaining: Record<string, Decimal> = {};
-    targets.forEach(([uid, qty]) => { remaining[uid] = new Decimal(qty); });
+    });
 
     const stageRuns: Record<string, number> = {};
     let totalAp = new Decimal(0);
-    let iterationCount = 0;
-    const maxIterations = 10000;
 
-    const anyRemaining = () => Object.values(remaining).some((v) => v.gt(0));
+    // Calculate optimal stage runs if there are targets
+    if (targets.length > 0) {
+      const contributingStages = stageInfos.filter((s) => s.contributes);
+      if (contributingStages.length > 0) {
+        // Remaining requirements
+        const remaining: Record<string, Decimal> = {};
+        targets.forEach(([uid, qty]) => { remaining[uid] = new Decimal(qty); });
 
-    while (anyRemaining() && iterationCount < maxIterations) {
-      iterationCount += 1;
-      // Score stages by how much they reduce remaining per AP
-      let best = null as null | typeof stageInfos[number];
-      let bestScore = new Decimal(0);
+        let iterationCount = 0;
+        const maxIterations = 10000;
 
-      for (const s of stageInfos) {
-        // Sum limited by remaining needs
-        let gain = new Decimal(0);
-        for (const [uid] of targets) {
-          const r = s.rewardPerItem[uid];
-          if (r && r.gt(0) && remaining[uid].gt(0)) {
-            gain = gain.plus(Decimal.min(remaining[uid], r));
+        const anyRemaining = () => Object.values(remaining).some((v) => v.gt(0));
+
+        while (anyRemaining() && iterationCount < maxIterations) {
+          iterationCount += 1;
+          // Score stages by how much they reduce remaining per AP
+          let best = null as null | typeof stageInfos[number];
+          let bestScore = new Decimal(0);
+
+          for (const s of contributingStages) {
+            // Sum limited by remaining needs
+            let gain = new Decimal(0);
+            for (const [uid] of targets) {
+              const r = s.rewardPerItem[uid];
+              if (r && r.gt(0) && remaining[uid].gt(0)) {
+                gain = gain.plus(Decimal.min(remaining[uid], r));
+              }
+            }
+            const score = gain.div(s.entryAp);
+            if (score.gt(bestScore)) {
+              bestScore = score;
+              best = s;
+            }
           }
-        }
-        const score = gain.div(s.entryAp);
-        if (score.gt(bestScore)) {
-          bestScore = score;
-          best = s;
-        }
-      }
 
-      if (!best || bestScore.lte(0)) {
-        break; // cannot progress further
-      }
+          if (!best || bestScore.lte(0)) {
+            break; // cannot progress further
+          }
 
-      // Apply one run of the best stage
-      stageRuns[best.uid] = (stageRuns[best.uid] || 0) + 1;
-      totalAp = totalAp.plus(best.entryAp);
-      for (const [uid] of targets) {
-        const r = best.rewardPerItem[uid];
-        if (r && r.gt(0) && remaining[uid].gt(0)) {
-          remaining[uid] = Decimal.max(0, remaining[uid].minus(r));
+          // Apply one run of the best stage
+          stageRuns[best.uid] = (stageRuns[best.uid] || 0) + 1;
+          totalAp = totalAp.plus(best.entryAp);
+          for (const [uid] of targets) {
+            const r = best.rewardPerItem[uid];
+            if (r && r.gt(0) && remaining[uid].gt(0)) {
+              remaining[uid] = Decimal.max(0, remaining[uid].minus(r));
+            }
+          }
         }
       }
     }
 
-    return { totalAp: totalAp.toNumber(), stageRuns };
-  }, [stages, appliedBonusRatio, paymentItemQuantities, enabledStages]);
+    // Calculate item breakdowns: from first run, from repeated runs, to buy shop items, and remaining
+    const fromFirstRun: Record<string, number> = {};
+    const fromRepeatedRuns: Record<string, number> = {};
+    const toBuyShopItems: Record<string, number> = {};
+    let extraAp = 0;
+
+    // Calculate first_clear rewards for enabled stages
+    if (includeFirstClear) {
+      stages.forEach((stage) => {
+        stage.rewards.forEach(({ item, rewardRequirement, amount }) => {
+          if (!item || item.category !== "coin") {
+            return;
+          }
+          if (rewardRequirement === "first_clear") {
+            fromFirstRun[item.uid] = (fromFirstRun[item.uid] || 0) + amount;
+          } else if (stage.difficulty === 0) {  // story
+            fromFirstRun[item.uid] = (fromFirstRun[item.uid] || 0) + amount;
+          }
+        });
+      });
+    }
+
+    // Calculate items from repeated stage runs (calculated + extra runs)
+    stages.forEach((stage) => {
+      if (!enabledStages[stage.uid]) {
+        return;
+      }
+
+      const calculatedRuns = stageRuns[stage.uid] || 0;
+      const extraRuns = extraStageRuns[stage.uid] || 0;
+      const totalRuns = calculatedRuns + extraRuns;
+      // Calculate extra AP
+      if (extraRuns > 0) {
+        extraAp += extraRuns * stage.entryAp;
+      }
+
+      // Calculate items from repeated runs (excluding first_clear)
+      if (totalRuns > 0) {
+        stage.rewards.forEach(({ item, rewardRequirement, amount }) => {
+          if (!item || item.category !== "coin" || rewardRequirement !== null) {
+            return;
+          }
+
+          const bonusRatio = appliedBonusRatio[item.uid] ?? new Decimal(0);
+          // Base amount + bonus amount (merged)
+          const perRunAmount = new Decimal(amount).plus(bonusRatio.mul(amount).ceil());
+          const totalAmount = perRunAmount.mul(totalRuns).toNumber();
+          fromRepeatedRuns[item.uid] = (fromRepeatedRuns[item.uid] || 0) + totalAmount;
+        });
+      }
+    });
+
+    // Calculate total collected (first run + repeated runs)
+    const totalCollected: Record<string, number> = {};
+    const allItemUids = new Set([...Object.keys(fromFirstRun), ...Object.keys(fromRepeatedRuns)]);
+    allItemUids.forEach((itemUid) => {
+      totalCollected[itemUid] = (fromFirstRun[itemUid] || 0) + (fromRepeatedRuns[itemUid] || 0);
+    });
+
+    // Calculate items to buy shop items and remaining items
+    const remaining: Record<string, number> = {};
+    Object.entries(paymentItemQuantities).forEach(([paymentUid, required]) => {
+      if ((required || 0) <= 0) return;
+      toBuyShopItems[paymentUid] = required;
+      const current = totalCollected[paymentUid] || 0;
+      const remainingAmount = Math.max(0, current - required);
+      if (remainingAmount > 0) {
+        remaining[paymentUid] = remainingAmount;
+      }
+    });
+
+    // Add remaining items that are not payment items
+    Object.entries(totalCollected).forEach(([itemUid, amount]) => {
+      if (!paymentItemQuantities[itemUid] || (paymentItemQuantities[itemUid] || 0) <= 0) {
+        remaining[itemUid] = amount;
+      }
+    });
+
+    return {
+      stageRuns,
+      totalAp: totalAp.toNumber(),
+      collectedTotals: remaining,
+      totalApWithExtras: totalAp.toNumber() + extraAp,
+      itemBreakdown: {
+        fromFirstRun,
+        fromRepeatedRuns,
+        toBuyShopItems,
+        remaining,
+      },
+    };
+  }, [stages, appliedBonusRatio, paymentItemQuantitiesWithFirstclear, enabledStages, extraStageRuns, paymentItemQuantities, includeFirstClear]);
 
   return (
     <>
-      <SubTitle text="스테이지" description="소탕할 스테이지를 활성화/비활성화하고 최적화된 소탕 계획을 확인하세요" />
+      <SubTitle text="스테이지" description="소탕할 스테이지를 선택하고 최적화된 소탕 계획을 확인하세요" />
 
-      {/* Summary Card */}
+      <Toggle label="스토리/퀘스트 초회 보상 반영" initialState={includeFirstClear} onChange={setIncludeFirstClear} />
+
+      <div className="grid grid-cols-1 md:grid-cols-2 gap-2">
+        {stages.filter(({ difficulty }) => difficulty === 1).map((stage) => (
+          <StageCard
+            key={stage.uid}
+            stage={stage}
+            isEnabled={!!enabledStages[stage.uid]}
+            calculatedRuns={stageCalculations.stageRuns[stage.uid] || 0}
+            extraRuns={extraStageRuns[stage.uid] || 0}
+            appliedBonusRatio={appliedBonusRatio}
+            onToggleStage={toggleStage}
+            onChangeExtraRuns={handleExtraRunsChange}
+          />
+        ))}
+      </div>
+
       {Object.values(paymentItemQuantities).some((qty) => (qty || 0) > 0) && (
-        <div className="mb-6 p-4 bg-gradient-to-r from-green-50 to-blue-50 dark:from-green-950 dark:to-teal-950 border border-green-200 dark:border-green-800 rounded-lg">
+        <div className="my-6 p-4 bg-gradient-to-r from-green-50 to-blue-50 dark:from-green-950 dark:to-teal-950 border border-green-200 dark:border-green-800 rounded-lg">
           <div className="flex items-center justify-between">
             <BoltIcon className="size-6 text-green-600 dark:text-green-400 mr-2" />
             <h3 className="grow text-lg font-semibold text-green-800 dark:text-green-200">소탕에 필요한 AP</h3>
             <div className="text-2xl font-bold text-green-700 dark:text-green-300">
-              {clearPlan.totalAp.toLocaleString()}
+              {stageCalculations.totalApWithExtras.toLocaleString()}
             </div>
           </div>
         </div>
       )}
 
-      {/* Stages Grid */}
-      <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-        {stages.map(({ uid, name, entryAp, index, rewards }) => {
-          const coinRewards = rewards.filter(({ item, rewardRequirement }) => item?.category === "coin" && rewardRequirement === null);
-          const isEnabled = enabledStages[uid];
-          const runs = clearPlan.stageRuns[uid] || 0;
+      <CollectedTotalsSection breakdown={stageCalculations.itemBreakdown} />
+    </>
+  );
+});
+
+
+type StageCardProps = {
+  stage: EventDetailShopPageProps["stages"][number];
+  isEnabled: boolean;
+  calculatedRuns: number;
+  extraRuns: number;
+  appliedBonusRatio: Record<string, Decimal>;
+  onToggleStage: (uid: string, enabled: boolean) => void;
+  onChangeExtraRuns: (uid: string, value: number) => void;
+};
+
+const StageCard = memo(function StageCard({ stage, isEnabled, calculatedRuns, extraRuns, appliedBonusRatio, onToggleStage, onChangeExtraRuns }: StageCardProps) {
+  const { uid, name, entryAp, index, rewards } = stage;
+  const coinRewards = rewards.filter(({ item, rewardRequirement }) => item?.category === "coin" && rewardRequirement === null);
+
+  return (
+    <div className="relative px-4 py-3 rounded-lg border border-neutral-200 dark:border-neutral-700">
+      <div className="flex items-center gap-2">
+        <div className="shrink-0 size-6 border border-neutral-200 dark:border-neutral-700 rounded flex items-center justify-center text-sm">
+          {index}
+        </div>
+        <div className="grow">
+          <p className="text-sm font-medium line-clamp-1">{name}</p>
+          <div className="my-0.5 flex items-center gap-1.5">
+            <div className="flex items-center gap-0.5 border border-green-600 text-green-600 text-xs font-medium px-1 rounded">
+              <BoltIcon className="size-2.5" />
+              <span>{entryAp}</span>
+            </div>
+            {calculatedRuns > 0 && (
+              <span className="border border-blue-500 dark:border-blue-600 bg-blue-500 dark:bg-blue-600 text-white text-xs px-1.5 rounded">
+                {calculatedRuns.toLocaleString()}회 소탕
+              </span>
+            )}
+          </div>
+        </div>
+        <div className="-my-4 -mr-2">
+          <Toggle initialState={isEnabled} onChange={(value) => onToggleStage(uid, value)} />
+        </div>
+      </div>
+
+      {isEnabled && (
+        <div className="mt-3 flex items-center gap-2">
+          <label className="text-xs text-neutral-600 dark:text-neutral-400 whitespace-nowrap">추가 소탕</label>
+          <div className="grow">
+            <NumberInput value={extraRuns} onChange={(value) => onChangeExtraRuns(uid, value)} />
+          </div>
+        </div>
+      )}
+
+      {coinRewards.length > 0 && (
+        <div className="mt-4 space-y-2">
+          <div className="flex flex-wrap gap-1">
+            {coinRewards.map(({ amount, item }, idx) => {
+              if (!item || amount === 0) {
+                return null;
+              }
+              return (
+                <ResourceCard key={`${item.uid}-${idx}`} itemUid={item.uid} resourceType={ResourceTypeEnum.Item} label={amount} />
+              );
+            })}
+            {coinRewards.map(({ amount, item }, idx) => {
+              if (!item || amount === 0 || appliedBonusRatio[item.uid]?.eq(0)) {
+                return null;
+              }
+              const bonusRatio = appliedBonusRatio[item.uid] ?? new Decimal(0);
+              const amountLabel = bonusRatio.mul(amount).ceil().toString();
+              return (
+                <ResourceCard key={`${item.uid}-${idx}-bonus`} itemUid={item.uid} resourceType={ResourceTypeEnum.Item} label={amountLabel} labelColor="yellow" />
+              );
+            })}
+          </div>
+        </div>
+      )}
+    </div>
+  );
+});
+
+type CollectedTotalsSectionProps = {
+  breakdown: {
+    fromFirstRun: Record<string, number>;
+    fromRepeatedRuns: Record<string, number>;
+    toBuyShopItems: Record<string, number>;
+    remaining: Record<string, number>;
+  };
+};
+
+const CollectedTotalsSection = memo(function CollectedTotalsSection({ breakdown }: CollectedTotalsSectionProps) {
+  const { fromFirstRun, fromRepeatedRuns, toBuyShopItems, remaining } = breakdown;
+
+  // Get all unique item UIDs from all categories
+  const allItemUids = new Set([
+    ...Object.keys(fromFirstRun),
+    ...Object.keys(fromRepeatedRuns),
+    ...Object.keys(toBuyShopItems),
+    ...Object.keys(remaining),
+  ]);
+
+  return (
+    <>
+      <SubTitle text="최종 아이템 수량" description="최초 클리어, 소탕, 상점 구매 후 남은 수량을 확인할 수 있어요" />
+      <div className="p-3 border border-neutral-200 dark:border-neutral-700 rounded-lg grid grid-cols-1 md:grid-cols-2 gap-4">
+        {Array.from(allItemUids).map((itemUid) => {
+          const firstRunCount = fromFirstRun[itemUid] || 0;
+          const repeatedRunsCount = fromRepeatedRuns[itemUid] || 0;
+          const toBuyCount = toBuyShopItems[itemUid] || 0;
+          const remainingCount = firstRunCount + repeatedRunsCount - toBuyCount;
 
           return (
-            <div key={uid} className="relative px-4 py-3 rounded-lg border border-neutral-200 dark:border-neutral-700">
-              {/* Stage Header */}
-              <div className="flex items-center gap-2">
-                <div className="shrink-0 size-6 border border-neutral-200 dark:border-neutral-700 rounded flex items-center justify-center text-sm">
-                  {index}
+            <div key={itemUid} className="p-3 bg-neutral-50 dark:bg-neutral-900 rounded-lg flex items-start gap-2">
+              <ResourceCard itemUid={itemUid} resourceType={ResourceTypeEnum.Item} rarity={1} />
+              <div className="grow space-y-1.5 text-sm">
+                <div className="flex justify-between items-center pb-1.5 border-b border-neutral-200 dark:border-neutral-700">
+                  <span className="font-medium text-neutral-800 dark:text-neutral-200">{remainingCount > 0 ? "남은" : "부족"} 수량</span>
+                  <span className={`font-bold ${remainingCount > 0 ? "text-green-600 dark:text-green-400" : "text-red-600 dark:text-red-400"}`}>{remainingCount.toLocaleString()}</span>
                 </div>
-                <div className="grow">
-                  <p className="text-sm font-medium line-clamp-1">{name}</p>
-                  <div className="my-0.5 flex items-center gap-1.5">
-                    <div className="flex items-center gap-0.5 border border-green-600 text-green-600 text-xs font-medium px-1 rounded">
-                      <BoltIcon className="size-2.5" />
-                      <span>{entryAp}</span>
-                    </div>
-                    {runs > 0 && (
-                      <span className="border border-blue-500 dark:border-blue-600 bg-blue-500 dark:bg-blue-600 text-white text-xs px-1.5 rounded">
-                        {runs.toLocaleString()}회 소탕
-                      </span>
-                    )}
+                {firstRunCount > 0 && (
+                  <div className="flex justify-between items-center">
+                    <span className="text-neutral-600 dark:text-neutral-400">스토리 / 초회 보상</span>
+                    <span className="font-medium text-neutral-700 dark:text-neutral-300">{firstRunCount.toLocaleString()}</span>
                   </div>
-                </div>
-                <div className="-my-4 -mr-2">
-                  <Toggle
-                    initialState={isEnabled}
-                    onChange={(value) => toggleStage(uid, value)}
-                  />
-                </div>
+                )}
+                {repeatedRunsCount > 0 && (
+                  <div className="flex justify-between items-center">
+                    <span className="text-neutral-600 dark:text-neutral-400">반복 소탕</span>
+                    <span className="font-medium text-neutral-700 dark:text-neutral-300">{repeatedRunsCount.toLocaleString()}</span>
+                  </div>
+                )}
+                {toBuyCount > 0 && (
+                  <div className="flex justify-between items-center">
+                    <span className="text-neutral-600 dark:text-neutral-400">상점 구매</span>
+                    <span className="font-medium text-neutral-700 dark:text-neutral-300">-{toBuyCount.toLocaleString()}</span>
+                  </div>
+                )}
               </div>
-
-              {/* Rewards */}
-              {coinRewards.length > 0 && (
-                <div className="mt-4 space-y-2">
-                  <div className="flex flex-wrap gap-1">
-                    {coinRewards.map(({ amount, item }, idx) => {
-                      if (!item || amount === 0) {
-                        return null;
-                      }
-                      return (
-                        <ResourceCard key={`${item.uid}-${idx}`} itemUid={item.uid} resourceType={ResourceTypeEnum.Item} label={amount} />
-                      );
-                    })}
-                    {coinRewards.map(({ amount, item }, idx) => {
-                      if (!item || amount === 0 || appliedBonusRatio[item.uid]?.eq(0)) {
-                        return null;
-                      }
-                      const bonusRatio = appliedBonusRatio[item.uid] ?? new Decimal(0);
-                      const amountLabel = bonusRatio.mul(amount).ceil().toString();
-                      return (
-                        <ResourceCard key={`${item.uid}-${idx}-bonus`} itemUid={item.uid} resourceType={ResourceTypeEnum.Item} label={amountLabel} labelColor="yellow" />
-                      );
-                    })}
-                  </div>
-                </div>
-              )}
             </div>
           );
         })}
@@ -799,6 +1038,7 @@ const Stages = memo(function Stages({ stages, appliedBonusRatio, paymentItemQuan
     </>
   );
 });
+
 
 type TabsProps = {
   tabs: {

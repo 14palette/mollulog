@@ -18,8 +18,8 @@ const eventDetailQuery = graphql(`
   query EventDetail($eventUid: String!) {
     event(uid: $eventUid) {
       uid name type since until endless imageUrl rerun
-      stages(difficulty: 1) {
-        uid name entryAp index
+      stages {
+        uid name entryAp index difficulty
         rewards(rewardType: "item") {
           amount rewardRequirement chance
           item { uid category rarity }
@@ -214,7 +214,7 @@ export default function EventDetail() {
       )}
       {page === "stages" && (
         <EventDetailStagePage
-          stages={event.stages}
+          stages={event.stages.filter(({ difficulty }) => difficulty === 1)}
           eventRewardBonus={eventRewardBonus}
           recruitedStudentUids={recruitedStudentUids}
           signedIn={me !== null}
