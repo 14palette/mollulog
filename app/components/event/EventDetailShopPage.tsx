@@ -674,7 +674,7 @@ const Stages = memo(function Stages({
   const paymentItemQuantitiesWithFirstclear = useMemo(() => {
     const adjusted: Record<string, number> = { ...paymentItemQuantities };
     if (includeFirstClear) {
-      // Calculate total first_clear rewards for enabled stages
+      // Calculate total first_clear rewards for all stages (first clear is one-time, regardless of enabled status)
       const firstClearRewards: Record<string, number> = {};
       stages.forEach((stage) => {
         stage.rewards.forEach(({ item, amount, rewardRequirement }) => {
@@ -698,7 +698,7 @@ const Stages = memo(function Stages({
     }
 
     return adjusted;
-  }, [paymentItemQuantities, includeFirstClear, stages, enabledStages]);
+  }, [paymentItemQuantities, includeFirstClear, stages]);
 
   // Calculate stage runs, collected totals, and total AP in a single pass
   const stageCalculations = useMemo(() => {
@@ -791,7 +791,7 @@ const Stages = memo(function Stages({
     let extraAp = 0;
     let firstClearAp = 0;
 
-    // Calculate first_clear rewards for enabled stages
+    // Calculate first_clear rewards for all stages (first clear is one-time, regardless of enabled status)
     if (includeFirstClear) {
       stages.forEach((stage) => {
         let hasFirstClearReward = false;
@@ -1052,6 +1052,8 @@ const CollectedTotalsSection = memo(function CollectedTotalsSection({ breakdown,
           const repeatedRunsCount = fromRepeatedRuns[itemUid] || 0;
           const toBuyCount = toBuyShopItems[itemUid] || 0;
           const existingCount = existingPaymentItemQuantities[itemUid] || 0;
+          // Note: toBuyCount already accounts for existing items (see paymentItemQuantities calculation)
+          // So remainingCount = collected - (required - existing) = collected - required + existing
           const remainingCount = firstRunCount + repeatedRunsCount - toBuyCount;
 
           return (
