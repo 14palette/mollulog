@@ -74,12 +74,14 @@ export function Layout({ children }: { children: React.ReactNode }) {
 const wideLayout = ["/futures", "/utils/relationship"];
 const fullLayout = ["/raids"]
 
-const banner = {
-  message: "이벤트 소탕 계산기 기능이 추가됐어요",
-  linkText: "바로가기 →",
-  linkTo: "/events/ive-alive-rerun?page=shop",
-  storageKey: "event-shop-calculator-banner-dismissed",
-};
+type Banner = {
+  message: string;
+  linkText: string;
+  linkTo: string;
+  storageKey: string;
+} | null;
+
+const banner: Banner = null;
 
 export default function App() {
   const loaderData = useLoaderData<typeof loader>();
@@ -105,9 +107,11 @@ export default function App() {
     widthClass = "max-w-6xl";
   }
 
-  const [bannerHidden, setBannerHidden] = useState(false);
+  const [bannerHidden, setBannerHidden] = useState(banner === null);
   useEffect(() => {
-    setBannerHidden(localStorage.getItem(banner.storageKey) === "true");
+    if (banner !== null) {
+      setBannerHidden(localStorage.getItem(banner.storageKey) === "true");
+    }
   }, [navigate.location]);
 
   return (

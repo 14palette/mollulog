@@ -131,8 +131,8 @@ function MenuContent({ currentUsername, pathname, onMenuClose, onShowSignIn, onD
 
       <div className="my-2 grid grid-cols-3 gap-2">
         <UtilItem name={"인연 랭크\n계산기"} to="/utils/relationship" OutlineIcon={HeartIconOutline} SolidIcon={HeartIconSolid} isActive={pathname.startsWith("/utils/relationship")} onItemClick={onMenuClose} />
-        <UtilItem name={"이벤트 소탕\n계산기"} to="/events/ive-alive-rerun?page=shop" OutlineIcon={BoltIconOutline} SolidIcon={BoltIconSolid} isActive={false} onItemClick={onMenuClose} showRedDot />
-        <UtilItem name={"총력전 점수\n계산기"} to="/utils/raidscore" OutlineIcon={ClockIconOutline} SolidIcon={ClockIconSolid} isActive={pathname.startsWith("/utils/raidscore")} onItemClick={onMenuClose} showRedDot />
+        <UtilItem name={"이벤트 소탕\n계산기"} to="/events/ive-alive-rerun?page=shop" OutlineIcon={BoltIconOutline} SolidIcon={BoltIconSolid} isActive={false} onItemClick={onMenuClose} />
+        <UtilItem name={"총력전 점수\n계산기"} to="/utils/raidscore" OutlineIcon={ClockIconOutline} SolidIcon={ClockIconSolid} isActive={pathname.startsWith("/utils/raidscore")} onItemClick={onMenuClose} />
       </div>
 
       {!currentUsername && (
@@ -196,7 +196,7 @@ type SidebarProps = {
     linkText: string;
     linkTo: string;
     storageKey: string;
-  };
+  } | null;
 };
 
 export default function Sidebar({ currentUsername, darkMode, setDarkMode, hasRecentNews, banner }: SidebarProps) {
@@ -213,9 +213,11 @@ export default function Sidebar({ currentUsername, darkMode, setDarkMode, hasRec
   return (
     <div>
       {/* Desktop Banner - Top */}
-      <div className="hidden xl:block mb-4">
-        <Banner message={banner.message} linkText={banner.linkText} linkTo={banner.linkTo} storageKey={banner.storageKey} />
-      </div>
+      {banner && (
+        <div className="hidden xl:block mb-4">
+          <Banner message={banner.message} linkText={banner.linkText} linkTo={banner.linkTo} storageKey={banner.storageKey} />
+        </div>
+      )}
 
       <div className="px-4 py-4">
         <div className="flex items-center">
@@ -238,9 +240,11 @@ export default function Sidebar({ currentUsername, darkMode, setDarkMode, hasRec
       </div>
       <div>
         {/* Mobile Banner - Bottom */}
-        <div className="block xl:hidden">
-          <Banner message={banner.message} linkText={banner.linkText} linkTo={banner.linkTo} storageKey={banner.storageKey} />
-        </div>
+        {banner && (
+          <div className="block xl:hidden">
+            <Banner message={banner.message} linkText={banner.linkText} linkTo={banner.linkTo} storageKey={banner.storageKey} />
+          </div>
+        )}
         <Transition
           show={isMenuOpen}
           as="div"

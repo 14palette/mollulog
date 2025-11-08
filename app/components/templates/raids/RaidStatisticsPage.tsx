@@ -1,7 +1,7 @@
 import { useFetcher } from "react-router";
 import { defenseTypeColor, defenseTypeLocale } from "~/locales/ko";
 import { FilterButtons } from "~/components/molecules/content";
-import { useEffect, useState } from "react";
+import { useEffect, useMemo, useState } from "react";
 import type { DefenseType, RaidType } from "~/models/content.d";
 import { EmptyView } from "~/components/atoms/typography";
 import { ChevronDownIcon, ChevronUpIcon } from "@heroicons/react/16/solid";
@@ -75,9 +75,14 @@ export default function RaidStatisticsPage({ raid }: RaidStatisticsProps) {
 function SlotCountInfos({ statistics, maxTier }: { statistics: Exclude<RaidStatisticsData["statistics"], undefined>, maxTier?: number }) {
   const [showMore, setShowMore] = useState(false);
 
+  const sortedStatistics = useMemo(() => {
+    const sorted = [...statistics].sort((a, b) => (b.slotsCount + b.assistsCount) - (a.slotsCount + a.assistsCount))
+    return showMore ? sorted : sorted.slice(0, 5);
+  }, [statistics, showMore]);
+
   return (
     <>
-      {statistics.slice(0, showMore ? undefined : 5).map(({ student, slotsCount, slotsByTier, assistsCount, assistsByTier }) => (
+      {sortedStatistics.map(({ student, slotsCount, slotsByTier, assistsCount, assistsByTier }) => (
         <SlotCountInfo
           key={student.uid}
           student={student}
