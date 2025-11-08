@@ -22,7 +22,7 @@ const eventDetailQuery = graphql(`
         uid name entryAp index difficulty
         rewards(rewardType: "item") {
           amount rewardRequirement chance
-          item { uid category rarity }
+          item { uid name category rarity }
         }
       }
       videos { title youtube start }

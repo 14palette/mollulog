@@ -26,6 +26,7 @@ type EventDetailShopPageProps = {
       chance: string | null;
       item: {
         uid: string;
+        name: string;
         category: string;
         rarity: number;
       } | null;
@@ -68,15 +69,24 @@ type EventDetailShopPageProps = {
 };
 
 export default function EventDetailShopPage({ stages, shopResources, eventRewardBonus, recruitedStudentUids, eventUid, savedShopState, signedIn }: EventDetailShopPageProps) {
-  const paymentResources = useMemo(() => {
-    const resources: { uid: string; name: string }[] = [];
+  const collectableResources = useMemo(() => {
+    const items: { uid: string; name: string, forPayment: boolean }[] = [];
     shopResources.forEach(({ paymentResource }) => {
-      if (!resources.some(({ uid }) => uid === paymentResource.uid)) {
-        resources.push(paymentResource);
+      if (!items.some(({ uid }) => uid === paymentResource.uid)) {
+        items.push({ uid: paymentResource.uid, name: paymentResource.name, forPayment: true });
       }
     });
-    return resources;
-  }, [shopResources]);
+
+    stages.forEach((stage) => {
+      stage.rewards.forEach(({ item }) => {
+        if (item && item.category === "coin" && !items.some(({ uid }) => uid === item.uid)) {
+          items.push({ uid: item.uid, name: item.name, forPayment: false });
+        }
+      });
+    });
+
+    return items.sort((a, b) => a.uid.localeCompare(b.uid));
+  }, [stages, shopResources]);
 
   const { showSignIn } = useSignIn();
 
@@ -213,7 +223,11 @@ export default function EventDetailShopPage({ stages, shopResources, eventReward
 
   const paymentItemQuantities = useMemo(() => {
     const quantities: Record<string, number> = {};
-    paymentResources.forEach(({ uid }) => {
+    collectableResources.forEach(({ uid, forPayment }) => {
+      if (!forPayment) {
+        return;
+      }
+
       const required = shopResources.reduce((total, { uid: shopResourceUid, paymentResourceAmount, paymentResource }) => {
         if (paymentResource.uid !== uid) {
           return total;
@@ -224,7 +238,7 @@ export default function EventDetailShopPage({ stages, shopResources, eventReward
       quantities[uid] = Math.max(0, required - existing);
     });
     return quantities;
-  }, [paymentResources, itemQuantities, shopResources, existingPaymentItemQuantities]);
+  }, [collectableResources, itemQuantities, shopResources, existingPaymentItemQuantities]);
 
   const isSaving = fetcher.state === "submitting" || fetcher.state === "loading";
 
@@ -266,10 +280,10 @@ export default function EventDetailShopPage({ stages, shopResources, eventReward
         signedIn={signedIn}
       />
 
-      {paymentResources.length > 0 && (
+      {collectableResources && (
         <ShopResourceSelector
           shopResources={shopResources}
-          paymentResources={paymentResources}
+          collectableResources={collectableResources}
           itemQuantities={itemQuantities}
           setItemQuantities={setItemQuantities}
           paymentItemQuantities={paymentItemQuantities}
@@ -288,6 +302,7 @@ export default function EventDetailShopPage({ stages, shopResources, eventReward
         setIncludeFirstClear={setIncludeFirstClear}
         extraStageRuns={extraStageRuns}
         setExtraStageRuns={setExtraStageRuns}
+        existingPaymentItemQuantities={existingPaymentItemQuantities}
       />
     </>
   );
@@ -476,9 +491,10 @@ const StudentBonusSelector = memo(function StudentBonusSelector({
 
 type ShopResourceSelectorProps = {
   shopResources: EventDetailShopPageProps["shopResources"];
-  paymentResources: {
+  collectableResources: {
     uid: string;
     name: string;
+    forPayment: boolean;
   }[];
 
   itemQuantities: Record<string, number>;
@@ -489,10 +505,10 @@ type ShopResourceSelectorProps = {
 };
 
 const ShopResourceSelector = memo(function ShopResourceSelector({
-  shopResources, paymentResources, itemQuantities, setItemQuantities, paymentItemQuantities,
+  shopResources, collectableResources, itemQuantities, setItemQuantities, paymentItemQuantities,
   existingPaymentItemQuantities, setExistingPaymentItemQuantities,
 }: ShopResourceSelectorProps) {
-  const [selectedPaymentResourceUid, setSelectedPaymentResourceUid] = useState<string>(paymentResources[0]?.uid ?? "");
+  const [selectedPaymentResourceUid, setSelectedPaymentResourceUid] = useState<string>(collectableResources.find(({ forPayment }) => forPayment)?.uid ?? "");
   const selectedShopResources = useMemo(() => {
     return shopResources.filter(({ paymentResource }) => paymentResource.uid === selectedPaymentResourceUid);
   }, [shopResources, selectedPaymentResourceUid]);
@@ -537,7 +553,7 @@ const ShopResourceSelector = memo(function ShopResourceSelector({
     <>
       <SubTitle text="상점 아이템" description="구매할 아이템의 개수를 선택하세요" />
       <Tabs
-        tabs={paymentResources.map(({ uid, name }) => ({ tabId: uid, name, imageUrl: `https://baql-assets.mollulog.net/images/items/${uid}` }))}
+        tabs={collectableResources.filter(({ forPayment }) => forPayment).map(({ uid, name }) => ({ tabId: uid, name, imageUrl: `https://baql-assets.mollulog.net/images/items/${uid}` }))}
         activeTabId={selectedPaymentResourceUid}
         setActiveTabId={setSelectedPaymentResourceUid}
       />
@@ -600,7 +616,7 @@ const ShopResourceSelector = memo(function ShopResourceSelector({
 
       <div className="my-4">
         <div className="p-3 w-full border border-neutral-200 dark:border-neutral-700 rounded-lg grid grid-cols-2 md:grid-cols-3 gap-3 md:gap-4">
-          {paymentResources.map(({ uid }) => {
+          {collectableResources.map(({ uid }) => {
             const existing = existingPaymentItemQuantities[uid] || 0;
             const required = paymentItemQuantities[uid] || 0;
             return (
@@ -637,10 +653,11 @@ type StagesProps = {
   setIncludeFirstClear: Dispatch<SetStateAction<boolean>>;
   extraStageRuns: Record<string, number>;
   setExtraStageRuns: Dispatch<SetStateAction<Record<string, number>>>;
+  existingPaymentItemQuantities: Record<string, number>;
 }
 
 const Stages = memo(function Stages({ 
-  stages, appliedBonusRatio,  paymentItemQuantities,  enabledStages,  setEnabledStages, includeFirstClear, setIncludeFirstClear, extraStageRuns, setExtraStageRuns,
+  stages, appliedBonusRatio,  paymentItemQuantities,  enabledStages,  setEnabledStages, includeFirstClear, setIncludeFirstClear, extraStageRuns, setExtraStageRuns, existingPaymentItemQuantities,
 }: StagesProps) {
   const toggleStage = useCallback((stageUid: string, enabled: boolean) => {
     setEnabledStages(prev => ({
@@ -772,20 +789,31 @@ const Stages = memo(function Stages({
     const fromRepeatedRuns: Record<string, number> = {};
     const toBuyShopItems: Record<string, number> = {};
     let extraAp = 0;
+    let firstClearAp = 0;
 
     // Calculate first_clear rewards for enabled stages
     if (includeFirstClear) {
       stages.forEach((stage) => {
+        let hasFirstClearReward = false;
         stage.rewards.forEach(({ item, rewardRequirement, amount }) => {
           if (!item || item.category !== "coin") {
             return;
           }
           if (rewardRequirement === "first_clear") {
             fromFirstRun[item.uid] = (fromFirstRun[item.uid] || 0) + amount;
+            hasFirstClearReward = true;
           } else if (stage.difficulty === 0) {  // story
             fromFirstRun[item.uid] = (fromFirstRun[item.uid] || 0) + amount;
           }
         });
+
+        // Check if stage has any first_clear rewards (not just coin rewards)
+        if (!hasFirstClearReward) {
+          hasFirstClearReward = stage.rewards.some(({ rewardRequirement }) => rewardRequirement === "first_clear");
+        }
+        if (stage.difficulty === 0 || hasFirstClearReward) {
+          firstClearAp += stage.entryAp;
+        }
       });
     }
 
@@ -848,8 +876,11 @@ const Stages = memo(function Stages({
     return {
       stageRuns,
       totalAp: totalAp.toNumber(),
+      firstClearAp,
+      questSweepAp: totalAp.toNumber(),
+      extraSweepAp: extraAp,
       collectedTotals: remaining,
-      totalApWithExtras: totalAp.toNumber() + extraAp,
+      totalApWithExtras: firstClearAp + totalAp.toNumber() + extraAp,
       itemBreakdown: {
         fromFirstRun,
         fromRepeatedRuns,
@@ -861,9 +892,9 @@ const Stages = memo(function Stages({
 
   return (
     <>
-      <SubTitle text="스테이지" description="소탕할 스테이지를 선택하고 최적화된 소탕 계획을 확인하세요" />
+      <SubTitle text="스테이지 소탕 계획" description="소탕할 스테이지를 선택하고 최적화된 소탕 계획을 세워보세요" />
 
-      <Toggle label="스토리/퀘스트 초회 보상 반영" initialState={includeFirstClear} onChange={setIncludeFirstClear} />
+      <Toggle label="스토리/퀘스트 1회 씩 클리어 (초회 보상 반영)" initialState={includeFirstClear} onChange={setIncludeFirstClear} />
 
       <div className="grid grid-cols-1 md:grid-cols-2 gap-2">
         {stages.filter(({ difficulty }) => difficulty === 1).map((stage) => (
@@ -882,17 +913,34 @@ const Stages = memo(function Stages({
 
       {Object.values(paymentItemQuantities).some((qty) => (qty || 0) > 0) && (
         <div className="my-6 p-4 bg-gradient-to-r from-green-50 to-blue-50 dark:from-green-950 dark:to-teal-950 border border-green-200 dark:border-green-800 rounded-lg">
-          <div className="flex items-center justify-between">
-            <BoltIcon className="size-6 text-green-600 dark:text-green-400 mr-2" />
-            <h3 className="grow text-lg font-semibold text-green-800 dark:text-green-200">소탕에 필요한 AP</h3>
-            <div className="text-2xl font-bold text-green-700 dark:text-green-300">
-              {stageCalculations.totalApWithExtras.toLocaleString()}
-            </div>
+          <div className="flex justify-between items-center mb-3 pb-1.5 border-b border-green-200 dark:border-green-800">
+            <h3 className="text-base font-semibold text-green-800 dark:text-green-200">필요한 AP</h3>
+            <span className="text-xl font-bold text-green-700 dark:text-green-300">{stageCalculations.totalApWithExtras.toLocaleString()}</span>
+          </div>
+          <div className="space-y-1.5">
+            {stageCalculations.firstClearAp > 0 && (
+              <div className="flex justify-between text-sm text-green-700 dark:text-green-300">
+                <span>스토리/퀘스트 초회</span>
+                <span>{stageCalculations.firstClearAp.toLocaleString()}</span>
+              </div>
+            )}
+            {stageCalculations.questSweepAp > 0 && (
+              <div className="flex justify-between text-sm text-green-700 dark:text-green-300">
+                <span>퀘스트 소탕</span>
+                <span>{stageCalculations.questSweepAp.toLocaleString()}</span>
+              </div>
+            )}
+            {stageCalculations.extraSweepAp > 0 && (
+              <div className="flex justify-between text-sm text-green-700 dark:text-green-300">
+                <span>추가 소탕</span>
+                <span>{stageCalculations.extraSweepAp.toLocaleString()}</span>
+              </div>
+            )}
           </div>
         </div>
       )}
 
-      <CollectedTotalsSection breakdown={stageCalculations.itemBreakdown} />
+      <CollectedTotalsSection breakdown={stageCalculations.itemBreakdown} existingPaymentItemQuantities={existingPaymentItemQuantities} />
     </>
   );
 });
@@ -981,9 +1029,10 @@ type CollectedTotalsSectionProps = {
     toBuyShopItems: Record<string, number>;
     remaining: Record<string, number>;
   };
+  existingPaymentItemQuantities: Record<string, number>;
 };
 
-const CollectedTotalsSection = memo(function CollectedTotalsSection({ breakdown }: CollectedTotalsSectionProps) {
+const CollectedTotalsSection = memo(function CollectedTotalsSection({ breakdown, existingPaymentItemQuantities }: CollectedTotalsSectionProps) {
   const { fromFirstRun, fromRepeatedRuns, toBuyShopItems, remaining } = breakdown;
 
   // Get all unique item UIDs from all categories
@@ -1002,6 +1051,7 @@ const CollectedTotalsSection = memo(function CollectedTotalsSection({ breakdown 
           const firstRunCount = fromFirstRun[itemUid] || 0;
           const repeatedRunsCount = fromRepeatedRuns[itemUid] || 0;
           const toBuyCount = toBuyShopItems[itemUid] || 0;
+          const existingCount = existingPaymentItemQuantities[itemUid] || 0;
           const remainingCount = firstRunCount + repeatedRunsCount - toBuyCount;
 
           return (
@@ -1012,6 +1062,12 @@ const CollectedTotalsSection = memo(function CollectedTotalsSection({ breakdown 
                   <span className="font-medium text-neutral-800 dark:text-neutral-200">{remainingCount > 0 ? "남은" : "부족"} 수량</span>
                   <span className={`font-bold ${remainingCount > 0 ? "text-green-600 dark:text-green-400" : "text-red-600 dark:text-red-400"}`}>{remainingCount.toLocaleString()}</span>
                 </div>
+                {existingCount > 0 && (
+                  <div className="flex justify-between items-center">
+                    <span className="text-neutral-600 dark:text-neutral-400">기존 보유</span>
+                    <span className="font-medium text-neutral-700 dark:text-neutral-300">{existingCount.toLocaleString()}</span>
+                  </div>
+                )}
                 {firstRunCount > 0 && (
                   <div className="flex justify-between items-center">
                     <span className="text-neutral-600 dark:text-neutral-400">스토리 / 초회 보상</span>
@@ -1020,7 +1076,7 @@ const CollectedTotalsSection = memo(function CollectedTotalsSection({ breakdown 
                 )}
                 {repeatedRunsCount > 0 && (
                   <div className="flex justify-between items-center">
-                    <span className="text-neutral-600 dark:text-neutral-400">반복 소탕</span>
+                    <span className="text-neutral-600 dark:text-neutral-400">퀘스트 소탕</span>
                     <span className="font-medium text-neutral-700 dark:text-neutral-300">{repeatedRunsCount.toLocaleString()}</span>
                   </div>
                 )}
