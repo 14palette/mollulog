@@ -1052,9 +1052,9 @@ const CollectedTotalsSection = memo(function CollectedTotalsSection({ breakdown,
           const repeatedRunsCount = fromRepeatedRuns[itemUid] || 0;
           const toBuyCount = toBuyShopItems[itemUid] || 0;
           const existingCount = existingPaymentItemQuantities[itemUid] || 0;
-          // Note: toBuyCount already accounts for existing items (see paymentItemQuantities calculation)
-          // So remainingCount = collected - (required - existing) = collected - required + existing
-          const remainingCount = firstRunCount + repeatedRunsCount - toBuyCount;
+          // Note: toBuyCount = required - existing (from paymentItemQuantities calculation)
+          // So remainingCount = collected - required + existing = collected - toBuyCount + existing
+          const remainingCount = firstRunCount + repeatedRunsCount + existingCount - toBuyCount;
 
           return (
             <div key={itemUid} className="p-3 bg-neutral-50 dark:bg-neutral-900 rounded-lg flex items-start gap-2">
