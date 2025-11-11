@@ -156,3 +156,10 @@ export function relativeTime(at: dayjs.Dayjs): string {
   }
   return timeLabel;
 }
+
+export function formatResourceAmount(amount: number): string {
+  if (amount >= 10000) {
+    return `${(amount / 1000).toLocaleString()}k`;
+  }
+  return amount.toLocaleString();
+}

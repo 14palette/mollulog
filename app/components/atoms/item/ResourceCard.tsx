@@ -25,6 +25,8 @@ export default function ResourceCard({ resourceType, rarity = 1, favoriteLevel, 
       imageUrl = furnitureImageUrl(itemUid);
     } else if (resourceType === "equipment") {
       imageUrl = equipmentImageUrl(itemUid);
+    } else if (resourceType === "currency") {
+      imageUrl = currencyImageUrl(itemUid);
     } else {
       imageUrl = itemImageUrl(itemUid);
     }
@@ -40,7 +42,7 @@ export default function ResourceCard({ resourceType, rarity = 1, favoriteLevel, 
           loading="lazy"
         />
         {label && (
-          <div className="px-1.5 absolute right-0 bottom-0 bg-neutral-900/80 backdrop-blur-sm text-white text-xs rounded-full">
+          <div className="px-1.5 absolute -right-1 -bottom-0.5 bg-neutral-900/80 backdrop-blur-sm text-white text-xs rounded-full">
             <span className={`${labelColorClass} text-xs font-medium`}>{label}</span>
           </div>
         )}
@@ -74,6 +76,10 @@ function furnitureImageUrl(furnitureUid: string): string {
 
 function equipmentImageUrl(equipmentUid: string): string {
   return `https://baql-assets.mollulog.net/images/equipments/${equipmentUid}`;
+}
+
+function currencyImageUrl(currencyUid: string): string {
+  return `https://baql-assets.mollulog.net/images/currencies/${currencyUid}`;
 }
 
 function favoriteLevelImageUrl(favoriteLevel: number): string {
