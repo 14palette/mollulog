@@ -14,6 +14,8 @@ export const eventShopStatesTable = sqliteTable("event_shop_states", {
   enabledStages: text().notNull().default("{}"),
   includeRecruitedStudents: int().notNull().default(0),
   existingPaymentItemQuantities: text().notNull().default("{}"),
+  includeFirstClear: int().notNull().default(0),
+  extraStageRuns: text().notNull().default("{}"),
   createdAt: text().notNull().default(sql`current_timestamp`),
   updatedAt: text().notNull().default(sql`current_timestamp`),
 });
@@ -24,6 +26,8 @@ export type EventShopState = {
   enabledStages: Record<string, boolean>;
   includeRecruitedStudents: boolean;
   existingPaymentItemQuantities: Record<string, number>;
+  includeFirstClear: boolean;
+  extraStageRuns: Record<string, number>;
 };
 
 function toModel(state: typeof eventShopStatesTable.$inferSelect): EventShopState {
@@ -33,6 +37,8 @@ function toModel(state: typeof eventShopStatesTable.$inferSelect): EventShopStat
     enabledStages: JSON.parse(state.enabledStages),
     includeRecruitedStudents: state.includeRecruitedStudents === 1,
     existingPaymentItemQuantities: JSON.parse(state.existingPaymentItemQuantities || "{}"),
+    includeFirstClear: state.includeFirstClear === 1,
+    extraStageRuns: JSON.parse(state.extraStageRuns || "{}"),
   };
 }
 
@@ -63,6 +69,7 @@ export async function upsertEventShopState(
   const selectedBonusStudentUidsJson = JSON.stringify(state.selectedBonusStudentUids);
   const enabledStagesJson = JSON.stringify(state.enabledStages);
   const existingPaymentItemQuantitiesJson = JSON.stringify(state.existingPaymentItemQuantities || {});
+  const extraStageRunsJson = JSON.stringify(state.extraStageRuns || {});
 
   await db
     .insert(eventShopStatesTable)
@@ -75,6 +82,8 @@ export async function upsertEventShopState(
       enabledStages: enabledStagesJson,
       includeRecruitedStudents: state.includeRecruitedStudents ? 1 : 0,
       existingPaymentItemQuantities: existingPaymentItemQuantitiesJson,
+      includeFirstClear: state.includeFirstClear ? 1 : 0,
+      extraStageRuns: extraStageRunsJson,
     })
     .onConflictDoUpdate({
       target: [eventShopStatesTable.userId, eventShopStatesTable.eventUid],
@@ -84,6 +93,8 @@ export async function upsertEventShopState(
         enabledStages: enabledStagesJson,
         includeRecruitedStudents: state.includeRecruitedStudents ? 1 : 0,
         existingPaymentItemQuantities: existingPaymentItemQuantitiesJson,
+        includeFirstClear: state.includeFirstClear ? 1 : 0,
+        extraStageRuns: extraStageRunsJson,
         updatedAt: sql`current_timestamp`,
       },
     });
