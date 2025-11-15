@@ -476,6 +476,7 @@ export type Resource = {
 };
 
 export enum ResourceTypeEnum {
+  Currency = 'currency',
   Equipment = 'equipment',
   Furniture = 'furniture',
   Item = 'item'
