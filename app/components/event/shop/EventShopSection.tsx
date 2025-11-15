@@ -38,7 +38,7 @@ export function EventShopSection({ title, description, foldable, foldStateKey, c
     <div className={`pb-4 ${foldable && !visible ? "border-b border-neutral-200 dark:border-neutral-700" : ""} ${visible ? "mb-4 md:mb-12" : "mb-4"}`}>
       <div
         className={`flex items-center gap-3 ${foldable ? "cursor-pointer" : ""}`}
-        onClick={() => foldable ? setVisible((prev: boolean) => !prev) : undefined}
+        onClick={foldable ? () => setVisible((prev: boolean) => !prev) : undefined}
       >
         <div className="grow min-w-0">
           <h2 className="font-semibold text-base text-neutral-900 dark:text-neutral-100">{title}</h2>

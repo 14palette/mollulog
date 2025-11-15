@@ -78,7 +78,7 @@ export const ShopResourceSelector = memo(function ShopResourceSelector({
           return (
             <div key={uid} className="px-2 py-3 flex flex-col gap-2 bg-neutral-100 dark:bg-neutral-900 rounded-lg">
               <div className="flex items-center justify-center gap-x-1">
-                <ResourceCard itemUid={resource.uid} resourceType={resource.type} rarity={resource.rarity} label={formattedResourceAmount === "1" ? undefined : formattedResourceAmount} />
+                <ResourceCard itemUid={resource.uid} resourceType={resource.type} rarity={resource.rarity} label={resourceAmount === 1 ? undefined : formattedResourceAmount} />
                 <div className="grow">
                   <div className="flex items-center justify-center gap-1">
                     <img

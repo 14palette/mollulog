@@ -1,4 +1,5 @@
 import { useMemo, useState, useEffect, memo } from "react";
+import type { Dispatch, SetStateAction } from "react";
 import Decimal from "decimal.js";
 import { ResourceTypeEnum } from "~/graphql/graphql";
 import { ResourceCard } from "~/components/atoms/item";
@@ -13,7 +14,7 @@ type StudentBonusSelectorProps = {
   eventRewardBonus: EventRewardBonus[];
   recruitedStudentUids: string[];
   selectedBonusStudentUids: string[];
-  setSelectedBonusStudentUids: (updater: (prev: string[]) => string[]) => void;
+  setSelectedBonusStudentUids: Dispatch<SetStateAction<string[]>>;
   setAppliedBonusRatio: (updater: (prev: Record<string, Decimal>) => Record<string, Decimal>) => void;
   includeRecruitedStudents: boolean;
   setIncludeRecruitedStudents: (value: boolean) => void;
@@ -114,11 +115,11 @@ export const StudentBonusSelector = memo(function StudentBonusSelector({
   };
 
   const handleSelectAll = () => {
-    setSelectedBonusStudentUids(() => eventBonusStudentUids);
+    setSelectedBonusStudentUids(eventBonusStudentUids);
   };
 
   const handleResetAll = () => {
-    setSelectedBonusStudentUids(() => includeRecruitedStudents ? recruitedStudentUids : []);
+    setSelectedBonusStudentUids(includeRecruitedStudents ? recruitedStudentUids : []);
   };
 
   const [tab, setTab] = useState<"student" | "item">("student");
