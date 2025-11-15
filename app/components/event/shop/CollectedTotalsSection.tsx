@@ -1,10 +1,9 @@
 import { memo, useMemo } from "react";
 import { ResourceTypeEnum } from "~/graphql/graphql";
 import { ResourceCard } from "~/components/atoms/item";
-import { SubTitle } from "~/components/atoms/typography";
 import { formatResourceAmount } from "~/locales/ko";
 import type { ShopResource } from "./types";
-import { SectionHeader } from "./SectionHeader";
+import { EventShopSection } from "./EventShopSection";
 
 type CollectedTotalsSectionProps = {
   breakdown: {
@@ -16,9 +15,13 @@ type CollectedTotalsSectionProps = {
   existingPaymentItemQuantities: Record<string, number>;
   itemQuantities: Record<string, number>;
   shopResources: ShopResource[];
+  totalApWithExtras: number;
+  firstClearAp: number;
+  questSweepAp: number;
+  extraSweepAp: number;
 };
 
-export const CollectedTotalsSection = memo(function CollectedTotalsSection({ breakdown, existingPaymentItemQuantities, itemQuantities, shopResources }: CollectedTotalsSectionProps) {
+export const CollectedTotalsSection = memo(function CollectedTotalsSection({ breakdown, existingPaymentItemQuantities, itemQuantities, shopResources, totalApWithExtras, firstClearAp, questSweepAp, extraSweepAp }: CollectedTotalsSectionProps) {
   const { fromFirstRun, fromRepeatedRuns, toBuyShopItems, remaining } = breakdown;
 
   // Get all unique item UIDs from all categories
@@ -61,67 +64,97 @@ export const CollectedTotalsSection = memo(function CollectedTotalsSection({ bre
 
   return (
     <>
-      <SectionHeader title="최종 아이템 수량" description="최초 클리어, 소탕, 상점 구매 후 남은 수량을 확인할 수 있어요" />
-      <div className="p-3 border border-neutral-200 dark:border-neutral-700 rounded-lg grid grid-cols-1 md:grid-cols-2 gap-4">
-        {allItemUids.size === 0 && (
-          <p className="w-full py-8 text-neutral-500 dark:text-neutral-400 text-center col-span-2 text-sm">
-            구매할 아이템과 스테이지를 선택하세요
-          </p>
-        )}
-        {Array.from(allItemUids).map((itemUid) => {
-          const firstRunCount = fromFirstRun[itemUid] || 0;
-          const repeatedRunsCount = fromRepeatedRuns[itemUid] || 0;
-          const toBuyCount = toBuyShopItems[itemUid] || 0;
-          const existingCount = existingPaymentItemQuantities[itemUid] || 0;
-          // Note: toBuyCount = required - existing (from paymentItemQuantities calculation)
-          // So remainingCount = collected - required + existing = collected - toBuyCount + existing
-          const remainingCount = firstRunCount + repeatedRunsCount + existingCount - toBuyCount;
-
-          return (
-            <div key={itemUid} className="p-3 bg-neutral-50 dark:bg-neutral-900 rounded-lg flex items-start gap-2">
-              <ResourceCard itemUid={itemUid} resourceType={ResourceTypeEnum.Item} rarity={1} />
-              <div className="grow space-y-1.5 text-sm">
-                <div className="flex justify-between items-center pb-1.5 border-b border-neutral-200 dark:border-neutral-700">
-                  <span className="font-medium text-neutral-800 dark:text-neutral-200">{remainingCount > 0 ? "남은" : "부족"} 수량</span>
-                  <span className={`font-bold ${remainingCount > 0 ? "text-green-600 dark:text-green-400" : "text-red-600 dark:text-red-400"}`}>{remainingCount.toLocaleString()}</span>
-                </div>
-                {existingCount > 0 && (
-                  <div className="flex justify-between items-center">
-                    <span className="text-neutral-600 dark:text-neutral-400">기존 보유</span>
-                    <span className="font-medium text-neutral-700 dark:text-neutral-300">{existingCount.toLocaleString()}</span>
-                  </div>
-                )}
-                {firstRunCount > 0 && (
-                  <div className="flex justify-between items-center">
-                    <span className="text-neutral-600 dark:text-neutral-400">스토리 / 초회 보상</span>
-                    <span className="font-medium text-neutral-700 dark:text-neutral-300">{firstRunCount.toLocaleString()}</span>
-                  </div>
-                )}
-                {repeatedRunsCount > 0 && (
-                  <div className="flex justify-between items-center">
-                    <span className="text-neutral-600 dark:text-neutral-400">퀘스트 소탕</span>
-                    <span className="font-medium text-neutral-700 dark:text-neutral-300">{repeatedRunsCount.toLocaleString()}</span>
-                  </div>
-                )}
-                {toBuyCount > 0 && (
-                  <div className="flex justify-between items-center">
-                    <span className="text-neutral-600 dark:text-neutral-400">상점 구매</span>
-                    <span className="font-medium text-neutral-700 dark:text-neutral-300">-{toBuyCount.toLocaleString()}</span>
-                  </div>
-                )}
-              </div>
+      <EventShopSection title="최종 결과" description="필요한 AP와 아이템 수량을 확인할 수 있어요" foldable={false}>
+        {totalApWithExtras > 0 && (
+          <div className="my-4 p-4 bg-gradient-to-r from-green-50 to-blue-50 dark:from-green-950 dark:to-teal-950 border border-green-200 dark:border-green-800 rounded-lg">
+            <div className="flex justify-between items-center mb-3 pb-1.5 border-b border-green-200 dark:border-green-800">
+              <h3 className="text-base font-semibold text-green-800 dark:text-green-200">필요한 AP</h3>
+              <span className="text-xl font-bold text-green-700 dark:text-green-300">{totalApWithExtras.toLocaleString()}</span>
             </div>
-          );
-        })}
-      </div>
+            <div className="space-y-1.5">
+              {firstClearAp > 0 && (
+                <div className="flex justify-between text-sm text-green-700 dark:text-green-300">
+                  <span>스토리/퀘스트 초회</span>
+                  <span>{firstClearAp.toLocaleString()}</span>
+                </div>
+              )}
+              {questSweepAp > 0 && (
+                <div className="flex justify-between text-sm text-green-700 dark:text-green-300">
+                  <span>퀘스트 소탕</span>
+                  <span>{questSweepAp.toLocaleString()}</span>
+                </div>
+              )}
+              {extraSweepAp > 0 && (
+                <div className="flex justify-between text-sm text-green-700 dark:text-green-300">
+                  <span>추가 소탕</span>
+                  <span>{extraSweepAp.toLocaleString()}</span>
+                </div>
+              )}
+            </div>
+          </div>
+        )}
 
-      {mergedBoughtResources.length > 0 && (
-        <div className="my-4 p-3 border border-neutral-200 dark:border-neutral-700 rounded-lg flex flex-wrap gap-3">
-          {mergedBoughtResources.map(({ resource, totalQuantity }) => (
-            <ResourceCard key={`${resource.type}:${resource.uid}`} itemUid={resource.uid} resourceType={resource.type} rarity={resource.rarity} label={formatResourceAmount(totalQuantity)} />
-          ))}
+        <div className="p-3 border border-neutral-200 dark:border-neutral-700 rounded-lg grid grid-cols-1 md:grid-cols-2 gap-4">
+          {allItemUids.size === 0 && (
+            <p className="w-full py-8 text-neutral-500 dark:text-neutral-400 text-center col-span-2 text-sm">
+              구매할 아이템과 스테이지를 선택하세요
+            </p>
+          )}
+          {Array.from(allItemUids).map((itemUid) => {
+            const firstRunCount = fromFirstRun[itemUid] || 0;
+            const repeatedRunsCount = fromRepeatedRuns[itemUid] || 0;
+            const toBuyCount = toBuyShopItems[itemUid] || 0;
+            const existingCount = existingPaymentItemQuantities[itemUid] || 0;
+            // Note: toBuyCount = required - existing (from paymentItemQuantities calculation)
+            // So remainingCount = collected - required + existing = collected - toBuyCount + existing
+            const remainingCount = firstRunCount + repeatedRunsCount + existingCount - toBuyCount;
+
+            return (
+              <div key={itemUid} className="p-3 bg-neutral-50 dark:bg-neutral-900 rounded-lg flex items-start gap-2">
+                <ResourceCard itemUid={itemUid} resourceType={ResourceTypeEnum.Item} rarity={1} />
+                <div className="grow space-y-1.5 text-sm">
+                  <div className="flex justify-between items-center pb-1.5 border-b border-neutral-200 dark:border-neutral-700">
+                    <span className="font-medium text-neutral-800 dark:text-neutral-200">{remainingCount > 0 ? "남은" : "부족"} 수량</span>
+                    <span className={`font-bold ${remainingCount > 0 ? "text-green-600 dark:text-green-400" : "text-red-600 dark:text-red-400"}`}>{remainingCount.toLocaleString()}</span>
+                  </div>
+                  {existingCount > 0 && (
+                    <div className="flex justify-between items-center">
+                      <span className="text-neutral-600 dark:text-neutral-400">기존 보유</span>
+                      <span className="font-medium text-neutral-700 dark:text-neutral-300">{existingCount.toLocaleString()}</span>
+                    </div>
+                  )}
+                  {firstRunCount > 0 && (
+                    <div className="flex justify-between items-center">
+                      <span className="text-neutral-600 dark:text-neutral-400">스토리 / 초회 보상</span>
+                      <span className="font-medium text-neutral-700 dark:text-neutral-300">{firstRunCount.toLocaleString()}</span>
+                    </div>
+                  )}
+                  {repeatedRunsCount > 0 && (
+                    <div className="flex justify-between items-center">
+                      <span className="text-neutral-600 dark:text-neutral-400">퀘스트 소탕</span>
+                      <span className="font-medium text-neutral-700 dark:text-neutral-300">{repeatedRunsCount.toLocaleString()}</span>
+                    </div>
+                  )}
+                  {toBuyCount > 0 && (
+                    <div className="flex justify-between items-center">
+                      <span className="text-neutral-600 dark:text-neutral-400">상점 구매</span>
+                      <span className="font-medium text-neutral-700 dark:text-neutral-300">-{toBuyCount.toLocaleString()}</span>
+                    </div>
+                  )}
+                </div>
+              </div>
+            );
+          })}
         </div>
-      )}
+
+        {mergedBoughtResources.length > 0 && (
+          <div className="my-4 p-3 border border-neutral-200 dark:border-neutral-700 rounded-lg flex flex-wrap gap-3">
+            {mergedBoughtResources.map(({ resource, totalQuantity }) => (
+              <ResourceCard key={`${resource.type}:${resource.uid}`} itemUid={resource.uid} resourceType={resource.type} rarity={resource.rarity} label={formatResourceAmount(totalQuantity)} />
+            ))}
+          </div>
+        )}
+      </EventShopSection>
     </>
   );
 });

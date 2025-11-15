@@ -219,43 +219,45 @@ export default function EventDetailShopPage({ stages, shopResources, eventReward
         )}
       </div>
 
-      <StudentBonusSelector
-        eventRewardBonus={eventRewardBonus}
-        recruitedStudentUids={recruitedStudentUids}
-        selectedBonusStudentUids={selectedBonusStudentUids}
-        setSelectedBonusStudentUids={setSelectedBonusStudentUids}
-        setAppliedBonusRatio={setAppliedBonusRatio}
-        includeRecruitedStudents={includeRecruitedStudents}
-        setIncludeRecruitedStudents={setIncludeRecruitedStudents}
-        signedIn={signedIn}
-      />
-
-      {collectableResources && (
-        <ShopResourceSelector
-          shopResources={shopResources}
-          collectableResources={collectableResources}
-          itemQuantities={itemQuantities}
-          setItemQuantities={setItemQuantities}
-          paymentItemQuantities={paymentItemQuantities}
-          existingPaymentItemQuantities={existingPaymentItemQuantities}
-          setExistingPaymentItemQuantities={setExistingPaymentItemQuantities}
+      <div>
+        <StudentBonusSelector
+          eventRewardBonus={eventRewardBonus}
+          recruitedStudentUids={recruitedStudentUids}
+          selectedBonusStudentUids={selectedBonusStudentUids}
+          setSelectedBonusStudentUids={setSelectedBonusStudentUids}
+          setAppliedBonusRatio={setAppliedBonusRatio}
+          includeRecruitedStudents={includeRecruitedStudents}
+          setIncludeRecruitedStudents={setIncludeRecruitedStudents}
+          signedIn={signedIn}
         />
-      )}
 
-      <StageSelector
-        stages={stages}
-        appliedBonusRatio={appliedBonusRatio}
-        paymentItemQuantities={paymentItemQuantities}
-        enabledStages={enabledStages}
-        setEnabledStages={setEnabledStages}
-        includeFirstClear={includeFirstClear}
-        setIncludeFirstClear={setIncludeFirstClear}
-        extraStageRuns={extraStageRuns}
-        setExtraStageRuns={setExtraStageRuns}
-        existingPaymentItemQuantities={existingPaymentItemQuantities}
-        itemQuantities={itemQuantities}
-        shopResources={shopResources}
-      />
+        {collectableResources && (
+          <ShopResourceSelector
+            shopResources={shopResources}
+            collectableResources={collectableResources}
+            itemQuantities={itemQuantities}
+            setItemQuantities={setItemQuantities}
+            paymentItemQuantities={paymentItemQuantities}
+            existingPaymentItemQuantities={existingPaymentItemQuantities}
+            setExistingPaymentItemQuantities={setExistingPaymentItemQuantities}
+          />
+        )}
+
+        <StageSelector
+          stages={stages}
+          appliedBonusRatio={appliedBonusRatio}
+          paymentItemQuantities={paymentItemQuantities}
+          enabledStages={enabledStages}
+          setEnabledStages={setEnabledStages}
+          includeFirstClear={includeFirstClear}
+          setIncludeFirstClear={setIncludeFirstClear}
+          extraStageRuns={extraStageRuns}
+          setExtraStageRuns={setExtraStageRuns}
+          existingPaymentItemQuantities={existingPaymentItemQuantities}
+          itemQuantities={itemQuantities}
+          shopResources={shopResources}
+        />
+      </div>
     </>
   );
 }

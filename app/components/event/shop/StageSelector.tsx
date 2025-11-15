@@ -1,22 +1,21 @@
-import { useMemo, useCallback, memo, useState } from "react";
+import { useMemo } from "react";
 import Decimal from "decimal.js";
 import { Toggle } from "~/components/atoms/form";
-import { SetStateAction, Dispatch } from "react";
 import { StageCard } from "./StageCard";
 import { CollectedTotalsSection } from "./CollectedTotalsSection";
 import type { Stage, ShopResource } from "./types";
-import { SectionHeader } from "./SectionHeader";
+import { EventShopSection } from "./EventShopSection";
 
 type StagesProps = {
   stages: Stage[];
   appliedBonusRatio: Record<string, Decimal>;
   paymentItemQuantities: Record<string, number>;
   enabledStages: Record<string, boolean>;
-  setEnabledStages: Dispatch<SetStateAction<Record<string, boolean>>>;
+  setEnabledStages: (updater: (prev: Record<string, boolean>) => Record<string, boolean>) => void;
   includeFirstClear: boolean;
-  setIncludeFirstClear: Dispatch<SetStateAction<boolean>>;
+  setIncludeFirstClear: (value: boolean) => void;
   extraStageRuns: Record<string, number>;
-  setExtraStageRuns: Dispatch<SetStateAction<Record<string, number>>>;
+  setExtraStageRuns: (updater: (prev: Record<string, number>) => Record<string, number>) => void;
   existingPaymentItemQuantities: Record<string, number>;
   itemQuantities: Record<string, number>;
   shopResources: ShopResource[];
@@ -25,16 +24,16 @@ type StagesProps = {
 export function StageSelector({
   stages, appliedBonusRatio,  paymentItemQuantities,  enabledStages,  setEnabledStages, includeFirstClear, setIncludeFirstClear, extraStageRuns, setExtraStageRuns, existingPaymentItemQuantities, itemQuantities, shopResources,
 }: StagesProps) {
-  const toggleStage = useCallback((stageUid: string, enabled: boolean) => {
+  const toggleStage = (stageUid: string, enabled: boolean) => {
     setEnabledStages(prev => ({
       ...prev,
       [stageUid]: enabled
     }));
-  }, [setEnabledStages]);
+  };
 
-  const handleExtraRunsChange = useCallback((stageUid: string, value: number) => {
+  const handleExtraRunsChange = (stageUid: string, value: number) => {
     setExtraStageRuns(prev => ({ ...prev, [stageUid]: value }));
-  }, [setExtraStageRuns]);
+  };
 
   // Calculate adjusted payment item quantities by subtracting first_clear rewards
   const paymentItemQuantitiesWithFirstclear = useMemo(() => {
@@ -256,63 +255,37 @@ export function StageSelector({
     };
   }, [stages, appliedBonusRatio, paymentItemQuantitiesWithFirstclear, enabledStages, extraStageRuns, paymentItemQuantities, includeFirstClear]);
 
-  const [folded, setFolded] = useState<boolean>(true);
-
   return (
     <>
-      <SectionHeader title="스테이지 소탕 계획" description="스테이지를 선택하고 최적화된 소탕 계획을 세워보세요" folded={folded} setFolded={setFolded} />
+      <EventShopSection title="스테이지 소탕 계획" description="스테이지를 선택하고 최적화된 소탕 계획을 세워보세요" foldable foldStateKey="stage-selector">
+        <Toggle label="스토리/퀘스트 1회 씩 클리어 (초회 보상 반영)" initialState={includeFirstClear} onChange={setIncludeFirstClear} />
 
-      {!folded && (
-        <>
-          <Toggle label="스토리/퀘스트 1회 씩 클리어 (초회 보상 반영)" initialState={includeFirstClear} onChange={setIncludeFirstClear} />
-
-          <div className="grid grid-cols-1 md:grid-cols-2 gap-2">
-            {stages.filter(({ difficulty }) => difficulty === 1).map((stage) => (
-              <StageCard
-                key={stage.uid}
-                stage={stage}
-                isEnabled={!!enabledStages[stage.uid]}
-                calculatedRuns={stageCalculations.stageRuns[stage.uid] || 0}
-                extraRuns={extraStageRuns[stage.uid] || 0}
-                appliedBonusRatio={appliedBonusRatio}
-                onToggleStage={toggleStage}
-                onChangeExtraRuns={handleExtraRunsChange}
-              />
-            ))}
-          </div>
-        </>
-      )}
-
-      {stageCalculations.totalApWithExtras > 0 && (
-        <div className="my-4 p-4 bg-gradient-to-r from-green-50 to-blue-50 dark:from-green-950 dark:to-teal-950 border border-green-200 dark:border-green-800 rounded-lg">
-          <div className="flex justify-between items-center mb-3 pb-1.5 border-b border-green-200 dark:border-green-800">
-            <h3 className="text-base font-semibold text-green-800 dark:text-green-200">필요한 AP</h3>
-            <span className="text-xl font-bold text-green-700 dark:text-green-300">{stageCalculations.totalApWithExtras.toLocaleString()}</span>
-          </div>
-          <div className="space-y-1.5">
-            {stageCalculations.firstClearAp > 0 && (
-              <div className="flex justify-between text-sm text-green-700 dark:text-green-300">
-                <span>스토리/퀘스트 초회</span>
-                <span>{stageCalculations.firstClearAp.toLocaleString()}</span>
-              </div>
-            )}
-            {stageCalculations.questSweepAp > 0 && (
-              <div className="flex justify-between text-sm text-green-700 dark:text-green-300">
-                <span>퀘스트 소탕</span>
-                <span>{stageCalculations.questSweepAp.toLocaleString()}</span>
-              </div>
-            )}
-            {stageCalculations.extraSweepAp > 0 && (
-              <div className="flex justify-between text-sm text-green-700 dark:text-green-300">
-                <span>추가 소탕</span>
-                <span>{stageCalculations.extraSweepAp.toLocaleString()}</span>
-              </div>
-            )}
-          </div>
+        <div className="grid grid-cols-1 md:grid-cols-2 gap-2">
+          {stages.filter(({ difficulty }) => difficulty === 1).map((stage) => (
+            <StageCard
+              key={stage.uid}
+              stage={stage}
+              isEnabled={!!enabledStages[stage.uid]}
+              calculatedRuns={stageCalculations.stageRuns[stage.uid] || 0}
+              extraRuns={extraStageRuns[stage.uid] || 0}
+              appliedBonusRatio={appliedBonusRatio}
+              onToggleStage={toggleStage}
+              onChangeExtraRuns={handleExtraRunsChange}
+            />
+          ))}
         </div>
-      )}
+      </EventShopSection>
 
-      <CollectedTotalsSection breakdown={stageCalculations.itemBreakdown} existingPaymentItemQuantities={existingPaymentItemQuantities} itemQuantities={itemQuantities} shopResources={shopResources} />
+      <CollectedTotalsSection 
+        breakdown={stageCalculations.itemBreakdown} 
+        existingPaymentItemQuantities={existingPaymentItemQuantities} 
+        itemQuantities={itemQuantities} 
+        shopResources={shopResources}
+        totalApWithExtras={stageCalculations.totalApWithExtras}
+        firstClearAp={stageCalculations.firstClearAp}
+        questSweepAp={stageCalculations.questSweepAp}
+        extraSweepAp={stageCalculations.extraSweepAp}
+      />
     </>
   );
 }

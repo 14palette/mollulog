@@ -1,24 +1,22 @@
-import { SetStateAction, Dispatch, useMemo, useState, useEffect, useCallback, memo } from "react";
+import { useMemo, useState, useEffect, memo } from "react";
 import Decimal from "decimal.js";
 import { ResourceTypeEnum } from "~/graphql/graphql";
 import { ResourceCard } from "~/components/atoms/item";
-import { SubTitle } from "~/components/atoms/typography";
 import { Button, Toggle } from "~/components/atoms/form";
 import { StudentCards } from "~/components/molecules/student";
 import EventItemBonus from "../EventItemBonus";
 import { Tabs } from "./Tabs";
 import type { EventRewardBonus } from "./types";
-import { ChevronDownIcon } from "@heroicons/react/16/solid";
-import { SectionHeader } from "./SectionHeader";
+import { EventShopSection } from "./EventShopSection";
 
 type StudentBonusSelectorProps = {
   eventRewardBonus: EventRewardBonus[];
   recruitedStudentUids: string[];
   selectedBonusStudentUids: string[];
-  setSelectedBonusStudentUids: Dispatch<SetStateAction<string[]>>;
-  setAppliedBonusRatio: Dispatch<SetStateAction<Record<string, Decimal>>>;
+  setSelectedBonusStudentUids: (updater: (prev: string[]) => string[]) => void;
+  setAppliedBonusRatio: (updater: (prev: Record<string, Decimal>) => Record<string, Decimal>) => void;
   includeRecruitedStudents: boolean;
-  setIncludeRecruitedStudents: Dispatch<SetStateAction<boolean>>;
+  setIncludeRecruitedStudents: (value: boolean) => void;
   signedIn: boolean;
 };
 
@@ -30,14 +28,14 @@ export const StudentBonusSelector = memo(function StudentBonusSelector({
     return [...new Set(eventRewardBonus.flatMap(({ rewardBonuses }) => rewardBonuses.map(({ student }) => student.uid)))];
   }, [eventRewardBonus]);
 
-  const handleSelectBonusStudent = useCallback((studentUid: string) => {
+  const handleSelectBonusStudent = (studentUid: string) => {
     setSelectedBonusStudentUids((prev) => {
       if (prev.includes(studentUid)) {
         return prev.filter((uid) => uid !== studentUid);
       }
       return [...prev, studentUid];
     });
-  }, [setSelectedBonusStudentUids]);
+  };
 
   const appliedEventRewardBonus = useMemo(() => {
     return eventRewardBonus.map(({ uid, rewardBonuses }) => {
@@ -106,96 +104,89 @@ export const StudentBonusSelector = memo(function StudentBonusSelector({
     });
   }, [eventBonusStudentUids, selectedBonusStudentUids, recruitedStudentUids]);
 
-  const handleToggleRecruitedStudents = useCallback((value: boolean) => {
+  const handleToggleRecruitedStudents = (value: boolean) => {
     setIncludeRecruitedStudents(value);
     if (value) {
       setSelectedBonusStudentUids((prev) => [...new Set([...prev, ...recruitedStudentUids])]);
     } else {
       setSelectedBonusStudentUids((prev) => prev.filter((uid) => !recruitedStudentUids.includes(uid)));
     }
-  }, [recruitedStudentUids, setSelectedBonusStudentUids, setIncludeRecruitedStudents]);
+  };
 
-  const handleSelectAll = useCallback(() => {
-    setSelectedBonusStudentUids(eventBonusStudentUids);
-  }, [eventBonusStudentUids, setSelectedBonusStudentUids]);
+  const handleSelectAll = () => {
+    setSelectedBonusStudentUids(() => eventBonusStudentUids);
+  };
 
-  const handleResetAll = useCallback(() => {
-    setSelectedBonusStudentUids(includeRecruitedStudents ? recruitedStudentUids : []);
-  }, [includeRecruitedStudents, recruitedStudentUids, setSelectedBonusStudentUids]);
+  const handleResetAll = () => {
+    setSelectedBonusStudentUids(() => includeRecruitedStudents ? recruitedStudentUids : []);
+  };
 
   const [tab, setTab] = useState<"student" | "item">("student");
-  const [folded, setFolded] = useState<boolean>(true);
-
   return (
-    <div>
-      <SectionHeader
-        title="학생 보너스"
-        description={recruitedStudentUids.length === 0 ? "로그인 후 모집한 학생 정보를 등록하면 편리하게 이용할 수 있어요" : "편성 보너스를 적용할 학생을 선택하세요"}
-        folded={folded} setFolded={setFolded}
+    <EventShopSection
+      title="학생 보너스"
+      description={recruitedStudentUids.length === 0 ? "로그인 후 모집한 학생 정보를 등록하면 편리하게 이용할 수 있어요" : "편성 보너스를 적용할 학생을 선택하세요"}
+      foldable
+      foldStateKey="student-bonus-selector"
+    >
+      <Toggle
+        label="모집한 학생 일괄 반영"
+        disabled={!signedIn}
+        initialState={signedIn ? includeRecruitedStudents : false}
+        onChange={handleToggleRecruitedStudents}
       />
 
-      {!folded && (
+      <Tabs
+        tabs={[{ tabId: "student", name: "학생별" }, { tabId: "item", name: "아이템별" }]}
+        activeTabId={tab}
+        setActiveTabId={(value) => setTab(value as "student" | "item")}
+      />
+      {tab === "student" && (
         <>
-          <Toggle
-            label="모집한 학생 일괄 반영"
-            disabled={!signedIn}
-            initialState={signedIn ? includeRecruitedStudents : false}
-            onChange={handleToggleRecruitedStudents}
-          />
-
-          <Tabs
-            tabs={[{ tabId: "student", name: "학생별" }, { tabId: "item", name: "아이템별" }]}
-            activeTabId={tab}
-            setActiveTabId={(value) => setTab(value as "student" | "item")}
-          />
-          {tab === "student" && (
-            <>
-              <StudentCards mobileGrid={8} pcGrid={12} students={studentCardsData} onSelect={handleSelectBonusStudent} />
-              <div className="my-4 p-3 w-full border border-neutral-200 dark:border-neutral-700 rounded-lg grid grid-cols-2 md:grid-cols-3 gap-3 md:gap-4">
-                {appliedEventRewardBonus.map(({ uid, appliedStrikerRatio, appliedSpecialRatio, maxStrikerRatio, maxSpecialRatio }) => {
-                  return (
-                    <div key={uid} className="flex flex-row items-center gap-2 text-sm text-neutral-700 dark:text-neutral-300">
-                      <ResourceCard itemUid={uid} resourceType={ResourceTypeEnum.Item} rarity={1} />
-                      <div>
-                        <p>적용 : {appliedStrikerRatio.plus(appliedSpecialRatio).mul(100).toFixed(0)}%</p>
-                        <p>최대 : {maxStrikerRatio.plus(maxSpecialRatio).mul(100).toFixed(0)}%</p>
-                      </div>
-                    </div>
-                  );
-                })}
-              </div>
-            </>
-          )}
-          {tab === "item" && (
-            <>
-              {eventRewardBonus.filter(({ rewardBonuses }) => rewardBonuses.length > 0).map(({ uid, name, rewardBonuses }) => {
-                const appliedItemBonus = appliedEventRewardBonus.find(({ uid: appliedUid }) => appliedUid === uid);
-                const appliedRatio = appliedItemBonus?.appliedStrikerRatio.plus(appliedItemBonus?.appliedSpecialRatio) ?? new Decimal(0);
-                const maxRatio = appliedItemBonus?.maxStrikerRatio.plus(appliedItemBonus?.maxSpecialRatio) ?? new Decimal(0);
-                return (
-                  <EventItemBonus
-                    key={uid}
-                    itemUid={uid}
-                    itemName={name}
-                    appliedRatio={appliedRatio}
-                    maxRatio={maxRatio}
-                    rewardBonuses={rewardBonuses}
-                    selectedBonusStudentUids={selectedBonusStudentUids}
-                    setSelectedBonusStudentUid={handleSelectBonusStudent}
-                    signedIn={signedIn}
-                  />
-                );
-              })}
-            </>
-          )}
-
-          <div className="my-4 flex justify-end gap-0.5">
-            <Button text="모두 선택" color="primary" onClick={handleSelectAll} />
-            <Button text="초기화" onClick={handleResetAll} />
+          <StudentCards mobileGrid={8} pcGrid={12} students={studentCardsData} onSelect={handleSelectBonusStudent} />
+          <div className="my-4 p-3 w-full border border-neutral-200 dark:border-neutral-700 rounded-lg grid grid-cols-2 md:grid-cols-3 gap-3 md:gap-4">
+            {appliedEventRewardBonus.map(({ uid, appliedStrikerRatio, appliedSpecialRatio, maxStrikerRatio, maxSpecialRatio }) => {
+              return (
+                <div key={uid} className="flex flex-row items-center gap-2 text-sm text-neutral-700 dark:text-neutral-300">
+                  <ResourceCard itemUid={uid} resourceType={ResourceTypeEnum.Item} rarity={1} />
+                  <div>
+                    <p>적용 : {appliedStrikerRatio.plus(appliedSpecialRatio).mul(100).toFixed(0)}%</p>
+                    <p>최대 : {maxStrikerRatio.plus(maxSpecialRatio).mul(100).toFixed(0)}%</p>
+                  </div>
+                </div>
+              );
+            })}
           </div>
         </>
       )}
-    </div>
+      {tab === "item" && (
+        <>
+          {eventRewardBonus.filter(({ rewardBonuses }) => rewardBonuses.length > 0).map(({ uid, name, rewardBonuses }) => {
+            const appliedItemBonus = appliedEventRewardBonus.find(({ uid: appliedUid }) => appliedUid === uid);
+            const appliedRatio = appliedItemBonus?.appliedStrikerRatio.plus(appliedItemBonus?.appliedSpecialRatio) ?? new Decimal(0);
+            const maxRatio = appliedItemBonus?.maxStrikerRatio.plus(appliedItemBonus?.maxSpecialRatio) ?? new Decimal(0);
+            return (
+              <EventItemBonus
+                key={uid}
+                itemUid={uid}
+                itemName={name}
+                appliedRatio={appliedRatio}
+                maxRatio={maxRatio}
+                rewardBonuses={rewardBonuses}
+                selectedBonusStudentUids={selectedBonusStudentUids}
+                setSelectedBonusStudentUid={handleSelectBonusStudent}
+                signedIn={signedIn}
+              />
+            );
+          })}
+        </>
+      )}
+
+      <div className="my-4 flex justify-end gap-0.5">
+        <Button text="모두 선택" color="primary" onClick={handleSelectAll} />
+        <Button text="초기화" onClick={handleResetAll} />
+      </div>
+    </EventShopSection>
   );
 });
 
