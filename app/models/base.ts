@@ -2,10 +2,10 @@ import type { Env } from "~/env.server";
 
 const cachePrefix = "cache::";
 
-export async function fetchCached<T>(env: Env, dataKey: string, fn: () => Promise<T>, ttl?: number): Promise<T> {
+export async function fetchCached<T>(env: Env, dataKey: string, fn: () => Promise<T>, ttl?: number, forceRefresh = false): Promise<T> {
   const cacheKey = `${cachePrefix}${dataKey}`;
   const cached = await env.KV_USERDATA.get(cacheKey);
-  if (cached) {
+  if (cached && !forceRefresh) {
     return JSON.parse(cached) as T;
   }
 

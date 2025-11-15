@@ -21,7 +21,7 @@ export default function Title({ text, description, className, parentPath }: Titl
           {text}
         </h1>
       </div>
-      {description && <p className="my-4">{description}</p>}
+      {description && <p className="my-4 text-neutral-500 dark:text-neutral-400">{description}</p>}
     </div>
   );
 }

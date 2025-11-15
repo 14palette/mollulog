@@ -1,0 +1,138 @@
+import { useMemo, useState } from "react";
+import { LoaderFunctionArgs, useFetcher, useLoaderData, useOutletContext } from "react-router";
+import { getAuthenticator } from "~/auth/authenticator.server";
+import { ContentTimeline } from "~/components/contents";
+import type { ContentFilterState, ContentTimelineProps } from "~/components/contents";
+import { getUserMemos, getContentsMemos, getFutureContents } from "~/models/content";
+import { getUserFavoritedStudents, getFavoritedCounts } from "~/models/favorite-students";
+import { ActionData as ContentsActionData } from "./api.contents";
+import { ActionData as MemoActionData } from "./api.contents.$uid.memos";
+
+export const loader = async ({ request, context }: LoaderFunctionArgs) => {
+  const { env } = context.cloudflare;
+  const contents = await getFutureContents(env);
+
+  const allStudentUids = contents.flatMap((content) => {
+    if (content.__typename === "Event") {
+      return content.pickups?.map((pickup) => pickup.student?.uid ?? null) ?? [];
+    }
+    return [];
+  }).filter((studentUid) => studentUid !== null);
+
+  const currentUser = await getAuthenticator(env).isAuthenticated(request);
+  const signedIn = currentUser !== null;
+  return {
+    signedIn,
+    contents,
+    favoritedStudents: signedIn ? await getUserFavoritedStudents(env, currentUser.id) : null,
+    favoritedCounts: await getFavoritedCounts(env, allStudentUids),
+    myMemos: signedIn ? await getUserMemos(env, currentUser.id) : [],
+    allMemos: await getContentsMemos(env, contents.map((content) => content.uid), currentUser?.id),
+  };
+};
+
+function equalFavorites(a: { contentUid: string, studentUid: string }, b: { contentUid: string, studentUid: string }): boolean {
+  return a.contentUid === b.contentUid && a.studentUid === b.studentUid;
+}
+
+export default function FutureContents() {
+  const { filter } = useOutletContext<{ filter: ContentFilterState }>();
+
+  const loaderData = useLoaderData<typeof loader>();
+  const { contents, myMemos, allMemos, signedIn } = loaderData;
+
+  const [favoritedStudents, setFavoritedStudents] = useState<{ contentUid: string, studentUid: string }[] | undefined>(
+    loaderData.favoritedStudents?.map((f) => ({ contentUid: f.contentId, studentUid: f.studentId })) ?? undefined
+  );
+  const [favoritedCounts, setFavoritedCounts] = useState(
+    loaderData.favoritedCounts.map((f) => ({ contentUid: f.contentId, studentUid: f.studentId, count: f.count }))
+  );
+
+  const fetcher = useFetcher();
+  const submit = (data: ContentsActionData) => fetcher.submit(data, { action: "/api/contents", method: "post", encType: "application/json" });
+
+  const toggleFavorite = (contentUid: string, studentUid: string, favorited: boolean) => {
+    submit({ favorite: { contentUid, studentUid, favorited } });
+
+    setFavoritedStudents((prev) => {
+      const alreadyFavorited = prev && prev.some((favorite) => equalFavorites(favorite, { contentUid, studentUid }));
+      if (favorited && !alreadyFavorited) {
+        return prev && [...prev, { contentUid, studentUid }];
+      } else if (!favorited && alreadyFavorited) {
+        return prev && prev.filter((fav) => !equalFavorites(fav, { contentUid, studentUid }));
+      }
+    });
+
+    setFavoritedCounts((prev) => {
+      let found = false;
+      const newCounts = prev.map((favorite) => {
+        if (equalFavorites(favorite, { contentUid, studentUid })) {
+          found = true;
+          return { ...favorite, count: favorite.count + (favorited ? 1 : -1) };
+        }
+        return favorite;
+      });
+      if (!found && favorited) {
+        newCounts.push({ contentUid, studentUid, count: 1 });
+      }
+      return newCounts.filter((favorite) => favorite.count > 0);
+    });
+  };
+
+  const filteredContents = useMemo(() => contents.filter((content) => {
+    if (content.__typename === "Event") {
+      if (filter.types.length > 0 && !filter.types.includes(content.eventType)) {
+        return false;
+      } else if (filter.onlyPickups && content.pickups?.length === 0) {
+        return false;
+      }
+      return true;
+    } else if (content.__typename === "Raid") {
+      if (filter.types.length > 0 && !filter.types.includes(content.raidType)) {
+        return false;
+      } else if (filter.onlyPickups) {
+        return false;
+      }
+      return true;
+    }
+    return false;
+  }), [contents, filter]);
+
+  return (
+    <ContentTimeline
+      contents={filteredContents.map((content) => {
+        const contentAttrs: Partial<ContentTimelineProps["contents"][number]> = {
+          ...content,
+          since: new Date(content.since),
+          until: new Date(content.until),
+          myMemo: myMemos.find((memo) => memo.contentId === content.uid) ?? undefined,
+          allMemos: allMemos[content.uid] ?? [],
+        };
+
+        if (content.__typename === "Event") {
+          contentAttrs.contentType = content.eventType;
+          contentAttrs.rerun = content.rerun;
+          contentAttrs.pickups = content.pickups ?? undefined;
+          contentAttrs.link = `/events/${content.uid}`;
+          contentAttrs.hasShopData = content.shopResources?.length > 0;
+        } else if (content.__typename === "Raid") {
+          contentAttrs.contentType = content.raidType;
+          contentAttrs.rerun = false;
+          contentAttrs.link = `/raids/${content.uid}`;
+          contentAttrs.raidInfo = content;
+        }
+
+        return contentAttrs as ContentTimelineProps["contents"][number];
+      })}
+      favoritedStudents={favoritedStudents ?? []}
+      favoritedCounts={favoritedCounts}
+      signedIn={signedIn}
+      onMemoUpdate={(contentUid, body, visibility) => {
+        const actionData: MemoActionData = { body, visibility };
+        fetcher.submit(actionData, { action: `/api/contents/${contentUid}/memos`, method: "post", encType: "application/json" });
+      }}
+      onFavorite={toggleFavorite}
+      isSubmittingMemo={false}
+    />
+  );
+}

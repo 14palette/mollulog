@@ -1,4 +1,4 @@
-import { useState } from "react";
+import { useState, useEffect } from "react";
 import { sanitizeClassName } from "~/prophandlers";
 
 // === FilterButtons
@@ -56,12 +56,11 @@ const buttonColors = {
   purple: "bg-purple-500",
 };
 
-// @deprecated Use FilterButton from navigation instead
 function FilterButton({ text, color, active, onToggle, inBlock }: FilterButtonProps) {
   return (
     <div
       className={sanitizeClassName(`
-        px-3 py-1 flex items-center rounded-full cursor-pointer border border-neutral-200 dark:border-neutral-700 transition-colors
+        px-3 py-1 flex items-center rounded-full cursor-pointer transition-colors
         ${active ?
           "bg-neutral-900 dark:bg-white text-white dark:text-neutral-900" :
           `${inBlock ? "bg-neutral-200" : "bg-neutral-100"} dark:bg-neutral-700 text-neutral-700 dark:text-neutral-200`

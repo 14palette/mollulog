@@ -4,6 +4,10 @@ import { int, sqliteTable, text } from "drizzle-orm/sqlite-core";
 import type { Env } from "~/env.server";
 import { nanoid } from "nanoid/non-secure";
 import { senseisTable } from "./sensei";
+import { graphql } from "~/graphql";
+import { FutureContentsQuery } from "~/graphql/graphql";
+import { runQuery } from "~/lib/baql";
+import { fetchCached } from "./base";
 
 
 type ContentMemo = {
@@ -99,4 +103,41 @@ function visibilityFilter(userId?: number): SQLWrapper[] {
     filters.push(eq(futureContentMemo.userId, userId));
   }
   return filters;
+}
+
+const futureContentsQuery = graphql(`
+  query FutureContents($now: ISO8601DateTime!) {
+    contents(untilAfter: $now, first: 9999) {
+      nodes {
+        __typename uid name since until confirmed
+        ... on Event {
+          eventType: type
+          rerun endless
+          shopResources { uid }
+          pickups {
+            type rerun since until studentName
+            student { uid attackType defenseType role schaleDbId }
+          }
+        }
+        ... on Raid {
+          raidType: type
+          rankVisible boss terrain attackType
+          defenseTypes { defenseType difficulty }
+        }
+      }
+    }
+  }
+`);
+
+export async function getFutureContents(env: Env, forceRefresh = false): Promise<FutureContentsQuery["contents"]["nodes"]> {
+  const truncatedNow = new Date();
+  truncatedNow.setMinutes(0, 0, 0);
+
+  return fetchCached(env, "future-contents", async () => {
+    const { data, error } = await runQuery(futureContentsQuery, { now: truncatedNow });
+    if (error || !data) {
+      throw error ?? "failed to fetch events";
+    }
+    return data.contents.nodes;
+  }, 60 * 10, forceRefresh);
 }

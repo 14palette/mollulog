@@ -20,7 +20,8 @@
 
   "triggers": {
     "crons": [
-      "0 0 * * *"
+      "0 * * * *", // every hour
+      "* * * * *"  // every minute
     ]
   },
 
