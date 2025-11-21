@@ -37,9 +37,9 @@ export default function ContentFilter({ initialFilter, onFilterChange }: Content
     <>
       {/* PC 화면 */}
       <div className="my-8 hidden xl:block">
-        <div className="bg-white dark:bg-neutral-900 rounded-xl p-5 pb-2 border border-neutral-200 dark:border-neutral-900">
+        <div className="rounded-xl p-5 pb-2 border border-neutral-200 dark:border-neutral-700">
           <div className="flex items-center gap-3 mb-4">
-            <div className="p-2 flex items-center justify-center bg-neutral-100 dark:bg-neutral-800 rounded-lg">
+            <div className="p-2 flex items-center justify-center bg-neutral-100 dark:bg-neutral-700 rounded-lg">
               <FunnelIcon className="size-5 text-neutral-600 dark:text-neutral-400" strokeWidth={2} />
             </div>
             <p className="font-bold text-lg">필터</p>

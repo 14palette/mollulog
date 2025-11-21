@@ -28,20 +28,22 @@ export default function ActionCard({ children, actions }: ActionCardProps) {
         {children}
       </div>
 
-      <div className="mt-4 -mb-2 flex items-center justify-end">
-        {remindDangerAction ? (
-          <>
-            <p className="mr-2">정말로 {remindDangerAction.text} 할까요?</p>
-            <ActionButton action={{
-              text: "취소",
-              onClick: () => setRemindDangerAction(null),
-            }} />
-            <ActionButton action={remindDangerAction} />
-          </>
-        ) : actions.map((action, index) => {
-          return <ActionButton key={index} action={action} setRemindDangerAction={setRemindDangerAction} />;
-        })}
-      </div>
+      {actions.length > 0 && (
+        <div className="mt-4 -mb-2 flex items-center justify-end">
+          {remindDangerAction ? (
+            <>
+              <p className="mr-2">정말로 {remindDangerAction.text} 할까요?</p>
+              <ActionButton action={{
+                text: "취소",
+                onClick: () => setRemindDangerAction(null),
+              }} />
+              <ActionButton action={remindDangerAction} />
+            </>
+          ) : actions.map((action, index) => {
+            return <ActionButton key={index} action={action} setRemindDangerAction={setRemindDangerAction} />;
+          })}
+        </div>
+      )}
     </div>
   );
 };
@@ -71,7 +73,7 @@ function ActionButton({ action, setRemindDangerAction }: ActionButtonProps) {
   const button = (
     <button
       type={action.form ? "submit" : "button"}
-      className={`-mx-1 px-4 py-2 hover:bg-neutral-200 dark:hover:bg-neutral-700 ${colorClass} font-bold transition rounded-lg cursor-pointer`}
+      className={`-mx-1 px-4 py-2 hover:bg-neutral-200 dark:hover:bg-neutral-700 ${colorClass} font-semibold text-sm transition rounded-lg cursor-pointer`}
       onClick={buttonOnclick}
     >
       {action.text}

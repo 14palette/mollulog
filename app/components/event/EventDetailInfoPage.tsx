@@ -5,7 +5,7 @@ import { useFetcher } from "react-router";
 import type { PickupType, AttackType, DefenseType, Role, EventType } from "~/models/content.d";
 import EventPickup from "./EventPickup";
 import { SubTitle } from "../atoms/typography";
-import { ContentMemoEditor } from "../molecules/content";
+import ContentMemoEditor from "../contents/ContentMemoEditor";
 import EventInfoCard from "./EventInfoCard";
 
 type EventDetailInfoPageProps = {

@@ -180,15 +180,11 @@ export default function RaidDetail() {
         {currentRaid.rankVisible && (
           <>
             <div className="mt-6 xl:mt-8">
-              <ScreenSelector text={screenTitles.ranks} description="일본 서버 상위 2만명의 편성 정보를 찾아볼 수 있어요" active={screen === "ranks"} onClick={() => setScreen("ranks")} />
-              <ScreenSelector text={screenTitles.statistics} description="학생들이 편성된 횟수의 통계를 확인할 수 있어요" active={screen === "statistics"} onClick={() => setScreen("statistics")} />
-              <ScreenSelector
-                text={screenTitles.videos}
-                description={videoAvailable ? "공략 영상 목록을 확인할 수 있어요" : "공략 영상을 준비중이에요"}
-                active={screen === "videos"}
-                onClick={() => setScreen("videos")}
-                disabled={!videoAvailable}
-              />
+              <ScreenSelector screens={[
+                { text: screenTitles.ranks, description: "일본 서버 상위 2만명의 편성 정보를 찾아볼 수 있어요", active: screen === "ranks", onClick: () => setScreen("ranks") },
+                { text: screenTitles.statistics, description: "학생들이 편성된 횟수의 통계를 확인할 수 있어요", active: screen === "statistics", onClick: () => setScreen("statistics") },
+                { text: screenTitles.videos, description: videoAvailable ? "공략 영상 목록을 확인할 수 있어요" : "공략 영상을 준비중이에요", active: screen === "videos", onClick: () => setScreen("videos"), disabled: !videoAvailable },
+              ]} />
             </div>
             {screen === "ranks" && (
               <>

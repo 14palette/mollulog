@@ -1,12 +1,25 @@
-import { useMemo, useState } from "react";
-import { LoaderFunctionArgs, useFetcher, useLoaderData, useOutletContext } from "react-router";
+import { useEffect, useMemo, useState } from "react";
+import { LoaderFunctionArgs, MetaFunction, useFetcher, useLoaderData, useOutletContext } from "react-router";
 import { getAuthenticator } from "~/auth/authenticator.server";
-import { ContentTimeline } from "~/components/contents";
+import { ContentFilter, ContentTimeline } from "~/components/contents";
 import type { ContentFilterState, ContentTimelineProps } from "~/components/contents";
 import { getUserMemos, getContentsMemos, getFutureContents } from "~/models/content";
 import { getUserFavoritedStudents, getFavoritedCounts } from "~/models/favorite-students";
 import { ActionData as ContentsActionData } from "./api.contents";
 import { ActionData as MemoActionData } from "./api.contents.$uid.memos";
+
+export const meta: MetaFunction = () => {
+  const title = "블루 아카이브 이벤트, 픽업 미래시";
+  const description = "블루 아카이브 한국 서버의 이벤트 및 총력전, 픽업 미래시 정보 모음";
+  return [
+    { title: `${title} | 몰루로그` },
+    { name: "description", content: description },
+    { name: "og:title", content: title },
+    { name: "og:description", content: description },
+    { name: "twitter:title", content: title },
+    { name: "twitter:description", content: description },
+  ];
+};
 
 export const loader = async ({ request, context }: LoaderFunctionArgs) => {
   const { env } = context.cloudflare;
@@ -35,8 +48,38 @@ function equalFavorites(a: { contentUid: string, studentUid: string }, b: { cont
   return a.contentUid === b.contentUid && a.studentUid === b.studentUid;
 }
 
+const futuresContentFilterKey = "futures::content-filter";
+
 export default function FutureContents() {
-  const { filter } = useOutletContext<{ filter: ContentFilterState }>();
+  const { setPanel } = useOutletContext<{ setPanel: (panel: React.ReactNode) => void }>();
+  // Initialize with default value to ensure server/client match
+  const [filter, setFilter] = useState<ContentFilterState>({ types: [], onlyPickups: false });
+  const [isHydrated, setIsHydrated] = useState(false);
+
+  // Load from localStorage after hydration
+  useEffect(() => {
+    setIsHydrated(true);
+    const saved = localStorage.getItem(futuresContentFilterKey);
+    if (saved) {
+      try {
+        const parsed = JSON.parse(saved);
+        setFilter(parsed);
+        setPanel(<ContentFilter initialFilter={parsed} onFilterChange={setFilter} />);
+      } catch (e) {
+        console.warn("Failed to parse saved content filter:", e);
+      }
+    }
+
+    return () => {
+      setPanel(null);
+    };
+  }, []);
+
+  useEffect(() => {
+    if (isHydrated) {
+      localStorage.setItem(futuresContentFilterKey, JSON.stringify(filter));
+    }
+  }, [filter, isHydrated]);
 
   const loaderData = useLoaderData<typeof loader>();
   const { contents, myMemos, allMemos, signedIn } = loaderData;

@@ -131,7 +131,7 @@ function MenuContent({ currentUsername, pathname, onMenuClose, onShowSignIn, onD
 
       <div className="my-2 grid grid-cols-3 gap-2">
         <UtilItem name={"인연 랭크\n계산기"} to="/utils/relationship" OutlineIcon={HeartIconOutline} SolidIcon={HeartIconSolid} isActive={pathname.startsWith("/utils/relationship")} onItemClick={onMenuClose} />
-        <UtilItem name={"이벤트 소탕\n계산기"} to="/events/ive-alive-rerun?page=shop" OutlineIcon={BoltIconOutline} SolidIcon={BoltIconSolid} isActive={false} onItemClick={onMenuClose} />
+        <UtilItem name={"이벤트 소탕\n계산기"} to="/events/hyakuyori-izuru-ichirinnno?page=shop" OutlineIcon={BoltIconOutline} SolidIcon={BoltIconSolid} isActive={false} onItemClick={onMenuClose} />
         <UtilItem name={"총력전 점수\n계산기"} to="/utils/raidscore" OutlineIcon={ClockIconOutline} SolidIcon={ClockIconSolid} isActive={pathname.startsWith("/utils/raidscore")} onItemClick={onMenuClose} />
       </div>
 
