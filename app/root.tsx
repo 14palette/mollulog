@@ -71,8 +71,8 @@ export function Layout({ children }: { children: React.ReactNode }) {
   );
 }
 
-const wideLayout = ["/futures", "/utils/relationship"];
-const fullLayout = ["/raids"]
+const wideLayout = ["/utils/relationship"];
+const fullLayout = ["/raids", "/futures", "/utils/pyroxene"];
 
 type Banner = {
   message: string;

@@ -5,12 +5,13 @@ import { ChevronRightIcon, ChartBarIcon, ClockIcon, CheckCircleIcon, Exclamation
 import { ArrowTopRightOnSquareIcon, IdentificationIcon, HeartIcon as EmptyHeartIcon } from "@heroicons/react/24/outline";
 import { HeartIcon as FilledHeartIcon } from "@heroicons/react/24/solid";
 import type { AttackType, DefenseType, EventType, PickupType, RaidType, Role, Terrain } from "~/models/content.d";
-import { attackTypeColor, attackTypeLocale, contentTypeLocale, defenseTypeColor, defenseTypeLocale, difficultyLocale, pickupLabelLocale, terrainLocale } from "~/locales/ko";
+import { attackTypeColor, attackTypeLocale, contentTypeLocale, defenseTypeColor, defenseTypeLocale, pickupLabelLocale, terrainLocale } from "~/locales/ko";
 import { bossImageUrl } from "~/models/assets";
 import { StudentCards } from "~/components/molecules/student";
-import { ContentMemoEditor, ContentMemoView } from "~/components/molecules/content";
 import { OptionBadge } from "~/components/atoms/student";
 import { BottomSheet } from "~/components/atoms/layout";
+import ContentMemoEditor from "./ContentMemoEditor";
+import ContentMemoView from "./ContentMemoView";
 
 export type ContentTimelineItemProps = {
   uid: string;
@@ -94,12 +95,10 @@ function ContentTitles({ name, showLink }: { name: string, showLink: boolean }):
 
 const MEMO_CONTENT_TYPES = ["event", "pickup", "fes", "immortal_event", "main_story"];
 
-export default function ContentTimelineItem(
-  {
-    name, contentType, rerun, endless, since, until, link, confirmed, hasShopData, raidInfo, pickups,
-    allMemos, myMemo, onUpdateMemo, isSubmittingMemo, favoritedStudents, favoritedCounts, onFavorite, signedIn,
-  }: ContentTimelineItemProps,
-) {
+export function ContentTimelineItem({
+  name, contentType, rerun, endless, since, until, link, confirmed, hasShopData, raidInfo, pickups,
+  allMemos, myMemo, onUpdateMemo, isSubmittingMemo, favoritedStudents, favoritedCounts, onFavorite, signedIn,
+}: ContentTimelineItemProps) {
   const showMemo = MEMO_CONTENT_TYPES.includes(contentType) && (pickups && pickups.length > 0);
   const [memoEditing, setMemoEditing] = useState(false);
 
@@ -145,7 +144,7 @@ export default function ContentTimelineItem(
         {raidInfo.defenseTypes.length > 1 && (
           <div className="flex gap-x-1">
             {raidInfo.defenseTypes.map(({ defenseType }) => (
-              <OptionBadge text={defenseTypeLocale[defenseType]} color={defenseTypeColor[defenseType]} bgColor="dark" />
+              <OptionBadge key={defenseType} text={defenseTypeLocale[defenseType]} color={defenseTypeColor[defenseType]} bgColor="dark" />
             ))}
           </div>
         )}

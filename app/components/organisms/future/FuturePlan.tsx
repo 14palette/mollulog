@@ -152,11 +152,13 @@ export default function FuturePlan({ event, favoritedStudents, memo, isMe }: Fut
           </Link>
           <p className="mt-1 text-xs text-neutral-500 dark:text-neutral-400">{since.format("YYYY-MM-DD")} ~ {until.format("YYYY-MM-DD")}</p>
         </div>
-        <div className="shrink-0">
-          <div className="inline-flex items-center justify-center rounded-md border border-neutral-300 dark:border-neutral-700 px-2 py-1">
-            <p className="text-base font-bold">D-{dDay}</p>
+        {dDay > 0 && (
+          <div className="shrink-0">
+            <div className="inline-flex items-center justify-center rounded-md border border-neutral-300 dark:border-neutral-700 px-2 py-1">
+              <p className="text-base font-bold">D-{dDay}</p>
+            </div>
           </div>
-        </div>
+        )}
       </div>
 
       {/* Students */}

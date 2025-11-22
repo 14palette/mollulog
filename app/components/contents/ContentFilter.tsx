@@ -1,25 +1,22 @@
-import { FunnelIcon, HeartIcon as EmptyHeartIcon } from "@heroicons/react/24/outline";
-import { HeartIcon as FilledHeartIcon } from "@heroicons/react/16/solid";
+import { FunnelIcon } from "@heroicons/react/24/outline";
 import { useState } from "react";
-import { Link } from "react-router";
-import FilterButtons from "./FilterButtons";
 import type { EventType, RaidType } from "~/models/content.d";
 import { Toggle } from "~/components/atoms/form";
 import { BottomSheet } from "~/components/atoms/layout";
+import { FilterButtons } from "~/components/navigation";
 
-export type ContentFilter = {
+export type ContentFilterState = {
   types: (EventType | RaidType)[];
   onlyPickups: boolean;
 };
 
 type ContentFilterProps = {
-  initialFilter: ContentFilter;
-  onFilterChange: (filter: ContentFilter) => void;
-  signedIn: boolean;
+  initialFilter: ContentFilterState;
+  onFilterChange: (filter: ContentFilterState) => void;
 };
 
-export default function ContentFilter({ initialFilter, onFilterChange, signedIn }: ContentFilterProps) {
-  const [filter, setFilter] = useState<ContentFilter>(initialFilter);
+export default function ContentFilter({ initialFilter, onFilterChange }: ContentFilterProps) {
+  const [filter, setFilter] = useState<ContentFilterState>(initialFilter);
   const [isMobileSheetOpen, setIsMobileSheetOpen] = useState(false);
 
   const onToggleType = (activated: boolean, types: (EventType | RaidType)[]) => {
@@ -39,45 +36,27 @@ export default function ContentFilter({ initialFilter, onFilterChange, signedIn 
   return (
     <>
       {/* PC 화면 */}
-      <div className="hidden xl:block">
-        <div className="bg-white dark:bg-neutral-900 rounded-xl xl:shadow-lg p-6 border border-neutral-100 dark:border-neutral-900">
+      <div className="my-8 hidden xl:block">
+        <div className="rounded-xl p-5 pb-2 border border-neutral-200 dark:border-neutral-700">
           <div className="flex items-center gap-3 mb-4">
-            <div className="p-3 flex items-center justify-center bg-neutral-100 dark:bg-neutral-800 rounded-lg">
+            <div className="p-2 flex items-center justify-center bg-neutral-100 dark:bg-neutral-700 rounded-lg">
               <FunnelIcon className="size-5 text-neutral-600 dark:text-neutral-400" strokeWidth={2} />
             </div>
             <p className="font-bold text-lg">필터</p>
           </div>
-          <FilterContent
+          <ContentFilterContent
             filter={filter}
             onToggleType={onToggleType}
             onToggleOnlyPickups={onToggleOnlyPickups}
           />
-
-          {signedIn && (
-            <div className="mt-6">
-              <Link to="/my?path=futures" className="flex items-center justify-center gap-1 w-full px-4 py-3 bg-neutral-100 dark:bg-neutral-800 hover:bg-neutral-200 dark:hover:bg-neutral-700 text-neutral-600 dark:text-neutral-400 rounded-lg transition-colors">
-                <FilledHeartIcon className="size-5" />
-                <span className="font-medium">내 관심 학생</span>
-              </Link>
-            </div>
-          )}
         </div>
       </div>
 
       {/* 모바일 화면 필터 표시 버튼 */}
       <div className="xl:hidden fixed bottom-6 right-4 z-40 flex gap-1">
-        {signedIn && (
-          <Link to="/my?path=futures">
-            <div className="flex items-center gap-2 px-4 py-3 bg-white/90 dark:bg-neutral-900/80 backdrop-blur-sm border border-neutral-200 dark:border-neutral-700 text-neutral-700 dark:text-neutral-300 hover:bg-neutral-50 dark:hover:bg-neutral-700 rounded-full shadow-lg transition-colors">
-              <EmptyHeartIcon className="size-5" />
-              <span className="font-medium">관심 학생</span>
-            </div>
-          </Link>
-        )}
-
         <button
           onClick={() => setIsMobileSheetOpen(true)}
-          className="flex items-center gap-2 px-4 py-3 bg-white/90 dark:bg-neutral-900/80 backdrop-blur-sm border border-neutral-200 dark:border-neutral-700 text-neutral-700 dark:text-neutral-300 hover:bg-neutral-50 dark:hover:bg-neutral-700 rounded-full shadow-lg transition-colors"
+          className="flex items-center gap-2 p-3 bg-white/90 dark:bg-neutral-900/80 backdrop-blur-sm border border-neutral-200 dark:border-neutral-700 text-neutral-700 dark:text-neutral-300 hover:bg-neutral-50 dark:hover:bg-neutral-700 rounded-full shadow-lg transition-colors"
         >
           <FunnelIcon className="size-5" strokeWidth={2} />
           <span>필터</span>
@@ -87,7 +66,7 @@ export default function ContentFilter({ initialFilter, onFilterChange, signedIn 
       {/* 모바일 화면 바텀 시트 */}
       {isMobileSheetOpen && (
         <BottomSheet Icon={FunnelIcon} title="필터" onClose={() => setIsMobileSheetOpen(false)}>
-          <FilterContent
+          <ContentFilterContent
             filter={filter}
             onToggleType={onToggleType}
             onToggleOnlyPickups={onToggleOnlyPickups}
@@ -99,13 +78,13 @@ export default function ContentFilter({ initialFilter, onFilterChange, signedIn 
 }
 
 
-type FilterContentProps = {
-  filter: ContentFilter;
+type ContentFilterContentProps = {
+  filter: ContentFilterState;
   onToggleType: (activated: boolean, types: (EventType | RaidType)[]) => void;
   onToggleOnlyPickups: (activated: boolean) => void;
 };
 
-function FilterContent({ filter, onToggleType, onToggleOnlyPickups }: FilterContentProps) {
+function ContentFilterContent({ filter, onToggleType, onToggleOnlyPickups }: ContentFilterContentProps) {
   const eventFilterProps = [
     { text: "메인 이벤트", active: filter.types.some(type => ["event", "immortal_event", "fes", "collab"].includes(type)), onToggle: (activated: boolean) => onToggleType(activated, ["event", "immortal_event", "fes", "collab"]) },
     { text: "미니 이벤트", active: filter.types.includes("mini_event"), onToggle: (activated: boolean) => onToggleType(activated, ["mini_event"]) },

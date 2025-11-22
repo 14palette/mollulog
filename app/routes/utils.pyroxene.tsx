@@ -1,0 +1,383 @@
+import { useEffect, useMemo, useState } from "react";
+import { MetaFunction, redirect, useFetcher, useLoaderData, useRevalidator, type ActionFunctionArgs, type LoaderFunctionArgs } from "react-router";
+import { ChartBarIcon, HeartIcon, PlusIcon } from "@heroicons/react/24/outline";
+import { LockClosedIcon } from "@heroicons/react/24/solid";
+import { getAuthenticator } from "~/auth/authenticator.server";
+import { PyroxenePlannerInputPanel, PyroxenePlannerOptionsPanel, PyroxeneSchedule } from "~/components/futures";
+import type { PickupResources, PyroxeneScheduleItem } from "~/components/futures";
+import type { PyroxenePlannerOptions } from "~/models/pyroxene-planner";
+import Page from "~/components/navigation/Page";
+import { getUserFavoritedStudents } from "~/models/favorite-students";
+import {
+  createPyroxeneOwnedResource,
+  createBuyPyroxene,
+  deletePyroxeneOwnedResourceByEventUid,
+  deletePyroxeneTimelineItem,
+  getLatestPyroxeneOwnedResource,
+  getLatestPyroxeneOwnedResourceWithEventUid,
+  getPyroxeneTimelineItems,
+  createPyroxenePackage,
+  createAttendance,
+  createOtherPyroxeneGain,
+  getPyroxenePlannerOptions,
+  upsertPyroxenePlannerOptions,
+  getPyroxenePlannerContents,
+} from "~/models/pyroxene-planner";
+import { ErrorPage } from "~/components/organisms/error";
+
+
+export const loader = async ({ request, context }: LoaderFunctionArgs) => {
+  const { env } = context.cloudflare;
+  const contents = await getPyroxenePlannerContents(env);
+
+  const currentUser = await getAuthenticator(env).isAuthenticated(request);
+  if (!currentUser) {
+    return {
+      contents,
+      favoritedStudents: [],
+      latestResources: {
+        pyroxene: 0,
+        oneTimeTicket: 0,
+        tenTimeTicket: 0,
+        inputAt: null,
+      },
+      latestResourceAfterPickup: {
+        uid: null,
+        pyroxene: 0,
+        oneTimeTicket: 0,
+        tenTimeTicket: 0,
+        eventUid: null,
+      },
+      timelineItems: [],
+      calcOptions: null,
+    };
+  }
+
+  const favoritedStudents = await getUserFavoritedStudents(env, currentUser.id);
+  const latestResources = await getLatestPyroxeneOwnedResource(env, currentUser.id);
+  const latestResourceAfterPickup = await getLatestPyroxeneOwnedResourceWithEventUid(env, currentUser.id);
+  const savedOptions = await getPyroxenePlannerOptions(env, currentUser.id);
+  return {
+    signedIn: currentUser !== null,
+    contents,
+    favoritedStudents: favoritedStudents.map(({ contentId, studentId }) => ({ contentUid: contentId, studentUid: studentId })),
+    latestResources: {
+      pyroxene: latestResources?.pyroxene ?? 0,
+      oneTimeTicket: latestResources?.oneTimeTicket ?? 0,
+      tenTimeTicket: latestResources?.tenTimeTicket ?? 0,
+      inputAt: latestResources?.inputAt ?? null,
+    },
+    latestResourceAfterPickup: {
+      uid: latestResourceAfterPickup?.uid ?? null,
+      pyroxene: latestResourceAfterPickup?.pyroxene ?? 0,
+      oneTimeTicket: latestResourceAfterPickup?.oneTimeTicket ?? 0,
+      tenTimeTicket: latestResourceAfterPickup?.tenTimeTicket ?? 0,
+      eventUid: latestResourceAfterPickup?.eventUid ?? null,
+    },
+    timelineItems: await getPyroxeneTimelineItems(env, currentUser.id),
+    calcOptions: savedOptions,
+  };
+};
+
+export type ActionData = {
+  createData: {
+    ownedResources?: {
+      eventUid: string | null;
+      pyroxene: number;
+      oneTimeTicket: number;
+      tenTimeTicket: number;
+    };
+    buy?: {
+      quantity: number;
+      date: Date;
+    };
+    package?: {
+      startDate: Date;
+      packageType: "half" | "full";
+    };
+    attendance?: {
+      startDate: Date;
+    };
+    other?: {
+      resources: PickupResources;
+      description: string;
+      date: Date;
+    };
+  };
+
+  deleteData: {
+    ownedResourceEventUid?: string | null;
+    itemUid?: string;
+  };
+
+  calcOptions?: PyroxenePlannerOptions;
+};
+
+export const action = async ({ request, context }: ActionFunctionArgs) => {
+  const env = context.cloudflare.env;
+  const currentUser = await getAuthenticator(env).isAuthenticated(request);
+  if (!currentUser) {
+    return { success: false };
+  }
+
+  const { createData, deleteData, calcOptions } = await request.json<ActionData>();
+  if (request.method === "POST" && createData) {
+    if (createData.ownedResources !== undefined) {
+      await createPyroxeneOwnedResource(env, currentUser.id, createData.ownedResources.eventUid, createData.ownedResources);
+    }
+    if (createData.buy?.quantity !== undefined) {
+      await createBuyPyroxene(env, currentUser.id, createData.buy.date, createData.buy.quantity);
+    }
+    if (createData.package?.startDate !== undefined) {
+      await createPyroxenePackage(env, currentUser.id, createData.package.startDate, createData.package.packageType);
+    }
+    if (createData.attendance?.startDate !== undefined) {
+      await createAttendance(env, currentUser.id, createData.attendance.startDate);
+    }
+    if (createData.other?.resources !== undefined) {
+      const { pyroxene, oneTimeTicket, tenTimeTicket } = createData.other.resources;
+      await createOtherPyroxeneGain(env, currentUser.id, createData.other.date, pyroxene, oneTimeTicket, tenTimeTicket, createData.other.description);
+    }
+  } else if (request.method === "POST" && calcOptions) {
+    await upsertPyroxenePlannerOptions(env, currentUser.id, calcOptions);
+  } else if (request.method === "DELETE" && deleteData) {
+    if (deleteData.ownedResourceEventUid) {
+      await deletePyroxeneOwnedResourceByEventUid(env, currentUser.id, deleteData.ownedResourceEventUid);
+    }
+    if (deleteData.itemUid) {
+      await deletePyroxeneTimelineItem(env, currentUser.id, deleteData.itemUid);
+    }
+  }
+  return { success: true };
+};
+
+export const meta: MetaFunction = () => {
+  const title = "청휘석 플래너";
+  const description = "현재 보유 재화, 각종 수급 계획을 바탕으로 관심 학생 모집 시점의 재화 수량을 예상해보세요";
+  return [
+    { title: `${title} | 몰루로그` },
+    { name: "description", content: description },
+    { name: "og:title", content: title },
+    { name: "og:description", content: description },
+    { name: "twitter:title", content: title },
+    { name: "twitter:description", content: description },
+  ];
+};
+
+export default function PyroxenePlanner() {
+  const loaderData = useLoaderData<typeof loader>();
+  const { signedIn, contents, favoritedStudents, timelineItems } = loaderData;
+
+  const [initialDate, setInitialDate] = useState<Date | null>(loaderData.latestResources.inputAt ? new Date(loaderData.latestResources.inputAt) : null);
+  const [initialResources, setInitialResources] = useState<PickupResources>(loaderData.latestResources);
+
+  const fetcher = useFetcher<typeof action>();
+  const revalidator = useRevalidator();
+  const [revalidated, setRevalidated] = useState(false);
+
+  const handleSaveOwnedResources = (eventUid: string | null, resources: PickupResources) => {
+    setRevalidated(false);
+    fetcher.submit(
+      { createData: { ownedResources: { eventUid, ...resources } } },
+      { method: "POST", encType: "application/json" },
+    );
+  };
+
+  const handleDeletePickupComplete = (eventUid: string) => {
+    setRevalidated(false);
+    fetcher.submit(
+      { deleteData: { ownedResourceEventUid: eventUid } },
+      { method: "DELETE", encType: "application/json" },
+    );
+  };
+
+  const handleDeleteItem = (itemUid: string) => {
+    setRevalidated(false);
+    fetcher.submit(
+      { deleteData: { itemUid } },
+      { method: "DELETE", encType: "application/json" },
+    );
+  };
+
+  const handleSaveBuy = (quantity: number, date: Date) => {
+    setRevalidated(false);
+    fetcher.submit(
+      { createData: { buy: { quantity, date: date.toISOString() } } },
+      { method: "POST", encType: "application/json" },
+    );
+  };
+
+  const handleSavePackage = (startDate: Date, packageType: "half" | "full") => {
+    setRevalidated(false);
+    fetcher.submit(
+      { createData: { package: { startDate: startDate.toISOString(), packageType } } },
+      { method: "POST", encType: "application/json" },
+    );
+  };
+
+  const handleSaveAttendance = (startDate: Date) => {
+    setRevalidated(false);
+    fetcher.submit(
+      { createData: { attendance: { startDate: startDate.toISOString() } } },
+      { method: "POST", encType: "application/json" },
+    );
+  };
+
+  const handleSaveOther = (resources: PickupResources, description: string, date: Date) => {
+    setRevalidated(false);
+    fetcher.submit(
+      { createData: { other: { resources, description, date: date.toISOString() } } },
+      { method: "POST", encType: "application/json" },
+    );
+  };
+
+  // Update state when loader data changes (e.g., after revalidation)
+  useEffect(() => {
+    setInitialDate(loaderData.latestResources.inputAt ? new Date(loaderData.latestResources.inputAt) : null);
+    setInitialResources(loaderData.latestResources);
+  }, [loaderData.latestResources]);
+
+  useEffect(() => {
+    if (loaderData.calcOptions) {
+      setOptions(loaderData.calcOptions);
+    }
+  }, [loaderData.calcOptions]);
+
+  useEffect(() => {
+    if (!revalidated && fetcher.data && !fetcher.data.success && fetcher.state === "idle") {
+      revalidator.revalidate();
+      setRevalidated(true);
+    }
+  }, [fetcher.data, fetcher.state, fetcher.formMethod, revalidator, revalidated]);
+
+  const defaultOptions: PyroxenePlannerOptions = {
+    event: {
+      pickupChance: "ceil",
+    },
+    raid: {
+      tier: "platinum",
+    },
+    tactical: {
+      level: "in100",
+    },
+    timeline: {
+      display: ["event", "raid", "buy", "package_onetime"],
+    },
+  };
+
+  const [options, setOptions] = useState<PyroxenePlannerOptions>(
+    loaderData.calcOptions ?? defaultOptions
+  );
+
+  const scheduleItems = useMemo(() => {
+    const items: PyroxeneScheduleItem[] = [];
+    contents.forEach((content) => {
+      if (content.__typename === "Event") {
+        items.push({
+          event: {
+            ...content,
+            pickups: content.pickups.map((pickup) => ({
+              ...pickup,
+              favorited: favoritedStudents.some(({ contentUid, studentUid }) => contentUid === content.uid && studentUid === pickup.student?.uid),
+            })),
+          },
+        });
+      } else if (content.__typename === "Raid") {
+        items.push({ raid: content });
+      }
+    });
+    timelineItems.forEach((item) => {
+      if (item.source === "buy") {
+        items.push({
+          onetimeGain: { uid: item.uid, source: "buy", description: item.description, date: new Date(item.eventAt), pyroxeneDelta: item.pyroxeneDelta },
+        });
+      } else if (item.source === "package_onetime") {
+        items.push({
+          onetimeGain: { uid: item.uid, source: "package_onetime", description: item.description, date: new Date(item.eventAt), pyroxeneDelta: item.pyroxeneDelta },
+        });
+      } else if (item.source === "package_daily") {
+        items.push({
+          repeatedGain: {
+            source: "package_daily", description: item.description, date: new Date(item.eventAt),
+            pyroxeneDelta: item.pyroxeneDelta,
+            repeatIntervalDays: item.repeatIntervalDays!,
+            repeatCount: item.repeatCount!,
+          },
+        });
+      } else if (item.source === "attendance") {
+        items.push({
+          repeatedGain: {
+            source: "attendance", description: item.description, date: new Date(item.eventAt),
+            pyroxeneDelta: item.pyroxeneDelta, repeatIntervalDays: item.repeatIntervalDays!,
+          },
+        });
+      } else if (item.source === "other") {
+        items.push({
+          onetimeGain: {
+            uid: item.uid, source: "other", description: item.description, date: new Date(item.eventAt),
+            pyroxeneDelta: item.pyroxeneDelta, oneTimeTicketDelta: item.oneTimeTicketDelta, tenTimeTicketDelta: item.tenTimeTicketDelta
+          },
+        });
+      }
+    });
+    return items;
+  }, [contents, favoritedStudents, timelineItems]);
+
+  return (
+    <Page
+      title="청휘석 플래너"
+      description="현재 보유 재화, 각종 수급 계획을 바탕으로 관심 학생 모집 시점의 재화 수량을 예상해보세요"
+      links={[
+        {
+          Icon: HeartIcon,
+          title: "관심학생 등록",
+          description: "미래시 페이지에서 등록할 수 있어요",
+          to: "/futures",
+        },
+      ]}
+      panels={[
+        {
+          title: "플래너 설정",
+          Icon: ChartBarIcon,
+          description: "획득/소비 계산 조건을 선택해주세요",
+          foldable: signedIn,
+          children: <PyroxenePlannerOptionsPanel options={options} onOptionsChange={(newOptions) => {
+            setOptions(newOptions);
+            fetcher.submit(
+              { calcOptions: newOptions },
+              { method: "POST", encType: "application/json" },
+            );
+          }} />,
+        },
+        {
+          title: "재화 수급처",
+          Icon: PlusIcon,
+          description: "재화 획득 날짜와 수량을 입력해주세요",
+          foldable: true,
+          disabled: !signedIn,
+          children: <PyroxenePlannerInputPanel
+            onSaveBuy={(quantity, date) => handleSaveBuy(quantity, date)}
+            onSavePackage={(startDate, packageType) => handleSavePackage(startDate, packageType)}
+            onSaveAttendance={(startDate) => handleSaveAttendance(startDate)}
+            onSaveOther={(resources, description, date) => handleSaveOther(resources, description, date)}
+          />,
+        },
+      ]}
+    >
+      {signedIn ? (
+        <PyroxeneSchedule
+          initialDate={initialDate}
+          initialResources={initialResources}
+          latestEventUid={loaderData.latestResourceAfterPickup.eventUid}
+          scheduleItems={scheduleItems}
+          options={options}
+          onPickupComplete={(eventUid, resources) => handleSaveOwnedResources(eventUid, resources)}
+          onDeletePickupComplete={(eventUid) => handleDeletePickupComplete(eventUid)}
+          onDeleteItem={(itemUid) => handleDeleteItem(itemUid)}
+        />
+      ) : (
+        <ErrorPage Icon={LockClosedIcon} message="로그인 후 이용할 수 있어요" showButtons={false} />
+      )}
+    </Page>
+  )
+}
