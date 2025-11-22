@@ -1,6 +1,4 @@
 import { useState } from "react";
-import { PlusIcon } from "@heroicons/react/24/outline";
-import { ScreenPanel } from "~/components/navigation";
 import FilterButtons from "~/components/navigation/FilterButtons";
 import type { PickupResources } from ".";
 import ResourcesInput from "./planner-input/ResourcesInput";
@@ -28,7 +26,7 @@ export default function PyroxenePlannerInputPanel({ onSaveBuy, onSavePackage, on
   };
 
   return (
-    <ScreenPanel Icon={PlusIcon} title="재화 수급처" description="재화 획득 날짜와 수량을 입력해주세요" foldable>
+    <>
       <div className="mb-2">
         <FilterButtons
           buttonProps={[
@@ -92,6 +90,6 @@ export default function PyroxenePlannerInputPanel({ onSaveBuy, onSavePackage, on
           />
         )}
       </div>
-    </ScreenPanel>
+    </>
   );
 }

@@ -4,7 +4,49 @@ import { and, eq, isNotNull, like, or, sql } from "drizzle-orm";
 import { drizzle } from "drizzle-orm/d1";
 import { sqliteTable, text, int } from "drizzle-orm/sqlite-core";
 import type { Env } from "~/env.server";
+import { graphql } from "~/graphql";
+import { runQuery } from "~/lib/baql";
+import { PyroxenePlannerContentsQuery } from "~/graphql/graphql";
+import { fetchCached } from "./base";
 
+
+/**
+ * Pyroxene Planner Contents
+ */
+export const pyroxenePlannerContentsQuery = graphql(`
+  query PyroxenePlannerContents($now: ISO8601DateTime!) {
+    contents(untilAfter: $now, first: 9999) {
+      nodes {
+        __typename uid name since until
+        ... on Event {
+          pickups {
+            type rerun
+            student { uid initialTier }
+          }
+        }
+        ... on Raid {
+          type
+        }
+      }
+    }
+  }
+`);
+
+export async function getPyroxenePlannerContents(env: Env, forceRefresh = false): Promise<PyroxenePlannerContentsQuery["contents"]["nodes"]> {
+  const now = new Date();
+  return fetchCached(env, "pyroxene-planner-contents", async () => {
+    const { data, error } = await runQuery(pyroxenePlannerContentsQuery, { now });
+    if (error || !data) {
+      throw error ?? "failed to fetch pyroxene planner contents";
+    }
+    return data.contents.nodes;
+  }, 60 * 10, forceRefresh);
+}
+
+
+/**
+ * Pyroxene Owned Resources
+ */
 export const pyroxeneOwnedResourcesTable = sqliteTable("pyroxene_owned_resources", {
   id: int().primaryKey({ autoIncrement: true }),
   uid: text().notNull(),
@@ -69,14 +111,10 @@ export async function createPyroxeneOwnedResource(
 ): Promise<void> {
   const db = drizzle(env.DB);
   const uid = nanoid(8);
+  const inputAt = new Date().toISOString();
+  const { pyroxene, oneTimeTicket, tenTimeTicket } = resources;
   await db.insert(pyroxeneOwnedResourcesTable)
-    .values({ uid, userId, eventUid, inputAt: new Date().toISOString(), ...resources });
-}
-
-export async function deletePyroxeneOwnedResource(env: Env, userId: number, uid: string): Promise<void> {
-  const db = drizzle(env.DB);
-  await db.delete(pyroxeneOwnedResourcesTable)
-    .where(and(eq(pyroxeneOwnedResourcesTable.userId, userId), eq(pyroxeneOwnedResourcesTable.uid, uid)));
+    .values({ uid, userId, eventUid, inputAt, pyroxene, oneTimeTicket, tenTimeTicket });
 }
 
 export async function deletePyroxeneOwnedResourceByEventUid(env: Env, userId: number, eventUid: string): Promise<void> {
@@ -85,6 +123,9 @@ export async function deletePyroxeneOwnedResourceByEventUid(env: Env, userId: nu
     .where(and(eq(pyroxeneOwnedResourcesTable.userId, userId), eq(pyroxeneOwnedResourcesTable.eventUid, eventUid)));
 }
 
+/**
+ * Pyroxene Timeline Items
+ */
 export const pyroxeneTimelineItemsTable = sqliteTable("pyroxene_timeline_items", {
   id: int().primaryKey({ autoIncrement: true }),
   uid: text().notNull(),
@@ -156,14 +197,13 @@ export async function createBuyPyroxene(env: Env, userId: number, date: Date, qu
 
 export async function deletePyroxeneTimelineItem(env: Env, userId: number, uid: string): Promise<void> {
   const db = drizzle(env.DB);
-  const parsedUid = uid.split("-")[0];
+  const parsedUid = uid.split("::")[0];
   await db.delete(pyroxeneTimelineItemsTable)
     .where(and(
       eq(pyroxeneTimelineItemsTable.userId, userId),
       or(eq(pyroxeneTimelineItemsTable.uid, parsedUid), like(pyroxeneTimelineItemsTable.uid, `${parsedUid}%`)),
     ));
 }
-
 
 export async function createPyroxenePackage(env: Env, userId: number, startDate: Date, packageType: "half" | "full"): Promise<void> {
   const uid = nanoid(8);
@@ -177,7 +217,7 @@ export async function createPyroxenePackage(env: Env, userId: number, startDate:
   await db.insert(pyroxeneTimelineItemsTable)
     .values([
       {
-        uid: `${uid}-onetime`,
+        uid: `${uid}::onetime`,
         userId, eventAt,
         source: "package_onetime",
         description: `${packageName} (초회)`,
@@ -186,7 +226,7 @@ export async function createPyroxenePackage(env: Env, userId: number, startDate:
         tenTimeTicketDelta: 0,
       },
       {
-        uid: `${uid}-daily`,
+        uid: `${uid}::daily`,
         userId, eventAt,
         source: "package_daily",
         description: `${packageName} (일간)`,
@@ -209,7 +249,7 @@ export async function createAttendance(env: Env, userId: number, startDate: Date
   await db.insert(pyroxeneTimelineItemsTable)
     .values([
       {
-        uid: `${uid}-5`,
+        uid: `${uid}::5`,
         userId,
         eventAt: startAt.add(4, "day").toISOString(),
         source: "attendance",
@@ -221,7 +261,7 @@ export async function createAttendance(env: Env, userId: number, startDate: Date
         repeatCount: null,
       },
       {
-        uid: `${uid}-10`,
+        uid: `${uid}::10`,
         userId,
         eventAt: startAt.add(9, "day").toISOString(),
         source: "attendance",
@@ -247,5 +287,69 @@ export async function createOtherPyroxeneGain(env: Env, userId: number, date: Da
       pyroxeneDelta: pyroxene,
       oneTimeTicketDelta: oneTimeTicket,
       tenTimeTicketDelta: tenTimeTicket,
+    });
+}
+
+/**
+ * Pyroxene Planner Options
+ */
+export type TimelineSourceType = "event" | "raid" | "daily_mission" | "weekly_mission" | "buy" | "package_onetime" | "package_daily" | "attendance" | "tactical" | "other";
+export type PyroxenePlannerOptions = {
+  event: {
+    pickupChance: "ceil" | "average";
+  };
+  raid: {
+    tier: "platinum" | "gold" | "silver" | "bronze";
+  };
+  tactical: {
+    level: "in10" | "in100" | "in200" | "over200";
+  };
+  timeline: {
+    display: TimelineSourceType[];
+  };
+};
+
+export const pyroxenePlannerOptionsTable = sqliteTable("pyroxene_planner_options", {
+  id: int().primaryKey({ autoIncrement: true }),
+  userId: int().notNull(),
+  options: text().notNull(),
+  createdAt: text().notNull().default(sql`current_timestamp`),
+  updatedAt: text().notNull().default(sql`current_timestamp`),
+});
+
+export type PyroxenePlannerOptionsModel = {
+  userId: number;
+  options: string;
+};
+
+export async function getPyroxenePlannerOptions(env: Env, userId: number): Promise<PyroxenePlannerOptions | null> {
+  const db = drizzle(env.DB);
+  const [record] = await db
+    .select()
+    .from(pyroxenePlannerOptionsTable)
+    .where(eq(pyroxenePlannerOptionsTable.userId, userId))
+    .limit(1);
+
+  if (!record) {
+    return null;
+  }
+
+  try {
+    return JSON.parse(record.options) as PyroxenePlannerOptions;
+  } catch {
+    return null;
+  }
+}
+
+export async function upsertPyroxenePlannerOptions(env: Env, userId: number, options: PyroxenePlannerOptions): Promise<void> {
+  const db = drizzle(env.DB);
+  const optionsJson = JSON.stringify(options);
+  const updatedAt = new Date().toISOString();
+
+  await db.insert(pyroxenePlannerOptionsTable)
+    .values({ userId, options: optionsJson, updatedAt })
+    .onConflictDoUpdate({
+      target: pyroxenePlannerOptionsTable.userId,
+      set: { options: optionsJson, updatedAt },
     });
 }

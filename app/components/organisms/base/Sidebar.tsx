@@ -9,6 +9,7 @@ import {
   HeartIcon as HeartIconOutline,
   BoltIcon as BoltIconOutline,
   ClockIcon as ClockIconOutline,
+  WalletIcon as WalletIconOutline,
 } from "@heroicons/react/24/outline";
 import {
   HomeIcon as HomeIconSolid,
@@ -19,6 +20,7 @@ import {
   HeartIcon as HeartIconSolid,
   BoltIcon as BoltIconSolid,
   ClockIcon as ClockIconSolid,
+  WalletIcon as WalletIconSolid,
 } from "@heroicons/react/24/solid";
 import { Transition } from "@headlessui/react";
 import { Link, useMatches, useSubmit } from "react-router";
@@ -59,7 +61,7 @@ function MenuItem({ to, name, OutlineIcon, SolidIcon, isActive, onItemClick, sho
 function UtilItem({ to, name, OutlineIcon, SolidIcon, isActive, onItemClick, showRedDot }: MenuItemProps) {
   return (
     <Link to={to} onClick={onItemClick}>
-      <div className={`p-2 flex flex-col items-center hover:bg-neutral-200 dark:hover:bg-neutral-700 border border-neutral-100 dark:border-neutral-700 rounded-lg transition relative ${isActive ? "font-bold drop-shadow-lg" : ""}`}>
+      <div className={`p-2 flex flex-col items-center hover:bg-neutral-200 dark:hover:bg-neutral-700 border border-neutral-200 dark:border-neutral-700 rounded-lg transition relative ${isActive ? "font-bold drop-shadow-lg" : ""}`}>
         {isActive ? <SolidIcon className="size-6" /> : <OutlineIcon className="size-6" />}
         <p className="mt-1 text-xs text-center">
           {name.split("\n").map((line, index) => <span key={index} className="block">{line}</span>)}
@@ -129,10 +131,11 @@ function MenuContent({ currentUsername, pathname, onMenuClose, onShowSignIn, onD
         />
       )}
 
-      <div className="my-2 grid grid-cols-3 gap-2">
-        <UtilItem name={"인연 랭크\n계산기"} to="/utils/relationship" OutlineIcon={HeartIconOutline} SolidIcon={HeartIconSolid} isActive={pathname.startsWith("/utils/relationship")} onItemClick={onMenuClose} />
-        <UtilItem name={"이벤트 소탕\n계산기"} to="/events/hyakuyori-izuru-ichirinnno?page=shop" OutlineIcon={BoltIconOutline} SolidIcon={BoltIconSolid} isActive={false} onItemClick={onMenuClose} />
-        <UtilItem name={"총력전 점수\n계산기"} to="/utils/raidscore" OutlineIcon={ClockIconOutline} SolidIcon={ClockIconSolid} isActive={pathname.startsWith("/utils/raidscore")} onItemClick={onMenuClose} />
+      <div className="my-2 grid grid-cols-2 gap-2">
+        <UtilItem name={"청휘석 플래너"} to="/utils/pyroxene" OutlineIcon={WalletIconOutline} SolidIcon={WalletIconSolid} isActive={pathname.startsWith("/utils/pyroxene")} onItemClick={onMenuClose} />
+        <UtilItem name={"이벤트 소탕 계산기"} to="/events/hyakuyori-izuru-ichirinnno?page=shop" OutlineIcon={BoltIconOutline} SolidIcon={BoltIconSolid} isActive={false} onItemClick={onMenuClose} />
+        <UtilItem name={"인연 랭크 계산기"} to="/utils/relationship" OutlineIcon={HeartIconOutline} SolidIcon={HeartIconSolid} isActive={pathname.startsWith("/utils/relationship")} onItemClick={onMenuClose} />
+        <UtilItem name={"총력전 점수 계산기"} to="/utils/raidscore" OutlineIcon={ClockIconOutline} SolidIcon={ClockIconSolid} isActive={pathname.startsWith("/utils/raidscore")} onItemClick={onMenuClose} />
       </div>
 
       {!currentUsername && (

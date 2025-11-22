@@ -33,7 +33,7 @@ export default function ResourcesInput({ description, onSaveResources, descripti
             <input
               type="date"
               className="w-full px-2 py-1 text-sm text-neutral-700 dark:text-neutral-200 hover:bg-neutral-100 dark:hover:bg-neutral-800 border border-neutral-300 dark:border-neutral-700 rounded-lg disabled:opacity-40 transition-all"
-              defaultValue={dayjs().format("YYYY-MM-DD")}
+              value={dayjs(date).format("YYYY-MM-DD")}
               onChange={(e) => setDate(new Date(e.target.value))}
             />
           </div>
@@ -54,12 +54,12 @@ export default function ResourcesInput({ description, onSaveResources, descripti
           <NumberInput label="청휘석" onChange={(value) => setResources((prev) => ({ ...prev, pyroxene: value }))} />
         </div>
         <div className="flex items-center justify-center gap-2">
-          <ResourceCard resourceType={ResourceTypeEnum.Item} itemUid="6998" />
-          <NumberInput label="1회 모집 티켓" onChange={(value) => setResources((prev) => ({ ...prev, oneTimeTicket: value }))} />
-        </div>
-        <div className="flex items-center justify-center gap-2">
           <ResourceCard resourceType={ResourceTypeEnum.Item} itemUid="6999" />
           <NumberInput label="10회 모집 티켓" onChange={(value) => setResources((prev) => ({ ...prev, tenTimeTicket: value }))} />
+        </div>
+        <div className="flex items-center justify-center gap-2">
+          <ResourceCard resourceType={ResourceTypeEnum.Item} itemUid="6998" />
+          <NumberInput label="1회 모집 티켓" onChange={(value) => setResources((prev) => ({ ...prev, oneTimeTicket: value }))} />
         </div>
       </div>
       <div className="mt-4 -mr-2 flex justify-end">

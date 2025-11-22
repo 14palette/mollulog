@@ -1,29 +1,14 @@
 import { useCallback } from "react";
-import { ChartBarIcon } from "@heroicons/react/24/outline";
-import { FilterButtons, ScreenPanel } from "~/components/navigation";
-import type { TimelineSourceType } from "./PyroxeneSchedule";
+import { FilterButtons } from "~/components/navigation";
+import type { PyroxenePlannerOptions, TimelineSourceType } from "~/models/pyroxene-planner";
 
-export type PyroxenePlannerCalcOptions = {
-  event: {
-    pickupChance: "ceil" | "average";
-  };
-  raid: {
-    tier: "platinum" | "gold" | "silver" | "bronze";
-  };
-  tactical: {
-    level: "in10" | "in100" | "in200" | "over200";
-  };
-  timeline: {
-    display: TimelineSourceType[];
-  };
+
+type PyroxenePlannerOptionsPanelProps = {
+  options: PyroxenePlannerOptions;
+  onOptionsChange: (options: PyroxenePlannerOptions) => void;
 };
 
-type PyroxenePlannerCalcPanelProps = {
-  options: PyroxenePlannerCalcOptions;
-  onOptionsChange: (options: PyroxenePlannerCalcOptions) => void;
-};
-
-export default function PyroxenePlannerCalcPanel({ options, onOptionsChange }: PyroxenePlannerCalcPanelProps) {
+export default function PyroxenePlannerOptionsPanel({ options, onOptionsChange }: PyroxenePlannerOptionsPanelProps) {
   const onToggleRaidTier = useCallback((tier: "platinum" | "gold" | "silver" | "bronze") => {
     onOptionsChange({ ...options, raid: { ...options.raid, tier } });
   }, [options, onOptionsChange]);
@@ -43,7 +28,7 @@ export default function PyroxenePlannerCalcPanel({ options, onOptionsChange }: P
   }, [options, onOptionsChange]);
 
   return (
-    <ScreenPanel Icon={ChartBarIcon} title="재화 계산" description="획득/소비 계산 조건을 선택해주세요" foldable>
+    <>
       <PanelLabel title="★3 학생 모집 횟수" />
       <FilterButtons
         exclusive atLeastOne
@@ -158,9 +143,14 @@ export default function PyroxenePlannerCalcPanel({ options, onOptionsChange }: P
             active: options.timeline.display.includes("attendance"),
             onToggle: () => onToggleTimelineDisplay("attendance"),
           },
+          {
+            text: "기타",
+            active: options.timeline.display.includes("other"),
+            onToggle: () => onToggleTimelineDisplay("other"),
+          },
         ]}
       />
-    </ScreenPanel>
+    </>
   )
 }
 
@@ -172,3 +162,4 @@ function PanelLabel({ title, description }: { title: string, description?: strin
     </>
   );
 }
+

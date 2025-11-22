@@ -1,16 +1,16 @@
 import dayjs from "dayjs";
 import "dayjs/locale/ko";
-import { KeyValueTable, SubTitle } from "~/components/atoms/typography";
-import { ActionCard } from "~/components/molecules/editor";
+import { KeyValueTable, MultilineText, SubTitle } from "~/components/atoms/typography";
+import { ResourceCard } from "~/components/atoms/item";
+import { NumberInput } from "~/components/atoms/form";
+import { ActionCard, type ActionCardAction } from "~/components/molecules/editor";
 import { StudentCards } from "~/components/molecules/student";
 import { PickupType, RaidType } from "~/models/content.d";
-import { PyroxenePlannerOptions } from "./PyroxenePlannerCalcPanel";
-import { useMemo, useState } from "react";
-import { ResourceCard } from "../atoms/item";
+import { useEffect, useMemo, useState } from "react";
 import { ResourceTypeEnum } from "~/graphql/graphql";
 import ResourcesInput from "./planner-input/ResourcesInput";
 import { Transition } from "@headlessui/react";
-import type { ActionCardAction } from "../molecules/editor/ActionCard";
+import type { PyroxenePlannerOptions, TimelineSourceType } from "~/models/pyroxene-planner";
 
 dayjs.locale("ko");
 
@@ -40,68 +40,58 @@ export type PyroxeneScheduleItem = ({
     since: Date;
     until: Date;
   };
-  buy?: {
-    uid: string;
-    date: Date;
-    quantity: number;
-  };
 
-  packageOnetime?: {
-    uid: string;
+  onetimeGain?: {
+    uid?: string;
+    source: TimelineSourceType;
     date: Date;
     description: string;
-    quantity: number;
+    pyroxeneDelta?: number;
+    oneTimeTicketDelta?: number;
+    tenTimeTicketDelta?: number;
   };
-  packageDaily?: {
-    uid: string;
+  repeatedGain?: {
+    uid?: string;
+    source: TimelineSourceType;
     date: Date;
     description: string;
-    quantity: number;
+    pyroxeneDelta?: number;
+    oneTimeTicketDelta?: number;
+    tenTimeTicketDelta?: number;
     repeatIntervalDays: number;
-    repeatCount: number;
-  };
-  attendance?: {
-    uid: string;
-    date: Date;
-    description: string;
-    quantity: number;
-    repeatIntervalDays: number;
+    repeatCount?: number;
   };
 });
 
 type PyroxeneScheduleProps = {
   initialDate: Date | null;
   initialResources: PickupResources;
-  initialResourcesUid: string | null;
   latestEventUid: string | null;
   scheduleItems: PyroxeneScheduleItem[];
   options: PyroxenePlannerOptions;
 
-  onPickupComplete: (eventUid: string, resources: PickupResources) => void;
+  onPickupComplete: (eventUid: string | null, resources: PickupResources) => void;
   onDeletePickupComplete: (eventUid: string) => void;
   onDeleteItem: (itemUid: string) => void;
-  onDeleteOwnedResource: (ownedResourceUid: string) => void;
 };
 
-export default function PyroxeneSchedule({ initialDate, initialResources, initialResourcesUid, latestEventUid, scheduleItems, options, onPickupComplete, onDeletePickupComplete, onDeleteItem, onDeleteOwnedResource }: PyroxeneScheduleProps) {
+export default function PyroxeneSchedule({ initialDate, initialResources, latestEventUid, scheduleItems, options, onPickupComplete, onDeletePickupComplete, onDeleteItem }: PyroxeneScheduleProps) {
   const timeline = useMemo(() => {
     return buildTimeline(initialResources, initialDate ?? new Date(), latestEventUid, scheduleItems, options);
   }, [initialDate, initialResources, latestEventUid, scheduleItems, options]);
 
   return (
     <>
-      <SubTitle text="청휘석 계획" description="각 픽업 일정에 예상되는 청휘석 보유량을 확인해보세요" />
+      <SubTitle 
+        text="현재 보유 재화" 
+        description={initialDate ? `마지막 입력 : ${dayjs(initialDate).format('YYYY-MM-DD HH:mm')}` : "현재 보유중인 재화 수량을 입력해주세요"}
+      />
+      <InitialResources
+        resources={initialResources}
+        onUpdateResources={(resources) => onPickupComplete(null, resources)}
+      />
 
-      {initialDate && (
-        <TimelineResources
-          date={dayjs(initialDate)}
-          description="보유 재화"
-          resources={initialResources}
-          itemUid={initialResourcesUid ?? undefined}
-          onDeleteItem={onDeleteOwnedResource}
-        />
-      )}
-
+      <SubTitle text="재화 획득/소비 계획" />
       {timeline.map(({ date, accumulatedResources, resourceDelta, source }) => {
         if (source.type !== "event" && !options.timeline.display.includes(source.type)) {
           return null;
@@ -172,7 +162,7 @@ function TimelineEvent({ event, accumulatedResources, resourceDelta, completed, 
   return (
     <div className="relative">
       <ActionCard actions={actions}>
-        <p className="font-semibold">{event.name}</p>
+        <MultilineText texts={event.name.split("\n")} className="font-semibold text-lg" />
         <p className="mb-2 text-xs text-neutral-500">
           {dayjs(event.since).format("YYYY-MM-DD")} ~ {dayjs(event.until).format("YYYY-MM-DD")}
         </p>
@@ -182,18 +172,31 @@ function TimelineEvent({ event, accumulatedResources, resourceDelta, completed, 
         />
         <div className="mt-2">
           {completed ? (
-            <>
-              <p className="text-center text-neutral-500 text-sm">모집 완료</p>
-            </>
+            <p className="text-center text-neutral-500 text-sm">모집 완료</p>
           ) : (
-            <KeyValueTable
-              items={[
-                { key: "남은 청휘석", value: remainingResourceValue(accumulatedResources.pyroxene, resourceDelta.pyroxene) },
-                { key: "남은 1회 모집 티켓", value: remainingResourceValue(accumulatedResources.oneTimeTicket, resourceDelta.oneTimeTicket) },
-                { key: "남은 10회 모집 티켓", value: remainingResourceValue(accumulatedResources.tenTimeTicket, resourceDelta.tenTimeTicket) },
-              ]}
-              keyPrefix={`pyroxene-planner-${event.uid}`}
-            />
+            <div className="grid grid-cols-1 md:grid-cols-3 gap-2">
+              <div className="flex items-center gap-2">
+                <ResourceCard resourceType={ResourceTypeEnum.Currency} itemUid="2" />
+                <div>
+                  <p className="text-sm font-semibold">남은 청휘석</p>
+                  <p>{remainingResourceValue(accumulatedResources.pyroxene, resourceDelta.pyroxene)}</p>
+                </div>
+              </div>
+              <div className="flex items-center gap-2">
+                <ResourceCard resourceType={ResourceTypeEnum.Item} itemUid="6999" />
+                <div>
+                  <p className="text-sm font-semibold">남은 10회 모집 티켓</p>
+                  <p>{remainingResourceValue(accumulatedResources.tenTimeTicket, resourceDelta.tenTimeTicket)}</p>
+                </div>
+              </div>
+              <div className="flex items-center gap-2">
+                <ResourceCard resourceType={ResourceTypeEnum.Item} itemUid="6998" />
+                <div>
+                  <p className="text-sm font-semibold">남은 1회 모집 티켓</p>
+                  <p>{remainingResourceValue(accumulatedResources.oneTimeTicket, resourceDelta.oneTimeTicket)}</p>
+                </div>
+              </div>
+            </div>
           )}
         </div>
       </ActionCard>
@@ -221,6 +224,87 @@ function TimelineEvent({ event, accumulatedResources, resourceDelta, completed, 
       </Transition>
     </div>
   );
+}
+
+function InitialResources({ resources, onUpdateResources }: { resources: PickupResources, onUpdateResources?: (resources: PickupResources) => void }) {
+  const [isEditing, setIsEditing] = useState(false);
+  const [editedResources, setEditedResources] = useState<PickupResources>(resources);
+
+  useEffect(() => {
+    if (!isEditing) {
+      setEditedResources(resources);
+    }
+  }, [resources, isEditing]);
+
+  const resourceItems = [
+    { type: ResourceTypeEnum.Currency, itemUid: "2", label: "청휘석", resourceKey: "pyroxene" as const },
+    { type: ResourceTypeEnum.Item, itemUid: "6999", label: "10회 모집 티켓", resourceKey: "tenTimeTicket" as const },
+    { type: ResourceTypeEnum.Item, itemUid: "6998", label: "1회 모집 티켓", resourceKey: "oneTimeTicket" as const },
+  ];
+
+  const handleSave = () => {
+    if (onUpdateResources) {
+      onUpdateResources(editedResources);
+      setIsEditing(false);
+    }
+  };
+
+  const handleCancel = () => {
+    setEditedResources(resources);
+    setIsEditing(false);
+  };
+
+  return (
+    <div className="my-4 p-4 border border-neutral-200 dark:border-neutral-700 rounded-lg">
+      <div className="grid grid-cols-1 md:grid-cols-3 gap-2">
+        {resourceItems.map(({ type, itemUid, label, resourceKey }) => (
+          <div key={itemUid} className="flex items-start gap-2">
+            <ResourceCard resourceType={type} itemUid={itemUid} />
+            <div className="flex-1">
+              <p className="text-sm font-semibold">{label}</p>
+              {isEditing ? (
+                <NumberInput
+                  value={editedResources[resourceKey]}
+                  onChange={(value) => setEditedResources((prev) => ({ ...prev, [resourceKey]: value }))}
+                />
+              ) : (
+                <p className="my-1 text-sm">{resources[resourceKey].toLocaleString()}</p>
+              )}
+            </div>
+          </div>
+        ))}
+      </div>
+      <div className="flex items-center justify-end gap-2 mt-2">
+        {onUpdateResources && (
+          <>
+            {isEditing ? (
+              <>
+                <button
+                  onClick={handleCancel}
+                  className="px-3 py-1 text-sm text-neutral-500 hover:bg-neutral-100 dark:hover:bg-neutral-800 rounded-lg transition"
+                >
+                  취소
+                </button>
+                <button
+                  onClick={handleSave}
+                  className="px-3 py-1 text-sm text-blue-500 hover:bg-blue-50 dark:hover:bg-blue-900/20 rounded-lg transition"
+                >
+                  저장
+                </button>
+              </>
+            ) : (
+              <button
+                onClick={() => setIsEditing(true)}
+                className="px-3 py-1 text-sm text-blue-500 hover:bg-blue-50 dark:hover:bg-blue-900/20 rounded-lg transition"
+              >
+                수정
+              </button>
+            )}
+          </>
+        )}
+      </div>
+    </div>
+  )
 }
 
 function TimelineResources({ date, description, resources, itemUid, onDeleteItem }: { date: dayjs.Dayjs, description: string, resources: PickupResources, itemUid?: string, onDeleteItem?: (itemUid: string) => void }) {
@@ -253,7 +337,7 @@ function TimelineResources({ date, description, resources, itemUid, onDeleteItem
 
 function remainingResourceValue(count: number, diff: number): React.ReactNode {
   return (
-    <p>
+    <p className="text-sm">
       <span className={count > 0 ? "text-green-500" : count === 0 ? undefined : "text-red-500"}>
         {count.toLocaleString()}
       </span>
@@ -265,8 +349,6 @@ function remainingResourceValue(count: number, diff: number): React.ReactNode {
     </p>
   )
 }
-
-export type TimelineSourceType = "event" | "raid" | "daily_mission" | "weekly_mission" | "buy" | "package_onetime" | "package_daily" | "attendance" | "tactical";
 
 type TimelineSource = {
   type: TimelineSourceType;
@@ -352,45 +434,38 @@ function buildTimeline(
           resourceDelta: { pyroxene: 650, oneTimeTicket: 0, tenTimeTicket: 1 },
         });
       }
-    } else if (scheduleItem.buy) {
-      const buy = scheduleItem.buy;
+    } else if (scheduleItem.onetimeGain) {
+      const { onetimeGain } = scheduleItem;
       timelineDeltas.push({
-        date: dayjs(buy.date),
-        source: { type: "buy", uid: buy.uid, description: "청휘석 구매" },
-        resourceDelta: { pyroxene: buy.quantity, oneTimeTicket: 0, tenTimeTicket: 0 },
+        date: dayjs(onetimeGain.date),
+        source: { type: onetimeGain.source, uid: onetimeGain.uid, description: onetimeGain.description },
+        resourceDelta: { pyroxene: onetimeGain.pyroxeneDelta ?? 0, oneTimeTicket: onetimeGain.oneTimeTicketDelta ?? 0, tenTimeTicket: onetimeGain.tenTimeTicketDelta ?? 0 },
       });
-    } else if (scheduleItem.packageOnetime) {
-      const pkg = scheduleItem.packageOnetime;
-      timelineDeltas.push({
-        date: dayjs(pkg.date),
-        source: { type: "package_onetime", uid: pkg.uid, description: pkg.description },
-        resourceDelta: { pyroxene: pkg.quantity, oneTimeTicket: 0, tenTimeTicket: 0 },
-      });
-    } else if (scheduleItem.packageDaily) {
-      const pkg = scheduleItem.packageDaily;
-      for (let i = 0; i < pkg.repeatCount; i++) {
-        timelineDeltas.push({
-          date: dayjs(pkg.date).add(i * pkg.repeatIntervalDays, "day"),
-          source: { type: "package_daily", description: pkg.description },
-          resourceDelta: { pyroxene: pkg.quantity, oneTimeTicket: 0, tenTimeTicket: 0 },
-        });
-      }
-    } else if (scheduleItem.attendance) {
-      const attendance = scheduleItem.attendance;
-      const dateFrom = dayjs(attendance.date);
-      for (let date = dateFrom; date.isBefore(maxDate); date = date.add(attendance.repeatIntervalDays, "day")) {
+    } else if (scheduleItem.repeatedGain) {
+      const { repeatedGain } = scheduleItem;
+      for (let date = dayjs(repeatedGain.date); date.isBefore(maxDate); date = date.add(repeatedGain.repeatIntervalDays, "day")) {
         timelineDeltas.push({
           date,
-          source: { type: "attendance", description: attendance.description },
-          resourceDelta: { pyroxene: attendance.quantity, oneTimeTicket: 0, tenTimeTicket: 0 },
+          source: { type: repeatedGain.source, uid: repeatedGain.uid, description: repeatedGain.description },
+          resourceDelta: { pyroxene: repeatedGain.pyroxeneDelta ?? 0, oneTimeTicket: repeatedGain.oneTimeTicketDelta ?? 0, tenTimeTicket: repeatedGain.tenTimeTicketDelta ?? 0 },
         });
       }
     }
   });
 
-  // 일별/주간 임무
+  // 일별/주간 임무 및 전술대회
   const dateFrom = dayjs(initialDate);
+  let tacticalPyroxene = 20;
+  if (options.tactical.level === "in200") {
+    tacticalPyroxene = 25;
+  } else if (options.tactical.level === "in100") {
+    tacticalPyroxene = 30;
+  } else if (options.tactical.level === "in10") {
+    tacticalPyroxene = 35;
+  }
+
   for (let date = dateFrom; date.isBefore(maxDate); date = date.add(1, "day")) {
+    // 일일 임무
     timelineDeltas.push({
       date,
       source: { type: "daily_mission", description: "일일 임무" },
@@ -405,22 +480,12 @@ function buildTimeline(
         resourceDelta: { pyroxene: 120, oneTimeTicket: 0, tenTimeTicket: 0 },
       });
     }
-  }
 
-  // 전술대회
-  for (let date = dateFrom; date.isBefore(maxDate); date = date.add(1, "day")) {
-    let pyroxene = 20;
-    if (options.tactical.level === "in200") {
-      pyroxene = 25;
-    } else if (options.tactical.level === "in100") {
-      pyroxene = 30;
-    } else if (options.tactical.level === "in10") {
-      pyroxene = 35;
-    }
+    // 전술대회
     timelineDeltas.push({
       date,
       source: { type: "tactical", description: "전술대회" },
-      resourceDelta: { pyroxene, oneTimeTicket: 0, tenTimeTicket: 0 },
+      resourceDelta: { pyroxene: tacticalPyroxene, oneTimeTicket: 0, tenTimeTicket: 0 },
     });
   }
 

@@ -25,7 +25,7 @@ export default function AttendanceInput({ onSaveAttendance }: AttendanceInputPro
         onChange={(e) => setStartDate(new Date(e.target.value))}
       />
       <div className="mt-2 -mr-2 flex justify-end">
-        <Button text="저장" color="primary" onClick={() => onSaveAttendance(startDate)} disabled={startDateIsBeforeToday} />
+        <Button text="저장" color="primary" onClick={() => onSaveAttendance(startDate)} />
       </div>
     </div>
   );

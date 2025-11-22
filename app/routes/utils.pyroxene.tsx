@@ -1,10 +1,11 @@
 import { useEffect, useMemo, useState } from "react";
-import { MetaFunction, redirect, useFetcher, useLoaderData, useOutletContext, useRevalidator, type ActionFunctionArgs, type LoaderFunctionArgs } from "react-router";
+import { MetaFunction, redirect, useFetcher, useLoaderData, useRevalidator, type ActionFunctionArgs, type LoaderFunctionArgs } from "react-router";
+import { ChartBarIcon, HeartIcon, PlusIcon } from "@heroicons/react/24/outline";
 import { getAuthenticator } from "~/auth/authenticator.server";
-import { PyroxenePlannerInputPanel, PyroxenePlannerCalcPanel, PyroxeneSchedule } from "~/components/futures";
-import type { PickupResources, PyroxenePlannerCalcOptions, PyroxeneScheduleItem } from "~/components/futures";
-import { graphql } from "~/graphql";
-import { runQuery } from "~/lib/baql";
+import { PyroxenePlannerInputPanel, PyroxenePlannerOptionsPanel, PyroxeneSchedule } from "~/components/futures";
+import type { PickupResources, PyroxeneScheduleItem } from "~/components/futures";
+import type { PyroxenePlannerOptions } from "~/models/pyroxene-planner";
+import Page from "~/components/navigation/Page";
 import { getUserFavoritedStudents } from "~/models/favorite-students";
 import {
   createPyroxeneOwnedResource,
@@ -17,35 +18,16 @@ import {
   createPyroxenePackage,
   createAttendance,
   createOtherPyroxeneGain,
-  deletePyroxeneOwnedResource,
+  getPyroxenePlannerOptions,
+  upsertPyroxenePlannerOptions,
+  getPyroxenePlannerContents,
 } from "~/models/pyroxene-planner";
 
-const pyroxenePlannerQuery = graphql(`
-  query PyroxenePlanner($now: ISO8601DateTime!) {
-    contents(untilAfter: $now, first: 9999) {
-      nodes {
-        __typename uid name since until
-        ... on Event {
-          pickups {
-            type rerun
-            student { uid initialTier }
-          }
-        }
-        ... on Raid {
-          type
-        }
-      }
-    }
-  }
-`);
 
 export const loader = async ({ request, context }: LoaderFunctionArgs) => {
-  const { data, error } = await runQuery(pyroxenePlannerQuery, { now: new Date() });
-  if (error || !data) {
-    throw error ?? "failed to fetch pyroxene planner";
-  }
-
   const { env } = context.cloudflare;
+  const contents = await getPyroxenePlannerContents(env);
+
   const currentUser = await getAuthenticator(env).isAuthenticated(request);
   if (!currentUser) {
     return redirect("/unauthorized");
@@ -54,11 +36,11 @@ export const loader = async ({ request, context }: LoaderFunctionArgs) => {
   const favoritedStudents = await getUserFavoritedStudents(env, currentUser.id);
   const latestResources = await getLatestPyroxeneOwnedResource(env, currentUser.id);
   const latestResourceAfterPickup = await getLatestPyroxeneOwnedResourceWithEventUid(env, currentUser.id);
+  const savedOptions = await getPyroxenePlannerOptions(env, currentUser.id);
   return {
-    contents: data.contents.nodes,
+    contents,
     favoritedStudents: favoritedStudents.map(({ contentId, studentId }) => ({ contentUid: contentId, studentUid: studentId })),
     latestResources: {
-      uid: latestResources?.uid ?? null,
       pyroxene: latestResources?.pyroxene ?? 0,
       oneTimeTicket: latestResources?.oneTimeTicket ?? 0,
       tenTimeTicket: latestResources?.tenTimeTicket ?? 0,
@@ -72,6 +54,7 @@ export const loader = async ({ request, context }: LoaderFunctionArgs) => {
       eventUid: latestResourceAfterPickup?.eventUid ?? null,
     },
     timelineItems: await getPyroxeneTimelineItems(env, currentUser.id),
+    calcOptions: savedOptions,
   };
 };
 
@@ -102,10 +85,11 @@ export type ActionData = {
   };
 
   deleteData: {
-    ownedResourceUid?: string | null;
     ownedResourceEventUid?: string | null;
     itemUid?: string;
   };
+
+  calcOptions?: PyroxenePlannerOptions;
 };
 
 export const action = async ({ request, context }: ActionFunctionArgs) => {
@@ -115,9 +99,9 @@ export const action = async ({ request, context }: ActionFunctionArgs) => {
     return redirect("/unauthorized");
   }
 
-  const { createData, deleteData } = await request.json<ActionData>();
-  if (request.method === "POST") {
-    if (createData.ownedResources?.pyroxene !== undefined) {
+  const { createData, deleteData, calcOptions } = await request.json<ActionData>();
+  if (request.method === "POST" && createData) {
+    if (createData.ownedResources !== undefined) {
       await createPyroxeneOwnedResource(env, currentUser.id, createData.ownedResources.eventUid, createData.ownedResources);
     }
     if (createData.buy?.quantity !== undefined) {
@@ -133,10 +117,9 @@ export const action = async ({ request, context }: ActionFunctionArgs) => {
       const { pyroxene, oneTimeTicket, tenTimeTicket } = createData.other.resources;
       await createOtherPyroxeneGain(env, currentUser.id, createData.other.date, pyroxene, oneTimeTicket, tenTimeTicket, createData.other.description);
     }
-  } else if (request.method === "DELETE") {
-    if (deleteData.ownedResourceUid) {
-      await deletePyroxeneOwnedResource(env, currentUser.id, deleteData.ownedResourceUid);
-    }
+  } else if (request.method === "POST" && calcOptions) {
+    await upsertPyroxenePlannerOptions(env, currentUser.id, calcOptions);
+  } else if (request.method === "DELETE" && deleteData) {
     if (deleteData.ownedResourceEventUid) {
       await deletePyroxeneOwnedResourceByEventUid(env, currentUser.id, deleteData.ownedResourceEventUid);
     }
@@ -149,7 +132,7 @@ export const action = async ({ request, context }: ActionFunctionArgs) => {
 
 export const meta: MetaFunction = () => {
   const title = "청휘석 플래너";
-  const description = "관심 학생을 픽업하기 위해 필요한 청휘석을 계산해보세요";
+  const description = "현재 보유 재화, 각종 수급 계획을 바탕으로 관심 학생 모집 시점의 재화 수량을 예상해보세요";
   return [
     { title: `${title} | 몰루로그` },
     { name: "description", content: description },
@@ -195,14 +178,6 @@ export default function PyroxenePlanner() {
     );
   };
 
-  const handleDeleteOwnedResource = (ownedResourceUid: string) => {
-    setRevalidated(false);
-    fetcher.submit(
-      { deleteData: { ownedResourceUid } },
-      { method: "DELETE", encType: "application/json" },
-    );
-  };
-
   const handleSaveBuy = (quantity: number, date: Date) => {
     setRevalidated(false);
     fetcher.submit(
@@ -242,13 +217,19 @@ export default function PyroxenePlanner() {
   }, [loaderData.latestResources]);
 
   useEffect(() => {
+    if (loaderData.calcOptions) {
+      setOptions(loaderData.calcOptions);
+    }
+  }, [loaderData.calcOptions]);
+
+  useEffect(() => {
     if (!revalidated && !fetcher.data?.success && fetcher.state === "idle") {
       revalidator.revalidate();
       setRevalidated(true);
     }
   }, [fetcher.data, fetcher.state, fetcher.formMethod, revalidator, revalidated]);
 
-  const [options, setOptions] = useState<PyroxenePlannerCalcOptions>({
+  const defaultOptions: PyroxenePlannerOptions = {
     event: {
       pickupChance: "ceil",
     },
@@ -261,22 +242,11 @@ export default function PyroxenePlanner() {
     timeline: {
       display: ["event", "raid", "buy", "package_onetime"],
     },
-  });
+  };
 
-  const { setPanel } = useOutletContext<{ setPanel: (panel: React.ReactNode) => void }>();
-  useEffect(() => {
-    setPanel(
-      <div>
-        <PyroxenePlannerCalcPanel options={options} onOptionsChange={setOptions} />
-        <PyroxenePlannerInputPanel
-          onSaveBuy={(quantity, date) => handleSaveBuy(quantity, date)}
-          onSavePackage={(startDate, packageType) => handleSavePackage(startDate, packageType)}
-          onSaveAttendance={(startDate) => handleSaveAttendance(startDate)}
-          onSaveOther={(resources, description, date) => handleSaveOther(resources, description, date)}
-        />
-      </div>
-    );
-  }, [options]);
+  const [options, setOptions] = useState<PyroxenePlannerOptions>(
+    loaderData.calcOptions ?? defaultOptions
+  );
 
   const scheduleItems = useMemo(() => {
     const items: PyroxeneScheduleItem[] = [];
@@ -297,38 +267,91 @@ export default function PyroxenePlanner() {
     });
     timelineItems.forEach((item) => {
       if (item.source === "buy") {
-        items.push({ buy: { uid: item.uid, date: new Date(item.eventAt), quantity: item.pyroxeneDelta } });
+        items.push({
+          onetimeGain: { uid: item.uid, source: "buy", description: item.description, date: new Date(item.eventAt), pyroxeneDelta: item.pyroxeneDelta },
+        });
       } else if (item.source === "package_onetime") {
-        items.push({ packageOnetime: { uid: item.uid, date: new Date(item.eventAt), description: item.description, quantity: item.pyroxeneDelta } });
+        items.push({
+          onetimeGain: { uid: item.uid, source: "package_onetime", description: item.description, date: new Date(item.eventAt), pyroxeneDelta: item.pyroxeneDelta },
+        });
       } else if (item.source === "package_daily") {
         items.push({
-          packageDaily: {
-            uid: item.uid, date: new Date(item.eventAt), description: item.description, quantity: item.pyroxeneDelta,
+          repeatedGain: {
+            source: "package_daily", description: item.description, date: new Date(item.eventAt),
+            pyroxeneDelta: item.pyroxeneDelta,
             repeatIntervalDays: item.repeatIntervalDays!,
             repeatCount: item.repeatCount!,
           },
         });
       } else if (item.source === "attendance") {
-        items.push({ attendance: { uid: item.uid, date: new Date(item.eventAt), description: item.description, quantity: item.pyroxeneDelta, repeatIntervalDays: item.repeatIntervalDays! } });
+        items.push({
+          repeatedGain: {
+            source: "attendance", description: item.description, date: new Date(item.eventAt),
+            pyroxeneDelta: item.pyroxeneDelta, repeatIntervalDays: item.repeatIntervalDays!,
+          },
+        });
+      } else if (item.source === "other") {
+        items.push({
+          onetimeGain: {
+            uid: item.uid, source: "other", description: item.description, date: new Date(item.eventAt),
+            pyroxeneDelta: item.pyroxeneDelta, oneTimeTicketDelta: item.oneTimeTicketDelta, tenTimeTicketDelta: item.tenTimeTicketDelta
+          },
+        });
       }
     });
     return items;
-  }, [contents, favoritedStudents]);
+  }, [contents, favoritedStudents, timelineItems]);
 
   return (
-    <>
+    <Page
+      title="청휘석 플래너"
+      description="현재 보유 재화, 각종 수급 계획을 바탕으로 관심 학생 모집 시점의 재화 수량을 예상해보세요"
+      links={[
+        {
+          Icon: HeartIcon,
+          title: "컨텐츠 미래시",
+          description: "관심 학생은 미래시 페이지에서 등록할 수 있어요",
+          to: "/futures",
+        },
+      ]}
+      panels={[
+        {
+          title: "플래너 설정",
+          Icon: ChartBarIcon,
+          description: "획득/소비 계산 조건을 선택해주세요",
+          foldable: true,
+          children: <PyroxenePlannerOptionsPanel options={options} onOptionsChange={(newOptions) => {
+            setOptions(newOptions);
+            fetcher.submit(
+              { calcOptions: newOptions },
+              { method: "POST", encType: "application/json" },
+            );
+          }} />,
+        },
+        {
+          title: "재화 수급처",
+          Icon: PlusIcon,
+          description: "재화 획득 날짜와 수량을 입력해주세요",
+          foldable: true,
+          children: <PyroxenePlannerInputPanel
+            onSaveBuy={(quantity, date) => handleSaveBuy(quantity, date)}
+            onSavePackage={(startDate, packageType) => handleSavePackage(startDate, packageType)}
+            onSaveAttendance={(startDate) => handleSaveAttendance(startDate)}
+            onSaveOther={(resources, description, date) => handleSaveOther(resources, description, date)}
+          />,
+        },
+      ]}
+    >
       <PyroxeneSchedule
         initialDate={initialDate}
         initialResources={initialResources}
-        initialResourcesUid={loaderData.latestResources.uid}
         latestEventUid={loaderData.latestResourceAfterPickup.eventUid}
         scheduleItems={scheduleItems}
         options={options}
         onPickupComplete={(eventUid, resources) => handleSaveOwnedResources(eventUid, resources)}
         onDeletePickupComplete={(eventUid) => handleDeletePickupComplete(eventUid)}
         onDeleteItem={(itemUid) => handleDeleteItem(itemUid)}
-        onDeleteOwnedResource={(ownedResourceUid) => handleDeleteOwnedResource(ownedResourceUid)}
       />
-    </>
+    </Page>
   )
 }

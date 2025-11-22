@@ -1,9 +1,9 @@
 import { Link } from "react-router";
-import { useState, type ReactNode } from "react";
+import { useState } from "react";
 import { ChevronDownIcon } from "@heroicons/react/20/solid";
 import { Transition } from "@headlessui/react";
 
-type ScreenSelectorProps = {
+export type ScreenSelectorProps = {
   screens: ScreenSelectorItemProps[];
 }
 
