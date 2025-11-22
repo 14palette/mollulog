@@ -83,11 +83,19 @@ export default function PyroxenePlannerInputPanel({ onSaveBuy, onSavePackage, on
         {inputMode === "other" && (
           <ResourcesInput
             onSaveResources={(resources, description, date) => {
-              onSaveOther(resources, description!, date!);
+              if (description === undefined || date === undefined) {
+                return;
+              }
+              onSaveOther(resources, description, date);
               setInputMode(null);
             }}
             descriptionInput dateInput vertical
           />
+        )}
+        {inputMode === null && (
+          <p className="text-sm text-neutral-500 text-center py-8">
+            재화 획득 방식을 선택해주세요
+          </p>
         )}
       </div>
     </>

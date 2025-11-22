@@ -1,7 +1,9 @@
 import { useState } from "react";
 import { PickupResources } from "..";
 import { ResourceCard } from "../../atoms/item";
-import { Button, NumberInput } from "../../atoms/form";
+import { NumberInput } from "../../atoms/form";
+import { ButtonForm, InputForm } from "~/components/molecules/form";
+import { FormGroup } from "~/components/organisms/form";
 import { ResourceTypeEnum } from "~/graphql/graphql";
 import dayjs from "dayjs";
 
@@ -24,47 +26,45 @@ export default function ResourcesInput({ description, onSaveResources, descripti
   const [descriptionValue, setDescriptionValue] = useState<string>(description ?? "");
   const [date, setDate] = useState<Date>(new Date());
   return (
-    <div>
-      {description && <p className="mt-2 mb-4 text-sm text-neutral-500">{description}</p>}
-      <div className={vertical ? "flex flex-col gap-4" : "grid grid-cols-1 md:grid-cols-3 gap-4"}>
+    <>
+      {description && <p className="mb-2 text-sm text-neutral-500">{description}</p>}
+      <FormGroup>
         {dateInput && (
-          <div className="w-full">
-            <p className="mb-1 text-sm text-neutral-700 dark:text-neutral-200 font-medium">획득 날짜</p>
-            <input
-              type="date"
-              className="w-full px-2 py-1 text-sm text-neutral-700 dark:text-neutral-200 hover:bg-neutral-100 dark:hover:bg-neutral-800 border border-neutral-300 dark:border-neutral-700 rounded-lg disabled:opacity-40 transition-all"
-              value={dayjs(date).format("YYYY-MM-DD")}
-              onChange={(e) => setDate(new Date(e.target.value))}
-            />
-          </div>
+          <InputForm
+            label="획득 날짜"
+            type="date"
+            defaultValue={dayjs(date).format("YYYY-MM-DD")}
+            onChange={(value) => setDate(new Date(value))}
+          />
         )}
         {descriptionInput && (
-          <div className="w-full">
-            <p className="mb-1 text-sm text-neutral-700 dark:text-neutral-200 font-medium">획득 사유</p>
-            <input
-              type="text"
-              className="w-full px-2 py-1 text-sm text-neutral-700 dark:text-neutral-200 hover:bg-neutral-100 dark:hover:bg-neutral-800 border border-neutral-300 dark:border-neutral-700 rounded-lg disabled:opacity-40 transition-all"
-              onChange={(e) => setDescriptionValue(e.target.value)}
-              placeholder="20자 이하 (예: 점검 보상)"
-            />
-          </div>
+          <InputForm
+            label="획득 사유"
+            type="text"
+            placeholder="20자 이하 (예: 점검 보상)"
+            onChange={(value) => setDescriptionValue(value)}
+          />
         )}
-        <div className="flex items-center justify-center gap-2">
-          <ResourceCard resourceType={ResourceTypeEnum.Currency} itemUid="2" />
-          <NumberInput label="청휘석" onChange={(value) => setResources((prev) => ({ ...prev, pyroxene: value }))} />
+        <div className={`p-4 ${vertical ? "flex flex-col gap-4" : "grid grid-cols-1 md:grid-cols-3 gap-4"}`}>
+          <div className="flex items-center justify-center gap-2">
+            <ResourceCard resourceType={ResourceTypeEnum.Currency} itemUid="2" />
+            <NumberInput label="청휘석" onChange={(value) => setResources((prev) => ({ ...prev, pyroxene: value }))} />
+          </div>
+          <div className="flex items-center justify-center gap-2">
+            <ResourceCard resourceType={ResourceTypeEnum.Item} itemUid="6999" />
+            <NumberInput label="10회 모집 티켓" onChange={(value) => setResources((prev) => ({ ...prev, tenTimeTicket: value }))} />
+          </div>
+          <div className="flex items-center justify-center gap-2">
+            <ResourceCard resourceType={ResourceTypeEnum.Item} itemUid="6998" />
+            <NumberInput label="1회 모집 티켓" onChange={(value) => setResources((prev) => ({ ...prev, oneTimeTicket: value }))} />
+          </div>
         </div>
-        <div className="flex items-center justify-center gap-2">
-          <ResourceCard resourceType={ResourceTypeEnum.Item} itemUid="6999" />
-          <NumberInput label="10회 모집 티켓" onChange={(value) => setResources((prev) => ({ ...prev, tenTimeTicket: value }))} />
-        </div>
-        <div className="flex items-center justify-center gap-2">
-          <ResourceCard resourceType={ResourceTypeEnum.Item} itemUid="6998" />
-          <NumberInput label="1회 모집 티켓" onChange={(value) => setResources((prev) => ({ ...prev, oneTimeTicket: value }))} />
-        </div>
-      </div>
-      <div className="mt-4 -mr-2 flex justify-end">
-        <Button text="저장" color="primary" onClick={() => onSaveResources(resources, descriptionInput ? descriptionValue : undefined, dateInput ? date : undefined)} />
-      </div>
-    </div>
+        <ButtonForm
+          label="저장"
+          color="blue"
+          onClick={() => onSaveResources(resources, descriptionInput ? descriptionValue : undefined, dateInput ? date : undefined)}
+        />
+      </FormGroup>
+    </>
   );
 }

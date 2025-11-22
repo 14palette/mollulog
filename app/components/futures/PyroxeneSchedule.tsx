@@ -1,6 +1,6 @@
 import dayjs from "dayjs";
 import "dayjs/locale/ko";
-import { KeyValueTable, MultilineText, SubTitle } from "~/components/atoms/typography";
+import { MultilineText, SubTitle } from "~/components/atoms/typography";
 import { ResourceCard } from "~/components/atoms/item";
 import { NumberInput } from "~/components/atoms/form";
 import { ActionCard, type ActionCardAction } from "~/components/molecules/editor";
@@ -162,42 +162,39 @@ function TimelineEvent({ event, accumulatedResources, resourceDelta, completed, 
   return (
     <div className="relative">
       <ActionCard actions={actions}>
-        <MultilineText texts={event.name.split("\n")} className="font-semibold text-lg" />
-        <p className="mb-2 text-xs text-neutral-500">
-          {dayjs(event.since).format("YYYY-MM-DD")} ~ {dayjs(event.until).format("YYYY-MM-DD")}
-        </p>
-        <StudentCards
-          students={event.pickups.filter(({ favorited }) => favorited).map(({ student }) => ({ uid: student!.uid, tier: student!.initialTier }))}
-          pcGrid={12}
-        />
-        <div className="mt-2">
-          {completed ? (
-            <p className="text-center text-neutral-500 text-sm">모집 완료</p>
-          ) : (
-            <div className="grid grid-cols-1 md:grid-cols-3 gap-2">
-              <div className="flex items-center gap-2">
-                <ResourceCard resourceType={ResourceTypeEnum.Currency} itemUid="2" />
-                <div>
-                  <p className="text-sm font-semibold">남은 청휘석</p>
+        <div className="flex flex-col md:flex-row gap-2">
+          <div className="flex-1">
+            <MultilineText texts={event.name.split("\n")} className="font-semibold text-lg" />
+            <p className="mb-2 text-xs text-neutral-500">
+              {dayjs(event.since).format("YYYY-MM-DD")} ~ {dayjs(event.until).format("YYYY-MM-DD")}
+            </p>
+            <StudentCards
+              students={event.pickups.filter(({ favorited }) => favorited).map(({ student }) => ({ uid: student!.uid, tier: student!.initialTier }))}
+              pcGrid={8}
+            />
+          </div>
+          <div className="w-full md:w-1/4 bg-white dark:bg-black rounded-lg md:-m-2 p-3 md:p-4">
+            {completed ? (
+              <div className="h-full flex items-center justify-center">
+                <p className="text-center text-neutral-500 text-sm">모집 완료</p>
+              </div>
+            ) : (
+              <div className="grid grid-cols-2 md:grid-cols-1 gap-2">
+                <div className="flex items-center gap-2">
+                  <ResourceCard resourceType={ResourceTypeEnum.Currency} itemUid="2" />
                   <p>{remainingResourceValue(accumulatedResources.pyroxene, resourceDelta.pyroxene)}</p>
                 </div>
-              </div>
-              <div className="flex items-center gap-2">
-                <ResourceCard resourceType={ResourceTypeEnum.Item} itemUid="6999" />
-                <div>
-                  <p className="text-sm font-semibold">남은 10회 모집 티켓</p>
+                <div className="flex items-center gap-2">
+                  <ResourceCard resourceType={ResourceTypeEnum.Item} itemUid="6999" />
                   <p>{remainingResourceValue(accumulatedResources.tenTimeTicket, resourceDelta.tenTimeTicket)}</p>
                 </div>
-              </div>
-              <div className="flex items-center gap-2">
-                <ResourceCard resourceType={ResourceTypeEnum.Item} itemUid="6998" />
-                <div>
-                  <p className="text-sm font-semibold">남은 1회 모집 티켓</p>
+                <div className="flex items-center gap-2">
+                  <ResourceCard resourceType={ResourceTypeEnum.Item} itemUid="6998" />
                   <p>{remainingResourceValue(accumulatedResources.oneTimeTicket, resourceDelta.oneTimeTicket)}</p>
                 </div>
               </div>
-            </div>
-          )}
+            )}
+          </div>
         </div>
       </ActionCard>
 
@@ -226,7 +223,7 @@ function TimelineEvent({ event, accumulatedResources, resourceDelta, completed, 
   );
 }
 
-function InitialResources({ resources, onUpdateResources }: { resources: PickupResources, onUpdateResources?: (resources: PickupResources) => void }) {
+function InitialResources({ resources, onUpdateResources }: { resources: PickupResources, onUpdateResources: (resources: PickupResources) => void }) {
   const [isEditing, setIsEditing] = useState(false);
   const [editedResources, setEditedResources] = useState<PickupResources>(resources);
 
@@ -255,73 +252,74 @@ function InitialResources({ resources, onUpdateResources }: { resources: PickupR
   };
 
   return (
-    <div className="my-4 p-4 border border-neutral-200 dark:border-neutral-700 rounded-lg">
-      <div className="grid grid-cols-1 md:grid-cols-3 gap-2">
-        {resourceItems.map(({ type, itemUid, label, resourceKey }) => (
-          <div key={itemUid} className="flex items-start gap-2">
-            <ResourceCard resourceType={type} itemUid={itemUid} />
-            <div className="flex-1">
-              <p className="text-sm font-semibold">{label}</p>
-              {isEditing ? (
-                <NumberInput
-                  value={editedResources[resourceKey]}
-                  onChange={(value) => setEditedResources((prev) => ({ ...prev, [resourceKey]: value }))}
-                />
-              ) : (
+    <div className="relative">
+      <div className="my-4 p-4 border border-neutral-200 dark:border-neutral-700 rounded-lg">
+        <div className="grid grid-cols-2 md:grid-cols-4 gap-2">
+          {resourceItems.map(({ type, itemUid, label, resourceKey }) => (
+            <div key={itemUid} className="flex items-start gap-2">
+              <ResourceCard resourceType={type} itemUid={itemUid} />
+              <div className="flex-1">
+                <p className="text-sm font-semibold">{label}</p>
                 <p className="my-1 text-sm">{resources[resourceKey].toLocaleString()}</p>
-              )}
+              </div>
             </div>
-          </div>
-        ))}
-      </div>
-      <div className="flex items-center justify-end gap-2 mt-2">
-        {onUpdateResources && (
-          <>
+          ))}
+          <div className="flex items-center justify-end gap-2 mt-2">
             {isEditing ? (
-              <>
-                <button
-                  onClick={handleCancel}
-                  className="px-3 py-1 text-sm text-neutral-500 hover:bg-neutral-100 dark:hover:bg-neutral-800 rounded-lg transition"
-                >
-                  취소
-                </button>
-                <button
-                  onClick={handleSave}
-                  className="px-3 py-1 text-sm text-blue-500 hover:bg-blue-50 dark:hover:bg-blue-900/20 rounded-lg transition"
-                >
-                  저장
-                </button>
-              </>
+              <button className="px-3 py-1 text-sm text-neutral-500 hover:bg-neutral-100 dark:hover:bg-neutral-800 rounded-lg transition" onClick={handleCancel}>
+                취소
+              </button>
             ) : (
               <button
-                onClick={() => setIsEditing(true)}
                 className="px-3 py-1 text-sm text-blue-500 hover:bg-blue-50 dark:hover:bg-blue-900/20 rounded-lg transition"
+                onClick={() => setIsEditing(true)}
               >
                 수정
               </button>
             )}
-          </>
-        )}
+          </div>
+        </div>
       </div>
+      <Transition
+        show={isEditing}
+        as="div"
+        enter="transition duration-200 ease-out"
+        enterFrom="opacity-0 scale-95"
+        enterTo="opacity-100 scale-100"
+        leave="transition duration-100 ease-in"
+        leaveFrom="opacity-100 scale-100"
+        leaveTo="opacity-0 scale-95"
+        className="absolute top-full left-0 w-full mt-2 z-10"
+      >
+        <div className="bg-white/90 dark:bg-black/80 backdrop-blur-sm border border-neutral-200 dark:border-neutral-700 rounded-lg shadow-lg p-4">
+          <ResourcesInput
+            description="현재 보유한 재화 수량을 입력해주세요."
+            onSaveResources={(resources) => {
+              onUpdateResources(resources);
+              setIsEditing(false);
+            }}
+          />
+        </div>
+      </Transition>
     </div>
-  )
+  );
 }
 
 function TimelineResources({ date, description, resources, itemUid, onDeleteItem }: { date: dayjs.Dayjs, description: string, resources: PickupResources, itemUid?: string, onDeleteItem?: (itemUid: string) => void }) {
   return (
     <div className="my-4 px-3 md:px-4 py-2 flex items-center justify-between border border-neutral-200 dark:border-neutral-700 rounded-lg">
-      <div className="flex items-center flex-1">
+      <div className="w-40">
         <div className="pr-3 mr-3 border-r border-neutral-200 dark:border-neutral-700">
           <p className="font-semibold text-sm">
             {date.format("YYYY-MM-DD")}({date.format("ddd")})
           </p>
-          <p className="text-neutral-500 text-xs">{description}</p>
+          <p className="text-neutral-500 text-xs line-clamp-1">{description}</p>
         </div>
-        <div className="flex items-center gap-1">
-          {resources.pyroxene > 0 && <ResourceCard resourceType={ResourceTypeEnum.Currency} itemUid="2" label={resources.pyroxene.toLocaleString()} />}
-          {resources.oneTimeTicket > 0 && <ResourceCard resourceType={ResourceTypeEnum.Item} itemUid="6998" label={resources.oneTimeTicket.toLocaleString()} />}
-          {resources.tenTimeTicket > 0 && <ResourceCard resourceType={ResourceTypeEnum.Item} itemUid="6999" label={resources.tenTimeTicket.toLocaleString()} />}
-        </div>
+      </div>
+      <div className="flex-1 flex items-center gap-1">
+        {resources.pyroxene > 0 && <ResourceCard resourceType={ResourceTypeEnum.Currency} itemUid="2" label={resources.pyroxene.toLocaleString()} />}
+        {resources.oneTimeTicket > 0 && <ResourceCard resourceType={ResourceTypeEnum.Item} itemUid="6998" label={resources.oneTimeTicket.toLocaleString()} />}
+        {resources.tenTimeTicket > 0 && <ResourceCard resourceType={ResourceTypeEnum.Item} itemUid="6999" label={resources.tenTimeTicket.toLocaleString()} />}
       </div>
       {itemUid && onDeleteItem && (
         <button
@@ -337,16 +335,14 @@ function TimelineResources({ date, description, resources, itemUid, onDeleteItem
 
 function remainingResourceValue(count: number, diff: number): React.ReactNode {
   return (
-    <p className="text-sm">
-      <span className={count > 0 ? "text-green-500" : count === 0 ? undefined : "text-red-500"}>
+    <>
+      <p className={`font-semibold text-sm ${count > 0 ? "text-green-600" : count === 0 ? undefined : "text-red-500"}`}>
         {count.toLocaleString()}
-      </span>
-      {diff !== 0 && (
-        <span className="text-neutral-500">
-          &nbsp;({diff.toLocaleString()})
-        </span>
-      )}
-    </p>
+      </p>
+      <p className="-mt-1 text-neutral-500 dark:text-neutral-400 text-xs">
+        ({diff === 0 ? "-" :diff.toLocaleString()})
+      </p>
+    </>
   )
 }
 
@@ -371,6 +367,8 @@ type Timeline = {
   accumulatedResources: PickupResources;
   resourceDelta: PickupResources;
 }[];
+
+const MAX_REPEATED_ENTRIES = 365;
 
 function buildTimeline(
   initialResources: PickupResources,
@@ -443,12 +441,14 @@ function buildTimeline(
       });
     } else if (scheduleItem.repeatedGain) {
       const { repeatedGain } = scheduleItem;
-      for (let date = dayjs(repeatedGain.date); date.isBefore(maxDate); date = date.add(repeatedGain.repeatIntervalDays, "day")) {
+      let repeatedGainCount = 0;
+      for (let date = dayjs(repeatedGain.date); date.isBefore(maxDate) && repeatedGainCount < MAX_REPEATED_ENTRIES; date = date.add(repeatedGain.repeatIntervalDays, "day")) {
         timelineDeltas.push({
           date,
           source: { type: repeatedGain.source, uid: repeatedGain.uid, description: repeatedGain.description },
           resourceDelta: { pyroxene: repeatedGain.pyroxeneDelta ?? 0, oneTimeTicket: repeatedGain.oneTimeTicketDelta ?? 0, tenTimeTicket: repeatedGain.tenTimeTicketDelta ?? 0 },
         });
+        repeatedGainCount++;
       }
     }
   });
@@ -464,7 +464,9 @@ function buildTimeline(
     tacticalPyroxene = 35;
   }
 
-  for (let date = dateFrom; date.isBefore(maxDate); date = date.add(1, "day")) {
+  let dailyEntryCount = 0;
+  for (let date = dateFrom; date.isBefore(maxDate) && dailyEntryCount < MAX_REPEATED_ENTRIES; date = date.add(1, "day")) {
+    dailyEntryCount++;
     // 일일 임무
     timelineDeltas.push({
       date,

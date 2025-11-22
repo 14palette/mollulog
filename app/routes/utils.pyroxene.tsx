@@ -1,6 +1,7 @@
 import { useEffect, useMemo, useState } from "react";
 import { MetaFunction, redirect, useFetcher, useLoaderData, useRevalidator, type ActionFunctionArgs, type LoaderFunctionArgs } from "react-router";
 import { ChartBarIcon, HeartIcon, PlusIcon } from "@heroicons/react/24/outline";
+import { LockClosedIcon } from "@heroicons/react/24/solid";
 import { getAuthenticator } from "~/auth/authenticator.server";
 import { PyroxenePlannerInputPanel, PyroxenePlannerOptionsPanel, PyroxeneSchedule } from "~/components/futures";
 import type { PickupResources, PyroxeneScheduleItem } from "~/components/futures";
@@ -22,6 +23,7 @@ import {
   upsertPyroxenePlannerOptions,
   getPyroxenePlannerContents,
 } from "~/models/pyroxene-planner";
+import { ErrorPage } from "~/components/organisms/error";
 
 
 export const loader = async ({ request, context }: LoaderFunctionArgs) => {
@@ -30,7 +32,25 @@ export const loader = async ({ request, context }: LoaderFunctionArgs) => {
 
   const currentUser = await getAuthenticator(env).isAuthenticated(request);
   if (!currentUser) {
-    return redirect("/unauthorized");
+    return {
+      contents,
+      favoritedStudents: [],
+      latestResources: {
+        pyroxene: 0,
+        oneTimeTicket: 0,
+        tenTimeTicket: 0,
+        inputAt: null,
+      },
+      latestResourceAfterPickup: {
+        uid: null,
+        pyroxene: 0,
+        oneTimeTicket: 0,
+        tenTimeTicket: 0,
+        eventUid: null,
+      },
+      timelineItems: [],
+      calcOptions: null,
+    };
   }
 
   const favoritedStudents = await getUserFavoritedStudents(env, currentUser.id);
@@ -38,6 +58,7 @@ export const loader = async ({ request, context }: LoaderFunctionArgs) => {
   const latestResourceAfterPickup = await getLatestPyroxeneOwnedResourceWithEventUid(env, currentUser.id);
   const savedOptions = await getPyroxenePlannerOptions(env, currentUser.id);
   return {
+    signedIn: currentUser !== null,
     contents,
     favoritedStudents: favoritedStudents.map(({ contentId, studentId }) => ({ contentUid: contentId, studentUid: studentId })),
     latestResources: {
@@ -96,7 +117,7 @@ export const action = async ({ request, context }: ActionFunctionArgs) => {
   const env = context.cloudflare.env;
   const currentUser = await getAuthenticator(env).isAuthenticated(request);
   if (!currentUser) {
-    return redirect("/unauthorized");
+    return { success: false };
   }
 
   const { createData, deleteData, calcOptions } = await request.json<ActionData>();
@@ -145,7 +166,7 @@ export const meta: MetaFunction = () => {
 
 export default function PyroxenePlanner() {
   const loaderData = useLoaderData<typeof loader>();
-  const { contents, favoritedStudents, timelineItems } = loaderData;
+  const { signedIn, contents, favoritedStudents, timelineItems } = loaderData;
 
   const [initialDate, setInitialDate] = useState<Date | null>(loaderData.latestResources.inputAt ? new Date(loaderData.latestResources.inputAt) : null);
   const [initialResources, setInitialResources] = useState<PickupResources>(loaderData.latestResources);
@@ -223,7 +244,7 @@ export default function PyroxenePlanner() {
   }, [loaderData.calcOptions]);
 
   useEffect(() => {
-    if (!revalidated && !fetcher.data?.success && fetcher.state === "idle") {
+    if (!revalidated && fetcher.data && !fetcher.data.success && fetcher.state === "idle") {
       revalidator.revalidate();
       setRevalidated(true);
     }
@@ -309,8 +330,8 @@ export default function PyroxenePlanner() {
       links={[
         {
           Icon: HeartIcon,
-          title: "컨텐츠 미래시",
-          description: "관심 학생은 미래시 페이지에서 등록할 수 있어요",
+          title: "관심학생 등록",
+          description: "미래시 페이지에서 등록할 수 있어요",
           to: "/futures",
         },
       ]}
@@ -319,7 +340,7 @@ export default function PyroxenePlanner() {
           title: "플래너 설정",
           Icon: ChartBarIcon,
           description: "획득/소비 계산 조건을 선택해주세요",
-          foldable: true,
+          foldable: signedIn,
           children: <PyroxenePlannerOptionsPanel options={options} onOptionsChange={(newOptions) => {
             setOptions(newOptions);
             fetcher.submit(
@@ -333,6 +354,7 @@ export default function PyroxenePlanner() {
           Icon: PlusIcon,
           description: "재화 획득 날짜와 수량을 입력해주세요",
           foldable: true,
+          disabled: !signedIn,
           children: <PyroxenePlannerInputPanel
             onSaveBuy={(quantity, date) => handleSaveBuy(quantity, date)}
             onSavePackage={(startDate, packageType) => handleSavePackage(startDate, packageType)}
@@ -342,16 +364,20 @@ export default function PyroxenePlanner() {
         },
       ]}
     >
-      <PyroxeneSchedule
-        initialDate={initialDate}
-        initialResources={initialResources}
-        latestEventUid={loaderData.latestResourceAfterPickup.eventUid}
-        scheduleItems={scheduleItems}
-        options={options}
-        onPickupComplete={(eventUid, resources) => handleSaveOwnedResources(eventUid, resources)}
-        onDeletePickupComplete={(eventUid) => handleDeletePickupComplete(eventUid)}
-        onDeleteItem={(itemUid) => handleDeleteItem(itemUid)}
-      />
+      {signedIn ? (
+        <PyroxeneSchedule
+          initialDate={initialDate}
+          initialResources={initialResources}
+          latestEventUid={loaderData.latestResourceAfterPickup.eventUid}
+          scheduleItems={scheduleItems}
+          options={options}
+          onPickupComplete={(eventUid, resources) => handleSaveOwnedResources(eventUid, resources)}
+          onDeletePickupComplete={(eventUid) => handleDeletePickupComplete(eventUid)}
+          onDeleteItem={(itemUid) => handleDeleteItem(itemUid)}
+        />
+      ) : (
+        <ErrorPage Icon={LockClosedIcon} message="로그인 후 이용할 수 있어요" showButtons={false} />
+      )}
     </Page>
   )
 }

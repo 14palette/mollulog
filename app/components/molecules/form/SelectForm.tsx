@@ -57,7 +57,7 @@ export default function SelectForm({
           <div className="grow">
             <label className="font-bold">{label}</label>
             {description && <p className="text-sm text-neutral-500 dark:text-neutral-400">{description}</p>}
-            {(selectedLabel ?? placeholder) && <p className="mt-2 text-neutral-700 dark:text-neutral-300">{selectedLabel ?? placeholder}</p>}
+            {(selectedLabel ?? placeholder) && <p className="mt-1 text-neutral-700 dark:text-neutral-300">{selectedLabel ?? placeholder}</p>}
           </div>
           <ChevronDownIcon className="size-4" />
         </div>

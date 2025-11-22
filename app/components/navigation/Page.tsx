@@ -4,6 +4,7 @@ import { BottomSheet } from "~/components/atoms/layout";
 import ScreenSelector, { type ScreenSelectorProps } from "./ScreenSelector";
 import PagePanel, { type PagePanelProps } from "./PagePanel";
 import PageLink, { type PageLinkProps } from "./PageLink";
+import { sanitizeClassName } from "~/prophandlers";
 
 type PageProps = {
   title: string;
@@ -21,7 +22,7 @@ export default function Page({ title, description, screens, panels, links, child
   return (
     <>
       <div className="flex flex-col xl:flex-row">
-        <div className="w-full xl:h-screen xl:max-w-sm xl:mr-8 xl:sticky xl:top-6 xl:self-start xl:overflow-y-scroll">
+        <div className="w-full xl:h-screen xl:max-w-sm xl:mr-8 xl:sticky xl:top-6 xl:self-start xl:overflow-y-scroll no-scrollbar">
           <Title text={title} description={description} />
           {screens && <ScreenSelector screens={screens} />}
           <div className="hidden xl:block">
@@ -45,13 +46,16 @@ export default function Page({ title, description, screens, panels, links, child
 
       {/* Mobile floating navigation bar */}
       {panels && panels.length > 0 && (
-        <div className="px-2 py-1 xl:hidden fixed bottom-6 right-4 z-40 bg-white/20 dark:bg-neutral-900/20 backdrop-blur-sm border border-neutral-200 dark:border-neutral-700 rounded-full shadow-lg">
+        <div className="px-2 py-1 xl:hidden fixed bottom-4 right-4 z-40 bg-white/20 dark:bg-neutral-900/20 backdrop-blur-sm border border-neutral-200 dark:border-neutral-700 rounded-full shadow-lg">
           <div className="flex items-center">
             {panels.map((panel, index) => (
               <div
                 key={panel.title}
-                onClick={() => setOpenPanelIndex(index)}
-                className="w-20 flex flex-col justify-center items-center p-2 text-neutral-700 dark:text-neutral-300 hover:bg-neutral-100 dark:hover:bg-neutral-800 rounded-full transition-colors cursor-pointer"
+                onClick={() => panel.disabled ? undefined : setOpenPanelIndex(index)}
+                className={sanitizeClassName(`
+                  w-20 flex flex-col justify-center items-center p-2 text-neutral-700 dark:text-neutral-300 rounded-full transition-colors cursor-pointer
+                  ${panel.disabled ? "opacity-50 cursor-default" : "hover:bg-neutral-100 dark:hover:bg-neutral-800"}
+                `)}
               >
                 <panel.Icon className="mb-1 size-5 shrink-0" strokeWidth={2} />
                 <span className="text-xs font-medium whitespace-nowrap">{panel.title}</span>

@@ -34,7 +34,7 @@ export default function ResourceCard({ resourceType, rarity = 1, favoriteLevel, 
 
   return (
     <div className="relative">
-      <div className={`shrink-0 size-10 md:size-12 rounded-lg border border-neutral-200 dark:border-neutral-700 ${rarityBgClass(rarity)} flex items-center justify-center overflow-hidden`}>
+      <div className={`shrink-0 size-10 rounded-lg border border-neutral-200 dark:border-neutral-700 ${rarityBgClass(rarity)} flex items-center justify-center overflow-hidden`}>
         <img
           alt="아이템 이미지"
           src={imageUrl}

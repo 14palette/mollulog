@@ -5,7 +5,9 @@ import { Form, useNavigation, useSubmit } from "react-router";
 type FormGroupProps = {
   method?: "post" | "put" | "patch" | "delete";
   children: ReactNode | ReactNode[];
+
   submitOnChange?: boolean;
+  showSavingIndicator?: boolean;
 };
 
 const FormGroupContext = createContext<{
@@ -14,7 +16,7 @@ const FormGroupContext = createContext<{
   submitFormGroup: () => {},
 });
 
-export default function FormGroup({ method, children, submitOnChange }: FormGroupProps) {
+export default function FormGroup({ method, children, submitOnChange, showSavingIndicator }: FormGroupProps) {
   const childrenArray = Array.isArray(children) ? children.flat() : [children];
 
   const navigation = useNavigation();
@@ -42,10 +44,12 @@ export default function FormGroup({ method, children, submitOnChange }: FormGrou
           </div>
         ))}
       </div>
-      <div className={`my-2 flex justify-end items-center gap-x-2 ${isSubmitting ? "visible" : "invisible"}`}>
-        <ArrowPathIcon className="size-4 animate-spin" />
-        <p className="text-right text-sm">저장중...</p>
-      </div>
+      {showSavingIndicator && (
+        <div className={`my-2 flex justify-end items-center gap-x-2 ${isSubmitting ? "visible" : "invisible"}`}>
+          <ArrowPathIcon className="size-4 animate-spin" />
+          <p className="text-right text-sm">저장중...</p>
+        </div>
+      )}
     </>
   );
 

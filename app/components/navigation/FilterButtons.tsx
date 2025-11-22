@@ -73,7 +73,7 @@ function FilterButton({ text, color, active, onToggle, inBlock }: FilterButtonPr
       onClick={() => { onToggle(!active); }}
     >
       {color && <div className={`size-2.5 rounded-full mr-1.5 ` + buttonColors[color]} />}
-      <span className="text-sm md:text-base tracking-tighter shrink-0">{text}</span>
+      <span className="text-base tracking-tighter shrink-0">{text}</span>
     </div>
   );
 }
